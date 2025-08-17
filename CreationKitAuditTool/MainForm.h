@@ -3,6 +3,7 @@
 namespace CreationKitAuditTool {
 
 	using namespace System;
+	using namespace System::IO;
 	using namespace System::ComponentModel;
 	using namespace System::Collections;
 	using namespace System::Windows::Forms;
@@ -34,9 +35,13 @@ namespace CreationKitAuditTool {
 				delete components;
 			}
 		}
-	private: System::IO::FileSystemWatcher^ fileSystemWatcher1;
+	private: System::IO::FileSystemWatcher^ fileSystemWatcher;
+	protected: bool running = false;
+	protected: String^ starfieldDataFolder;
+	protected: String^ starfieldXBoxDataFolder;
+
 	protected:
-	private: System::Windows::Forms::FolderBrowserDialog^ starfieldFolderBrowser;
+	private: System::Windows::Forms::FolderBrowserDialog^ folderBrowser;
 	private: System::Windows::Forms::TextBox^ starfieldFolderTextBox;
 	private: System::Windows::Forms::Label^ label1;
 	private: System::Windows::Forms::Button^ starfieldFolderButton;
@@ -49,8 +54,9 @@ namespace CreationKitAuditTool {
 
 	private: System::Windows::Forms::ListView^ auditListView;
 	private: System::Windows::Forms::CheckBox^ wavCheckBox;
+	private: System::Windows::Forms::CheckBox^ pscCheckBox;
 
-	private: System::Windows::Forms::CheckBox^ checkBox1;
+
 	private: System::Windows::Forms::Button^ generateButton;
 	private: System::Windows::Forms::Button^ quitButton;
 
@@ -58,6 +64,10 @@ namespace CreationKitAuditTool {
 	private: System::Windows::Forms::Button^ stopButton;
 	private: System::Windows::Forms::Button^ startButton;
 	private: System::Windows::Forms::Button^ xboxWEMButton;
+	private: System::Windows::Forms::Button^ importButton;
+	private: System::Windows::Forms::ColumnHeader^ columnHeader1;
+
+
 
 
 
@@ -74,8 +84,8 @@ namespace CreationKitAuditTool {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			this->fileSystemWatcher1 = (gcnew System::IO::FileSystemWatcher());
-			this->starfieldFolderBrowser = (gcnew System::Windows::Forms::FolderBrowserDialog());
+			this->fileSystemWatcher = (gcnew System::IO::FileSystemWatcher());
+			this->folderBrowser = (gcnew System::Windows::Forms::FolderBrowserDialog());
 			this->label1 = (gcnew System::Windows::Forms::Label());
 			this->starfieldFolderTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->starfieldFolderButton = (gcnew System::Windows::Forms::Button());
@@ -84,24 +94,30 @@ namespace CreationKitAuditTool {
 			this->label3 = (gcnew System::Windows::Forms::Label());
 			this->pluginComboBox = (gcnew System::Windows::Forms::ComboBox());
 			this->auditListView = (gcnew System::Windows::Forms::ListView());
+			this->columnHeader1 = (gcnew System::Windows::Forms::ColumnHeader());
 			this->groupBox1 = (gcnew System::Windows::Forms::GroupBox());
+			this->importButton = (gcnew System::Windows::Forms::Button());
 			this->generateButton = (gcnew System::Windows::Forms::Button());
 			this->wavCheckBox = (gcnew System::Windows::Forms::CheckBox());
-			this->checkBox1 = (gcnew System::Windows::Forms::CheckBox());
+			this->pscCheckBox = (gcnew System::Windows::Forms::CheckBox());
 			this->groupBox2 = (gcnew System::Windows::Forms::GroupBox());
 			this->stopButton = (gcnew System::Windows::Forms::Button());
 			this->startButton = (gcnew System::Windows::Forms::Button());
 			this->quitButton = (gcnew System::Windows::Forms::Button());
 			this->xboxWEMButton = (gcnew System::Windows::Forms::Button());
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher1))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher))->BeginInit();
 			this->groupBox1->SuspendLayout();
 			this->groupBox2->SuspendLayout();
 			this->SuspendLayout();
 			// 
-			// fileSystemWatcher1
+			// fileSystemWatcher
 			// 
-			this->fileSystemWatcher1->EnableRaisingEvents = true;
-			this->fileSystemWatcher1->SynchronizingObject = this;
+			this->fileSystemWatcher->EnableRaisingEvents = true;
+			this->fileSystemWatcher->SynchronizingObject = this;
+			this->fileSystemWatcher->Changed += gcnew System::IO::FileSystemEventHandler(this, &MainForm::fileSystemWatcher_Changed);
+			this->fileSystemWatcher->Created += gcnew System::IO::FileSystemEventHandler(this, &MainForm::fileSystemWatcher_Created);
+			this->fileSystemWatcher->Deleted += gcnew System::IO::FileSystemEventHandler(this, &MainForm::fileSystemWatcher_Deleted);
+			this->fileSystemWatcher->Renamed += gcnew System::IO::RenamedEventHandler(this, &MainForm::fileSystemWatcher_Renamed);
 			// 
 			// label1
 			// 
@@ -168,32 +184,54 @@ namespace CreationKitAuditTool {
 			// 
 			// auditListView
 			// 
+			this->auditListView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(1) { this->columnHeader1 });
 			this->auditListView->HideSelection = false;
 			this->auditListView->Location = System::Drawing::Point(45, 153);
+			this->auditListView->MultiSelect = false;
 			this->auditListView->Name = L"auditListView";
 			this->auditListView->Size = System::Drawing::Size(887, 422);
+			this->auditListView->Sorting = System::Windows::Forms::SortOrder::Ascending;
 			this->auditListView->TabIndex = 8;
+			this->auditListView->TabStop = false;
 			this->auditListView->UseCompatibleStateImageBehavior = false;
+			this->auditListView->View = System::Windows::Forms::View::Details;
+			// 
+			// columnHeader1
+			// 
+			this->columnHeader1->Text = L"Relative Filename";
+			this->columnHeader1->Width = 881;
 			// 
 			// groupBox1
 			// 
+			this->groupBox1->Controls->Add(this->importButton);
 			this->groupBox1->Controls->Add(this->generateButton);
 			this->groupBox1->Controls->Add(this->wavCheckBox);
-			this->groupBox1->Controls->Add(this->checkBox1);
+			this->groupBox1->Controls->Add(this->pscCheckBox);
 			this->groupBox1->Location = System::Drawing::Point(47, 601);
 			this->groupBox1->Name = L"groupBox1";
-			this->groupBox1->Size = System::Drawing::Size(471, 110);
+			this->groupBox1->Size = System::Drawing::Size(471, 200);
 			this->groupBox1->TabIndex = 9;
 			this->groupBox1->TabStop = false;
 			this->groupBox1->Text = L"ARCHLIST Generation";
 			// 
+			// importButton
+			// 
+			this->importButton->Enabled = false;
+			this->importButton->Location = System::Drawing::Point(290, 36);
+			this->importButton->Name = L"importButton";
+			this->importButton->Size = System::Drawing::Size(157, 48);
+			this->importButton->TabIndex = 2;
+			this->importButton->Text = L"Import";
+			this->importButton->UseVisualStyleBackColor = true;
+			this->importButton->Click += gcnew System::EventHandler(this, &MainForm::importButton_Click);
+			// 
 			// generateButton
 			// 
 			this->generateButton->Enabled = false;
-			this->generateButton->Location = System::Drawing::Point(293, 36);
+			this->generateButton->Location = System::Drawing::Point(290, 131);
 			this->generateButton->Name = L"generateButton";
 			this->generateButton->Size = System::Drawing::Size(157, 48);
-			this->generateButton->TabIndex = 2;
+			this->generateButton->TabIndex = 3;
 			this->generateButton->Text = L"Generate";
 			this->generateButton->UseVisualStyleBackColor = true;
 			this->generateButton->Click += gcnew System::EventHandler(this, &MainForm::generateButton_Click);
@@ -210,17 +248,17 @@ namespace CreationKitAuditTool {
 			this->wavCheckBox->Text = L"Exclude WAV";
 			this->wavCheckBox->UseVisualStyleBackColor = true;
 			// 
-			// checkBox1
+			// pscCheckBox
 			// 
-			this->checkBox1->AutoSize = true;
-			this->checkBox1->Checked = true;
-			this->checkBox1->CheckState = System::Windows::Forms::CheckState::Checked;
-			this->checkBox1->Location = System::Drawing::Point(6, 28);
-			this->checkBox1->Name = L"checkBox1";
-			this->checkBox1->Size = System::Drawing::Size(155, 29);
-			this->checkBox1->TabIndex = 0;
-			this->checkBox1->Text = L"Exclude PSC";
-			this->checkBox1->UseVisualStyleBackColor = true;
+			this->pscCheckBox->AutoSize = true;
+			this->pscCheckBox->Checked = true;
+			this->pscCheckBox->CheckState = System::Windows::Forms::CheckState::Checked;
+			this->pscCheckBox->Location = System::Drawing::Point(6, 28);
+			this->pscCheckBox->Name = L"pscCheckBox";
+			this->pscCheckBox->Size = System::Drawing::Size(155, 29);
+			this->pscCheckBox->TabIndex = 0;
+			this->pscCheckBox->Text = L"Exclude PSC";
+			this->pscCheckBox->UseVisualStyleBackColor = true;
 			// 
 			// groupBox2
 			// 
@@ -239,7 +277,7 @@ namespace CreationKitAuditTool {
 			this->stopButton->Location = System::Drawing::Point(205, 36);
 			this->stopButton->Name = L"stopButton";
 			this->stopButton->Size = System::Drawing::Size(157, 48);
-			this->stopButton->TabIndex = 4;
+			this->stopButton->TabIndex = 5;
 			this->stopButton->Text = L"Stop";
 			this->stopButton->UseVisualStyleBackColor = true;
 			this->stopButton->Click += gcnew System::EventHandler(this, &MainForm::stopButton_Click);
@@ -250,7 +288,7 @@ namespace CreationKitAuditTool {
 			this->startButton->Location = System::Drawing::Point(6, 36);
 			this->startButton->Name = L"startButton";
 			this->startButton->Size = System::Drawing::Size(157, 48);
-			this->startButton->TabIndex = 3;
+			this->startButton->TabIndex = 4;
 			this->startButton->Text = L"Start";
 			this->startButton->UseVisualStyleBackColor = true;
 			this->startButton->Click += gcnew System::EventHandler(this, &MainForm::startButton_Click);
@@ -296,7 +334,7 @@ namespace CreationKitAuditTool {
 			this->MinimumSize = System::Drawing::Size(1059, 877);
 			this->Name = L"MainForm";
 			this->Text = L"Starfield Creation Kit Audit Tool";
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher1))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher))->EndInit();
 			this->groupBox1->ResumeLayout(false);
 			this->groupBox1->PerformLayout();
 			this->groupBox2->ResumeLayout(false);
@@ -306,46 +344,154 @@ namespace CreationKitAuditTool {
 		}
 #pragma endregion
 private: System::Void starfieldFolderButton_Click(System::Object^ sender, System::EventArgs^ e) {
-	starfieldFolderBrowser->Description = "Select the Starfield Installation Folder";
-	starfieldFolderBrowser->SelectedPath = starfieldFolderTextBox->Text;
-	starfieldFolderBrowser->ShowNewFolderButton = false;
-	if (starfieldFolderBrowser->ShowDialog(this) == System::Windows::Forms::DialogResult::OK) {
-		starfieldFolderTextBox->Text = starfieldFolderBrowser->SelectedPath;
-		fileSystemWatcher1->Path = starfieldFolderTextBox->Text;
+	folderBrowser->Description = "Select the Starfield Installation Folder";
+	folderBrowser->SelectedPath = starfieldFolderTextBox->Text;
+	folderBrowser->ShowNewFolderButton = false;
+	if (folderBrowser->ShowDialog(this) == System::Windows::Forms::DialogResult::OK) {
+		String^ base = folderBrowser->SelectedPath;
+		starfieldFolderTextBox->Text = base;
+		starfieldDataFolder = base->ToUpper() + L"\\DATA\\";
+		fileSystemWatcher->Path = starfieldFolderTextBox->Text;
+		fileSystemWatcher->IncludeSubdirectories = true;
 		xboxWEMButton->Enabled = true;
-		if (!(xboxWEMTextBox->Text->Equals(L""))) {
+		if (0 == String::Compare(base, 0, xboxWEMTextBox->Text, 0, base->Length)) {
 			startButton->Enabled = true;
+		}
+		else {
+			xboxWEMTextBox->Text = L"";
+			startButton->Enabled = false;
 		}
 	}
 }
 private: System::Void xboxWEMButton_Click(System::Object^ sender, System::EventArgs^ e) {
-	starfieldFolderBrowser->Description = "Select the XBox Alternate WEM Folder";
-	if (!xboxWEMTextBox->Text->Equals(L"")) {
-		starfieldFolderBrowser->SelectedPath = xboxWEMTextBox->Text;
-	}
-	else {
-		starfieldFolderBrowser->SelectedPath = starfieldFolderTextBox->Text;
-	}
-	starfieldFolderBrowser->ShowNewFolderButton = true;
-	if (starfieldFolderBrowser->ShowDialog(this) == System::Windows::Forms::DialogResult::OK) {
-		xboxWEMTextBox->Text = starfieldFolderBrowser->SelectedPath;
-		if (!(starfieldFolderTextBox->Text->Equals(L""))) {
-			startButton->Enabled = true;
+	folderBrowser->Description = "Select the XBox Alternate WEM Folder";
+	folderBrowser->SelectedPath = starfieldFolderTextBox->Text;
+	folderBrowser->ShowNewFolderButton = true;
+	if (folderBrowser->ShowDialog(this) == System::Windows::Forms::DialogResult::OK) {
+		String^ base = starfieldFolderTextBox->Text;
+		String^ path = folderBrowser->SelectedPath;
+		if (0 != String::Compare(base, 0, path, 0, base->Length)) {
+			MessageBox::Show(L"XBox WEM Folder must reside within the Starfield Folder.", L"Invalid XBox WEM Folder", MessageBoxButtons::OK);
+		}
+		else {
+			xboxWEMTextBox->Text = folderBrowser->SelectedPath;
+			starfieldXBoxDataFolder = folderBrowser->SelectedPath + L"\\Data\\";
+			if (!(starfieldFolderTextBox->Text->Equals(L""))) {
+				startButton->Enabled = true;
+			}
 		}
 	}
 }
 private: System::Void startButton_Click(System::Object^ sender, System::EventArgs^ e) {
 	startButton->Enabled = false;
 	stopButton->Enabled = true;
+	running = true;
 }
 private: System::Void stopButton_Click(System::Object^ sender, System::EventArgs^ e) {
 	stopButton->Enabled = false;
 	startButton->Enabled = true;
+	running = false;
 }
 private: System::Void generateButton_Click(System::Object^ sender, System::EventArgs^ e) {
 }
 private: System::Void quitButton_Click(System::Object^ sender, System::EventArgs^ e) {
 	this->Close();
+}
+private: System::Void importButton_Click(System::Object^ sender, System::EventArgs^ e) {
+}
+private: System::Void fileSystemWatcher_Changed(System::Object^ sender, System::IO::FileSystemEventArgs^ e) {
+	if (running) {
+		if (shouldLog(e->FullPath, false)) {
+			String^ rpath = relativePath(e->FullPath);
+			if (nullptr == auditListView->FindItemWithText(rpath)) {
+				auditListView->Items->Add(gcnew ListViewItem(rpath));
+			}
+		}
+	}
+}
+private: System::Void fileSystemWatcher_Deleted(System::Object^ sender, System::IO::FileSystemEventArgs^ e) {
+	if (running) {
+		if (shouldLog(e->FullPath, true)) {
+			auditListView->Items->Remove(auditListView->FindItemWithText(relativePath(e->FullPath)));
+		}
+	}
+}
+private: System::Void fileSystemWatcher_Created(System::Object^ sender, System::IO::FileSystemEventArgs^ e) {
+	if (running) {
+		if (shouldLog(e->FullPath, false)) {
+			String^ rpath = relativePath(e->FullPath);
+			if (nullptr == auditListView->FindItemWithText(rpath)) {
+				auditListView->Items->Add(gcnew ListViewItem(rpath));
+			}
+		}
+	}
+}
+private: System::Void fileSystemWatcher_Renamed(System::Object^ sender, System::IO::RenamedEventArgs^ e) {
+	if (running) {
+		if (shouldLog(e->OldFullPath, true)) {
+			auditListView->Items->Remove(auditListView->FindItemWithText(relativePath(e->OldFullPath)));
+		}
+		if (shouldLog(e->FullPath, false)) {
+			String^ rpath = relativePath(e->FullPath);
+			if (nullptr == auditListView->FindItemWithText(rpath)) {
+				auditListView->Items->Add(gcnew ListViewItem(rpath));
+			}
+		}
+	}
+}
+private: bool shouldLog(String^ fullName, bool isDelete) {
+	if (!isDelete) {
+		try {
+			FileAttributes attr = File::GetAttributes(fullName);
+			if (attr.HasFlag(FileAttributes::Directory) || attr.HasFlag(FileAttributes::Hidden)) {
+				return false;
+			}
+		}
+		catch (System::Exception^ e) {
+			// Assume that the file was deleted prior to processing this notification, so
+			// we should not log it.  We should get a DELETE notification later on that
+			// will remove this file from the audit list.
+			return false;
+		}
+	}
+
+	// Ignore any file not under the Starfield Data or Starfield XBox folders
+	if ((fullName->Length < starfieldDataFolder->Length ||
+			0 != String::Compare(fullName, 0, starfieldDataFolder, 0, starfieldDataFolder->Length, true)) &&
+		(fullName->Length < starfieldXBoxDataFolder->Length ||
+			0 != String::Compare(fullName, 0, starfieldXBoxDataFolder, 0, starfieldXBoxDataFolder->Length, true))) {
+		return false;
+	}
+
+	// Ignore the ESP & ESM files.  Also the TEMP.WEM files that are generated by WWise.
+	if (fullName->EndsWith(L".esm", StringComparison::InvariantCultureIgnoreCase) ||
+		fullName->EndsWith(L".esp", StringComparison::InvariantCultureIgnoreCase) ||
+		fullName->EndsWith(L"Temp.wem", StringComparison::InvariantCultureIgnoreCase)) {
+		return false;
+	}
+
+	// Ignore the Papyrus Source files if so indicated
+	if (pscCheckBox->Checked && fullName->EndsWith(".psc", StringComparison::InvariantCultureIgnoreCase)) {
+		return false;
+	}
+
+	// Ignore the WAV Audio Files if so indicated
+	if (wavCheckBox->Checked && fullName->EndsWith(".wav", StringComparison::InvariantCultureIgnoreCase)) {
+		return false;
+	}
+	return true;
+}
+private: String^ relativePath(String^ fullname) {
+	// If the file resides in the Starfield XBox Alternate Data folder, we have to construct
+	// the special relative path that will resolve properly when the Creation Kit processes
+	// the ARCHLIST file.
+	if (fullname->Length >= starfieldXBoxDataFolder->Length &&
+		0 == String::Compare(fullname, 0, starfieldXBoxDataFolder, 0, starfieldXBoxDataFolder->Length, true)) {
+		return L"Data\\..\\" + fullname->Substring(starfieldFolderTextBox->Text->Length + 1);
+	}
+
+	// A normal Starfield Data file, just compute a simple relative path
+	return fullname->Substring(starfieldFolderTextBox->Text->Length + 1);
 }
 };
 }
