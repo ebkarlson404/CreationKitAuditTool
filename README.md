@@ -16,6 +16,7 @@ Unforunately, the naming scheme *includes* the extension for the plugin file.  T
 works on plugin files whose names end with `.ESP`, it places the plugin-specific files in a directory named `MyMod.ESP`.  However,
 when the plugin is published Creation Kit creates a plugin file with an extension of `.ESM` so when Starfield loads the `.ESM` plugin
 file, it will look for the plugin-specific files in a directory named `MyMod.ESM`, which does not exist.
+
 The Creation Kit Audit Tool will automatically detect when plugin files reside in a `MyMod.ESP` directory and will replicate those
 files into a corresponding `MyMod.ESM` directory to use for the generated ARCHLIST packing list.  This will result in a
 `BA2` file that is ready to ship with the resulting `.ESM` plugin file.
@@ -26,10 +27,12 @@ audio toolkit that integrates into the Starfield Creation Kit is specific to one
 do all the work to create the PC version of one's plugin, pack the `BA2` archive files, then exit Creation Kit, change the
 `CreationKitCustom.ini` file to reconfigure WWise to generate XBox WEM files, restart Creation Kit, regenerate the WEM files
 and then pack the XBox-specific `BA2` archive files.
+
 The Creation Kit Audit Tool has been engineered to work with an alternate WWise configuration which will generate *both*
 the PC and XBox WEM files in a single pass, placing the XBox WEM files into an alternate directory tree.  The Creation Kit
 Audit Tool can be configured to know about this alternate XBox WEM tree and generate the two platform-specific ARCHLIST
 packing lists that will pull the WEM files from the appropriate tree for each platform.
+
 To configure the Starfield Creation Kit for single-pass WEM generation, go into your `CreationKitCustom.ini` file and
 ensure that the `Audio` settings are as follows:
 > [Audio]  
