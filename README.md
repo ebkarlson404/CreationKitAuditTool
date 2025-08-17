@@ -46,6 +46,7 @@ ensure that the `Audio` settings are as follows:
 > sPathToWwiseProj=Tools\wwise\Starfield\Starfield.wproj  
 
 Then go to your Starfield Installation Folder and create a folder named `XBOX` and then within that folder a subfolder named `Data`.
+
 Once this is done, when one uses the `Audio | Process Local Voice WAVs` or `Audio | Build Soundbank for Active File` tool in Creation
 Kit to process `.WAV` files into `.WEM` files, it will create *both* the PC and XBox WEM files in a single pass, placing the XBox WEM
 files into the alternate directory paths specified in the `CreationKitCustom.ini` file above.  One can then configure that
@@ -60,15 +61,17 @@ the alternate XBox directory tree.
 4. Start up the Creation Kit Audit Tool and tell it which plugin you are working on.  If you have worked on this plugin with the Creation Kit Audit Tool before, the audit log for the plugin will be initialized from the previous run.  If this is the first time that you're using the Creation Kit Audit Tool for this plugin, you can load your old ARCHLIST file to initialize the set of files to include.
 5. Click `Start` in the Creation Kit Audit Tool
 6. Go back to your Creation Kit and work on your plugin
-7. When you are ready to package the plugin, go back to the Creation Kit Audit Tool and click on the `Generate` button to create the two platform-specific ARCHLIST files.  They will be created in your `Documents\MyGames\Starfield\CreationKitAuditTool` directory.
-8. Go back to Creation Kit and use the `Archive` tool to pack your `BA2` files by importing the ARCHLIST files that were stored in your `Documents\MyGames\Starfield\CreationKitAuditTool` directory.
+7. When you are ready to package the plugin, go back to the Creation Kit Audit Tool and click on the `Generate` button to create the two platform-specific ARCHLIST files.  They will be created in your `Documents\My Games\Starfield\CreationKitAuditTool` directory.
+8. Go back to Creation Kit and use the `Archive` tool to pack your `BA2` files by importing the ARCHLIST files that were stored in your `Documents\My Games\Starfield\CreationKitAuditTool` directory.
+
 You can suspend the audit processing at any time by clicking on the `Stop` button in the Creation Kit Audit Tool and then resume audit
 processing by clicking on `Start` again.
+
 Once the Creation Kit Audit Tool has been used for a given plugin, it will save the manifest of all files detected during the audit
-session in a file named *MyMod.manifest* in your `Documents\MyGames\Starfield\CreationKitAuditTool` directory.  The Creation Kit
-audit Tool will use this manifest file to reload the audit log for that plugin the next time that the audit tool is started up.  This
-manifest file is nothing more than a list of all the discovered files, one file per line, so one can create a manifest file
-directly by hand if one wants to manually setup the initial audit log for a new plugin.
+session in a file named *MyMod.manifest* in your `Documents\My Games\Starfield\CreationKitAuditTool` directory.  The Creation Kit
+audit Tool will use this manifest file to reload the audit log for that plugin the next time that the audit tool is started up for
+that plugin.  This manifest file is nothing more than a list of all the discovered files, one file per line, so one can create a
+manifest file directly by hand if one wants to manually setup the initial audit log for a new plugin.
 # Build Configuration
 One can download the project files from GitHub and build the tool locally if one so desires.  In order to do so
 one must first prepare their build environment as follows:
