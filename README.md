@@ -80,6 +80,9 @@ if one wants to manually setup the initial audit log for a plugin.
 Once the manifest file has been created for a given plugin, the Creation Kit Audit Tool will use this manifest file to reload the audit
 log for that plugin the next time that the audit tool is used to monitor activity for that plugin.
 
+# Runtime Requirements
+The Creation Kit Audit Tool will run on Windows 10 or 11 using the .NET runtime version 4.7.2 or later.
+
 # Build Configuration
 One can download the project files from GitHub and build the tool locally if one so desires.  In order to do so
 one must first prepare their build environment as follows:
