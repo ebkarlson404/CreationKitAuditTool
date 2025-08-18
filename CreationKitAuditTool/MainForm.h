@@ -654,6 +654,7 @@ namespace CreationKitAuditTool {
 					auditListView->Items->Add(gcnew ListViewItem(filename));
 				}
 			}
+			WriteManifest(pluginComboBox->Text);
 		}
 	}
 	private: System::Void MainForm_Layout(System::Object^ sender, System::Windows::Forms::LayoutEventArgs^ e) {
