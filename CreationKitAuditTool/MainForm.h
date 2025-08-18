@@ -44,6 +44,9 @@ namespace CreationKitAuditTool {
 			String^ docFolder = System::Environment::GetFolderPath(System::Environment::SpecialFolder::MyDocuments);
 			userGameFolder = docFolder + L"\\My Games\\Starfield\\CreationKitAuditTool";
 			System::IO::Directory::CreateDirectory(userGameFolder);
+
+			// Populate the PlugIn Control with all known plugins
+			PopluatePlugInChoices();
 		}
 
 	protected:
@@ -94,7 +97,6 @@ namespace CreationKitAuditTool {
 	private: System::Windows::Forms::ToolStripMenuItem^ exitToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^ aboutToolStripMenuItem;
 	private: System::Windows::Forms::BindingSource^ pluginEnumerator;
-	private: System::Data::DataSet^ dataSet1;
 	private: System::Windows::Forms::ContextMenuStrip^ auditContextMenuStrip;
 	private: System::Windows::Forms::ToolStripMenuItem^ contextToolRemove;
 	private: System::Windows::Forms::ToolTip^ toolTip;
@@ -105,6 +107,7 @@ namespace CreationKitAuditTool {
 	private: System::Windows::Forms::OpenFileDialog^ addFileToAuditDialog;
 	private: System::Windows::Forms::Button^ generateButton;
 	private: System::Windows::Forms::Button^ startButton;
+
 	private: System::ComponentModel::IContainer^ components;
 
 	private:
@@ -132,7 +135,6 @@ namespace CreationKitAuditTool {
 			this->label3 = (gcnew System::Windows::Forms::Label());
 			this->pluginComboBox = (gcnew System::Windows::Forms::ComboBox());
 			this->pluginEnumerator = (gcnew System::Windows::Forms::BindingSource(this->components));
-			this->dataSet1 = (gcnew System::Data::DataSet());
 			this->auditListView = (gcnew System::Windows::Forms::ListView());
 			this->columnHeader1 = (gcnew System::Windows::Forms::ColumnHeader());
 			this->auditGroupBox = (gcnew System::Windows::Forms::GroupBox());
@@ -159,7 +161,6 @@ namespace CreationKitAuditTool {
 			this->addFileToAuditDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pluginEnumerator))->BeginInit();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->dataSet1))->BeginInit();
 			this->auditGroupBox->SuspendLayout();
 			this->menuStrip1->SuspendLayout();
 			this->auditContextMenuStrip->SuspendLayout();
@@ -234,7 +235,7 @@ namespace CreationKitAuditTool {
 			// 
 			// pluginComboBox
 			// 
-			this->pluginComboBox->DataSource = this->pluginEnumerator;
+			this->pluginComboBox->DropDownStyle = System::Windows::Forms::ComboBoxStyle::DropDownList;
 			this->pluginComboBox->Enabled = false;
 			this->pluginComboBox->FormattingEnabled = true;
 			this->pluginComboBox->Location = System::Drawing::Point(286, 141);
@@ -244,10 +245,6 @@ namespace CreationKitAuditTool {
 			this->pluginComboBox->TabIndex = 7;
 			this->toolTip->SetToolTip(this->pluginComboBox, L"Select which PlugIn to audit");
 			this->pluginComboBox->TextChanged += gcnew System::EventHandler(this, &MainForm::pluginComboBox_TextChanged);
-			// 
-			// dataSet1
-			// 
-			this->dataSet1->DataSetName = L"pluginDataSet";
 			// 
 			// auditListView
 			// 
@@ -514,7 +511,6 @@ namespace CreationKitAuditTool {
 			this->Layout += gcnew System::Windows::Forms::LayoutEventHandler(this, &MainForm::MainForm_Layout);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher))->EndInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pluginEnumerator))->EndInit();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->dataSet1))->EndInit();
 			this->auditGroupBox->ResumeLayout(false);
 			this->auditGroupBox->PerformLayout();
 			this->menuStrip1->ResumeLayout(false);
@@ -734,7 +730,7 @@ namespace CreationKitAuditTool {
 			L"Generated ACHLIST files are stored in one's >Documents\\My Games\\Starfield\\CreationKitAuditTool< folder.\n\n" +
 			L"GitHub: https://github.com/ebkarlson404/CreationKitAuditTool\n\n" +
 			L"Version 0.9.0\n\n" +
-			L"Copyright 2025\n\n" +
+			L"Copyright 2025, Eric Karlson\n\n" +
 			L"Distrbuted under the terms of the Apache License version 2.0, January 2004",
 			L"Creation Kit Audit Log Help",
 			MessageBoxButtons::OK,
@@ -796,8 +792,14 @@ namespace CreationKitAuditTool {
 	}
 	private: System::Void newPluginButton_Click(System::Object^ sender, System::EventArgs^ e) {
 		if (Windows::Forms::DialogResult::OK == findPluginDialog->ShowDialog(this)) {
-			String^ pluginName = findPluginDialog->SafeFileName;
-			pluginComboBox->Text = pluginName->Substring(0, pluginName->Length - 4);
+			// Get the name of the plugin, create its manifest file if needed,
+			// re-popluate the choices in the pluginComboBox control and then
+			// set this plugin as the active project.
+			String^ pluginName = findPluginDialog->SafeFileName->Substring(0, findPluginDialog->SafeFileName->Length - 4);
+			if (RegisterPlugInIfNeeded(pluginName)) {
+				PopluatePlugInChoices();
+				pluginComboBox->Text = pluginName;
+			}
 		}
 	}
 	private: System::Void addAuditFileButton_Click(System::Object^ sender, System::EventArgs^ e) {
@@ -1063,6 +1065,28 @@ namespace CreationKitAuditTool {
 	   }
 	   return value;
     }
+	private: bool RegisterPlugInIfNeeded(String^ plugin) {
+		String^ manifestFile = userGameFolder + L"\\" + plugin + manifestFileExt;
+		try {
+			StreamWriter^ fh = nullptr;
+			try {
+				fh = File::AppendText(manifestFile);
+			}
+			finally {
+				if (nullptr != fh) {
+					fh->Close();
+				}
+			}
+		}
+		catch (Exception^ e) {
+			MessageBox::Show(L"Unable to create manifest file " + manifestFile + ": " + e->Message,
+				L"Manifest File Creation Error",
+				MessageBoxButtons::OK,
+				MessageBoxIcon::Error);
+			return false;
+		}
+		return true;
+	}
     private: System::Void LoadManifest(String^ plugin) {
 		String^ manifestFile = userGameFolder + L"\\" + plugin + manifestFileExt;
 		try {
@@ -1129,6 +1153,16 @@ namespace CreationKitAuditTool {
 				MessageBoxIcon::Error);
 		}
 		return newRelFilename;
+	}
+	private: System::Void PopluatePlugInChoices() {
+		pluginComboBox->Items->Clear();
+		IEnumerable^ enumeration = Directory::EnumerateFiles(userGameFolder, L"*" + manifestFileExt);
+		IEnumerator^ iter = enumeration->GetEnumerator();
+		while (iter->MoveNext()) {
+			String^ filename = ((String^)iter->Current)->Substring(userGameFolder->Length + 1);
+			pluginComboBox->Items->Add(
+				filename->Substring(0, filename->Length - manifestFileExt->Length));
+		}
 	}
 };
 }
