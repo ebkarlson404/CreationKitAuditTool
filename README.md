@@ -68,13 +68,19 @@ You can suspend the audit processing at any time by clicking on the `Stop` butto
 processing by clicking on `Start` again.
 
 Once the Creation Kit Audit Tool has been used for a given plugin, it will save the manifest of all files detected during the audit
-session in a file named *MyMod.manifest* in your `Documents\My Games\Starfield\CreationKitAuditTool` directory.  The Creation Kit
-audit Tool will use this manifest file to reload the audit log for that plugin the next time that the audit tool is started up for
-that plugin.  This manifest file is nothing more than a list of all the discovered files, one file per line, so one can create a
-manifest file directly by hand if one wants to manually setup the initial audit log for a new plugin.
+session in a file named *MyMod.manifest* in your `Documents\My Games\Starfield\CreationKitAuditTool` directory.
+
+If you have an existing ACHLIST file for your plugin, you can initialize the manifest in the Creation Kit Audit Tool by using the
+`Import` button to merge the contents of the ACHLIST file into the plugin's manifest file.
+
+Once the manifest file has been created for a given plugin, the Creation Kit Audit Tool will use this manifest file to reload the audit
+log for that plugin the next time that the audit tool is used to monitor activity for that plugin.
+
+This manifest file is nothing more than a list of all the discovered files with one file per line.  One can create/edit a
+manifest file directly by hand if one wants to manually setup the initial audit log for a plugin.
 # Build Configuration
 One can download the project files from GitHub and build the tool locally if one so desires.  In order to do so
 one must first prepare their build environment as follows:
 1. Download and install [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/)
 2. Go into `Tools | Get Tools and Features ...` and ensure that you have the `Desktop development with C++` feature installed with the `C++/CLI support for v143 build tools` package included.  See the third-party video here for a walk-through: [Create your first C++ GUI WIndows Form using Visual Studio 2022](https://youtu.be/AINCOpXma6M?t=90)
-3. Go into `Git | Clone repository` to pull down the repo from GitHub
+3. Go into `Git | Clone repository` to pull down the repo from GitHub: `https://github.com/ebkarlson404/CreationKitAuditTool.git`
