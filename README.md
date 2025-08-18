@@ -58,26 +58,28 @@ the alternate XBox directory tree.
 1. Ensure that you have a properly deployed Starfield Creation Kit
 2. If you will be generating WEM files as part of your plugin work, ensure that you have setup the `Audio` configuration block as detailed above
 3. Start up the Creation Kit and load up your plugin
-4. Start up the Creation Kit Audit Tool and tell it which plugin you are working on.  If you have worked on this plugin with the Creation Kit Audit Tool before, the audit log for the plugin will be initialized from the previous run.  If this is the first time that you're using the Creation Kit Audit Tool for this plugin, you can load your old ACHLIST file to initialize the set of files to include.
-5. Click `Start` in the Creation Kit Audit Tool
-6. Go back to your Creation Kit and work on your plugin
-7. When you are ready to package the plugin, go back to the Creation Kit Audit Tool and click on the `Generate` button to create the two platform-specific ACHLIST files.  They will be created in your `Documents\My Games\Starfield\CreationKitAuditTool` directory.
-8. Go back to Creation Kit and use the `Archive` tool to pack your `BA2` files by importing the ACHLIST files that were stored in your `Documents\My Games\Starfield\CreationKitAuditTool` directory.
+4. Start up the Creation Kit Audit Tool and configure the `Starfield Installation Folder` (which is where your *starfield.exe* executable was installed, and the `XBOX WEM Folder` (which would be the `XBOX` folder under your starfield installation folder if you follow the instructions above for configuring the `[Audio]` settings in your *CreationKitCustom.ini* file.  Note that if you have configured these two items before, the previous setings will be auto-configured for you.
+5. Tell Creation Kit Audit Tool which plugin you are working on.  If you have worked on this plugin with the Creation Kit Audit Tool before, the audit log for the plugin will be initialized from the previous run.  If this is the first time that you're using the Creation Kit Audit Tool for this plugin, you can load your old ACHLIST file via the `Import` button to initialize the set of files to include.
+6. Click `Start` in the Creation Kit Audit Tool
+7. Go back to your Creation Kit and work on your plugin
+8. When you are ready to package the plugin, go back to the Creation Kit Audit Tool and click on the `Generate` button to create the two platform-specific ACHLIST files.  They will be created in your `Documents\My Games\Starfield\CreationKitAuditTool` directory.
+9. Go back to Creation Kit and use the `Archive` tool to pack your `BA2` files by importing the ACHLIST files that were stored in your `Documents\My Games\Starfield\CreationKitAuditTool` directory.
 
 You can suspend the audit processing at any time by clicking on the `Stop` button in the Creation Kit Audit Tool and then resume audit
 processing by clicking on `Start` again.
 
-Once the Creation Kit Audit Tool has been used for a given plugin, it will save the manifest of all files detected during the audit
-session in a file named *MyMod.manifest* in your `Documents\My Games\Starfield\CreationKitAuditTool` directory.
+If the audit tool has captured a file that should not be part of the distribution for your plugin, you can remove it from the audit
+log by right clicking on the file in the audit window and choosing the `Remove From Audit` action.  Note that a removed item
+can be rediscovered if it is modified later on while the audit tool is running.
 
-If you have an existing ACHLIST file for your plugin, you can initialize the manifest in the Creation Kit Audit Tool by using the
-`Import` button to merge the contents of the ACHLIST file into the plugin's manifest file.
+Once the Creation Kit Audit Tool has been used for a given plugin, it will save the manifest of all files detected during the audit
+session in a file named *MyMod.manifest* in your `Documents\My Games\Starfield\CreationKitAuditTool` directory. This manifest file is
+nothing more than a list of all the discovered files with one file per line.  One can create/edit a manifest file directly by hand
+if one wants to manually setup the initial audit log for a plugin.
 
 Once the manifest file has been created for a given plugin, the Creation Kit Audit Tool will use this manifest file to reload the audit
 log for that plugin the next time that the audit tool is used to monitor activity for that plugin.
 
-This manifest file is nothing more than a list of all the discovered files with one file per line.  One can create/edit a
-manifest file directly by hand if one wants to manually setup the initial audit log for a plugin.
 # Build Configuration
 One can download the project files from GitHub and build the tool locally if one so desires.  In order to do so
 one must first prepare their build environment as follows:
