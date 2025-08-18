@@ -924,7 +924,7 @@ namespace CreationKitAuditTool {
 			System::IO::FileStream^ fh = nullptr;
 			try {
 				fh = File::OpenRead(filename);
-				strings = (System::Array^)deser->ReadObject(fh);
+				strings = cli::safe_cast<System::Array^>(deser->ReadObject(fh));
 			}
 			finally {
 				if (nullptr != fh) {
@@ -1032,7 +1032,7 @@ namespace CreationKitAuditTool {
 	private: bool AuditFileAlreadyPresent(String^ relativeFilename) {
 		IEnumerator^ iter = auditListView->Items->GetEnumerator();
 		while (iter->MoveNext()) {
-			if (0 == String::Compare(relativeFilename, ((ListViewItem^)iter->Current)->Text, true)) {
+			if (0 == String::Compare(relativeFilename, (cli::safe_cast<ListViewItem^>(iter->Current))->Text, true)) {
 				return true;
 			}
 		}
