@@ -833,6 +833,13 @@ namespace CreationKitAuditTool {
 		}
 	}
 	private: System::Void pluginComboBox_TextChanged(System::Object^ sender, System::EventArgs^ e) {
+		// If the current value in the control is an empty string, this is
+		// an interim condition caused by reloading the choice list - ignore
+		String^ currentPlugin = pluginComboBox->Text;
+		if (currentPlugin->Length == 0) {
+			return;
+		}
+
 		// Clear the audit log unless we were not bound to a specific plugin before
 		bool preserveAudit = previousPlugInName->Equals(unboundPlugInName);
 		if (!preserveAudit) {
@@ -841,7 +848,7 @@ namespace CreationKitAuditTool {
 
 		// Toggle the state on the various buttons depending on whether we are
 		// now bound to a specific plugin
-		if (pluginComboBox->Text->Equals(unboundPlugInName)) {
+		if (currentPlugin->Equals(unboundPlugInName)) {
 			importButton->Enabled = false;
 			generateButton->Enabled = false;
 			addAuditFileButton->Enabled = false;
@@ -853,14 +860,14 @@ namespace CreationKitAuditTool {
 			importButton->Enabled = true;
 			addAuditFileButton->Enabled = true;
 			generateButton->Enabled = true;
-			LoadManifest(pluginComboBox->Text);
+			LoadManifest(currentPlugin);
 			if (preserveAudit) {
-				WriteManifest(pluginComboBox->Text);
+				WriteManifest(currentPlugin);
 			}
 		}
 
 		// Record the new plugin binding
-		previousPlugInName = pluginComboBox->Text;
+		previousPlugInName = currentPlugin;
 	}
 	private: System::Void auditListView_MouseClick(System::Object^ sender, System::Windows::Forms::MouseEventArgs^ e) {
 		if (e->Button == System::Windows::Forms::MouseButtons::Right)
