@@ -65,7 +65,7 @@ to generate the two, platform-specific, `BA2` archive files to distributed your 
 5. Tell Creation Kit Audit Tool which plugin you are working on.  If you have worked on this plugin with the Creation Kit Audit Tool before, the audit log for the plugin will be initialized from the previous run.  If this is the first time that you're using the Creation Kit Audit Tool for this plugin, you can load your old ACHLIST file via the `Import` button to initialize the set of files to include.
 6. Click `Start` in the Creation Kit Audit Tool
 7. Go back to your Creation Kit and work on your plugin
-8. When you are ready to package the plugin, go back to the Creation Kit Audit Tool and click on the `Generate` button to create the two platform-specific ACHLIST files.  They will be created in your `Documents\My Games\Starfield\CreationKitAuditTool` directory.
+8. When you are ready to package the plugin, go back to the Creation Kit Audit Tool and click on the `Generate` button to create the two platform-specific ACHLIST files.  They will be created in your `%USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool` directory.
 9. Go back to Creation Kit and use the `Archive` tool to pack your `BA2` files by importing the ACHLIST files that were stored in your `%USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool` directory.
 
 # Tips, Tricks and Notes
@@ -87,7 +87,7 @@ once as long as they are all in the same folder.  Note that there is a filtering
 file-picker that will allow one to restrict the set of files displayed, or use the `All (*.*)` choice to see all files.
 
 To remove a captured file from the audit log, right click on the errant file and then click on the `Remove From Audit`
-menu item.
+menu item.  Note that a removed item can be rediscovered if it is modified later on while the audit tool is running.
 
 One can also completely clear the audit log by clicking on the `Clear` button in the `Audit Control` group at the bottom of
 the window. This will pop up a confirmation window to remove all files from the audit log.
@@ -105,17 +105,16 @@ to add/remove file extensions from the filtering logic.  Note that any changes m
 `%USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool\CustomFilters.txt` file and will be automatically
 loaded everytime that one starts the Creation Kit Audit Tool.
 
-If the audit tool has captured a file that should not be part of the distribution for your plugin, you can remove it from the audit
-log by right clicking on the file in the audit window and choosing the `Remove From Audit` action.  Note that a removed item
-can be rediscovered if it is modified later on while the audit tool is running.
-
+## Plugin Manifest Files
 Once the Creation Kit Audit Tool has been used for a given plugin, it will save the manifest of all files detected during the audit
-session in a file named *MyMod.manifest* in your `Documents\My Games\Starfield\CreationKitAuditTool` directory. This manifest file is
-nothing more than a list of all the discovered files with one file per line.  One can create/edit a manifest file directly by hand
-if one wants to manually setup the initial audit log for a plugin.
+session in a file named *MyMod.manifest* in your `%USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool` directory. This
+manifest file is nothing more than a list of all the discovered files with one file per line.  One can create/edit a manifest file
+directly by hand if one wants to manually setup the initial audit log for a plugin.  Note that editing a manifest file for a given
+plugin while the Creation Kit Audit Tool is running an audit on that plugin will almost certainly result in the tool overwriting
+any manual changes made to the file.
 
-Once the manifest file has been created for a given plugin, the Creation Kit Audit Tool will use this manifest file to reload the audit
-log for that plugin the next time that the audit tool is used to monitor activity for that plugin.
+Once the manifest file has been created for a given plugin, the Creation Kit Audit Tool will use this manifest file to reload the
+audit log for that plugin the next time that the audit tool is used to monitor activity for that plugin.
 
 ## Autodiscovery of New Plugins
 The Creation Kit Audit Tool can be configured to capture altered/created files while waiting for one to create
