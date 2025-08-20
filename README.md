@@ -121,7 +121,7 @@ The Creation Kit Audit Tool can be configured to capture altered/created files w
 a new plugin in the Creation Kit.  To do so, choose the `<autodetect>` option in the `Plugin Name` dropdown and
 then click on the `Start` button to start the audit process.  The Creation Kit Audit Tool will capture files
 that are created in the Starfield Installation tree while it waits for a new *MyMod.ESP* file to show up in
-the Starfield Data folder.  When creates the new *MyMod.ESP* file via Creation Kit, the Creation Kit Audit Tool
+the Starfield Data folder.  When one creates the new *MyMod.ESP* file via Creation Kit, the Creation Kit Audit Tool
 will automatically add the new plugin to its list of registered plugins and initialize its manifest with the
 files that have been captured so far.
 
