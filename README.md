@@ -99,7 +99,7 @@ of the window.  This will pop up a file-picker dialog that will allow one to cho
 
 ## Customized Audit Filtering
 Not all files that are altered/created in the Starfield Installation tree should be distributed with one's plugin.  The
-Creation Kit Audit Tool comes pre-configured with a set of filters to ignore irrelevant files with by extension.  One
+Creation Kit Audit Tool comes pre-configured with a set of filters to ignore irrelevant files by extension.  One
 can customize this list of filters by clicking on `File | Audit Filters`.  This will bring up a dialog that allows one
 to add/remove file extensions from the filtering logic.  Note that any changes made here will be saved in a
 `%USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool\CustomFilters.txt` file and will be automatically
