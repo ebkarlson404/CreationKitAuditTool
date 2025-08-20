@@ -95,7 +95,7 @@ the window. This will pop up a confirmation window to remove all files from the 
 ## Importing existing ACHLIST files
 If you have a plugin that was created prior to using the Creation Kit Audit Tool, one can import the contents of
 one's old ACHLIST file into the plugin's audit log.  Use the `Import` button in the `Audit Control` group at the bottom
-of the window.  This will pop up a file-picker dialog that will allow 
+of the window.  This will pop up a file-picker dialog that will allow one to choose an existing ACHLIST file for importing.
 
 ## Customized Audit Filtering
 Not all files that are altered/created in the Starfield Installation tree should be distributed with one's plugin.  The
@@ -144,5 +144,5 @@ one must first prepare their build environment as follows:
 2. Go into `Tools | Get Tools and Features ...` and ensure that you have the `Desktop development with C++` feature installed with the `C++/CLI support for v143 build tools` package included.  See this third-party video for a walk-through: [Create your first C++ GUI WIndows Form using Visual Studio 2022](https://youtu.be/AINCOpXma6M?t=90)
 3. Go into `Git | Clone repository` to pull down the repo from GitHub: `https://github.com/ebkarlson404/CreationKitAuditTool.git`.
 
-Note that GitHub has a choice in the `<> Code` drop down () for `Open with Visual Studio` that will launch Visual Studio for you and automatically launch the cloning of the repo.
+Note that GitHub has a choice in the `<> Code` drop down for `Open with Visual Studio` that will launch Visual Studio for you and automatically launch the cloning of the repo.
 <img width="1383" height="804" alt="GitHubVisualStudio" src="https://github.com/user-attachments/assets/27d84db0-a8db-4987-b718-7d0bfdfff1a9" />
