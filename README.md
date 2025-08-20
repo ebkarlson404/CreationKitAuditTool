@@ -13,14 +13,14 @@ that audit log to generate suitable ACHLIST packing lists for the Creation Kit.
 One unfortunate design decision in Starfield and its Creation Kit is the directory naming scheme used for some files associated with
 a given plugin.  The naming scheme is to place some plugin-specific files in a directory whose name matches the name of the plugin file.
 Unforunately, the naming scheme *includes* the extension for the plugin file.  The issue this creates is that since Creation Kit
-works on plugin files whose names end with `.ESP`, it places the plugin-specific files in a directory named `MyMod.ESP`.  However,
+works on plugin files whose names end with `.ESP`, it places the plugin-specific files in a directory named *MyMod.ESP*.  However,
 when the plugin is published Creation Kit creates a plugin file with an extension of `.ESM` so when Starfield loads the `.ESM` plugin
-file, it will look for the plugin-specific files in a directory named `MyMod.ESM`, which does not exist.
+file, it will look for the plugin-specific files in a directory named *MyMod.ESM*, which does not exist.
 
-The Creation Kit Audit Tool will automatically detect when plugin files reside in a `MyMod.ESP` directory and will replicate those
-files into a corresponding `MyMod.ESM` directory to use for the generated ACHLIST packing list.  This will result in a
+The Creation Kit Audit Tool will automatically detect when plugin files reside in a *MyMod.ESP* directory and will replicate those
+files into a corresponding *MyMod.ESM* directory to use for the generated ACHLIST packing list.  This will result in a
 `BA2` file that is ready to ship with the resulting `.ESM` plugin file.
-## PC and XBox WEM Files
+## WWise Configuration: Streamlined Multi-Platform Distribution
 For some reason, the format of the audio WEM files is platform-specific.  So WEM files meant for a PC platform cannot be used on
 an XBox and vice versa.  This makes generation of cross-platform plugins tedious as the nominal configuration for the WWise
 audio toolkit that integrates into the Starfield Creation Kit is specific to one platform or the other.  This forces one to
@@ -47,12 +47,15 @@ ensure that the `Audio` settings are as follows:
 
 Then go to your Starfield Installation Folder and create a folder named `XBOX` and then within that folder a subfolder named `Data`.
 
-Once this is done, when one uses the `Audio | Process Local Voice WAVs` or `Audio | Build Soundbank for Active File` tool in Creation
+When one runs the Creation Kit Audit Tool, ensure that the XBox WEM Folder is set to the `XBOX` folder that you created inside your Starfield Installtion Folder.
+
+Now when one uses the `Audio | Process Local Voice WAVs` or `Audio | Build Soundbank for Active File` tool in Creation
 Kit to process `.WAV` files into `.WEM` files, it will create *both* the PC and XBox WEM files in a single pass, placing the XBox WEM
-files into the alternate directory paths specified in the `CreationKitCustom.ini` file above.  One can then configure that
-`XBox WEM Path` in the Creation Kit Audit Tool and when the tool generates the platform-specific ACHLIST packing lists, the PC
-ACHLIST file will pack the WEM files from the standard directory tree and the XBox ACHLIST file will pack the WEM files from
-the alternate XBox directory tree.
+files into the alternate directory paths specified in the `CreationKitCustom.ini` file above.  The Creation Kit Audit Tool
+will detect both files and add them to the audit log for the plugin.  When one uses the Creation Kit Audit Tool to generate
+the ACHLIST packing lists for the plugin, it will create two such lists - one for the PC platform that packs the PC WEM
+files, and one for the XBox platform that packs the XBox WEM files.  One can pull these ACHLIST files into Creation Kit
+to generate the two, platform-specific, `BA2` archive files to distributed your plugin to both platforms.
 
 # Quick Start Instructions
 1. Ensure that you have a properly deployed Starfield Creation Kit
@@ -63,10 +66,44 @@ the alternate XBox directory tree.
 6. Click `Start` in the Creation Kit Audit Tool
 7. Go back to your Creation Kit and work on your plugin
 8. When you are ready to package the plugin, go back to the Creation Kit Audit Tool and click on the `Generate` button to create the two platform-specific ACHLIST files.  They will be created in your `Documents\My Games\Starfield\CreationKitAuditTool` directory.
-9. Go back to Creation Kit and use the `Archive` tool to pack your `BA2` files by importing the ACHLIST files that were stored in your `Documents\My Games\Starfield\CreationKitAuditTool` directory.
+9. Go back to Creation Kit and use the `Archive` tool to pack your `BA2` files by importing the ACHLIST files that were stored in your `%USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool` directory.
 
+# Tips, Tricks and Notes
+## Audit Processing
 You can suspend the audit processing at any time by clicking on the `Stop` button in the Creation Kit Audit Tool and then resume audit
-processing by clicking on `Start` again.
+processing by clicking on `Start` again.  Note that clicking on the red or green `Status` button will toggle the audit processing.
+
+Altered/Created files are only detected while the audit process is running.  Suspending the audit process allows one to make changes
+inside the Starfield Installation tree without having those changes picked up by the Creation Kit Audit Tool.  Resuming the audit
+process will append newly discovered files to the existing audit log.
+
+## Manually Altering the Audit Log
+If one should decide that the audit log for a given plugin has missed some files that it should have, or captured some files
+that it should not have, one can manually alter the audit log.
+
+To add missing files to the audit log, use the `+` button to the right of the audit log list.  This will bring up a file-picker
+dialog which will allow one to select additional files to add to the audit log.  Note that one can select multiple files at
+once as long as they are all in the same folder.  Note that there is a filtering control in the lower right corner of the
+file-picker that will allow one to restrict the set of files displayed, or use the `All (*.*)` choice to see all files.
+
+To remove a captured file from the audit log, right click on the errant file and then click on the `Remove From Audit`
+menu item.
+
+One can also completely clear the audit log by clicking on the `Clear` button in the `Audit Control` group at the bottom of
+the window. This will pop up a confirmation window to remove all files from the audit log.
+
+## Importing existing ACHLIST files
+If you have a plugin that was created prior to using the Creation Kit Audit Tool, one can import the contents of
+one's old ACHLIST file into the plugin's audit log.  Use the `Import` button in the `Audit Control` group at the bottom
+of the window.  This will pop up a file-picker dialog that will allow 
+
+## Customized Audit Filtering
+Not all files that are altered/created in the Starfield Installation tree should be distributed with one's plugin.  The
+Creation Kit Audit Tool comes pre-configured with a set of filters to ignore irrelevant files with by extension.  One
+can customize this list of filters by clicking on `File | Audit Filters`.  This will bring up a dialog that allows one
+to add/remove file extensions from the filtering logic.  Note that any changes made here will be saved in a
+`%USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool\CustomFilters.txt` file and will be automatically
+loaded everytime that one starts the Creation Kit Audit Tool.
 
 If the audit tool has captured a file that should not be part of the distribution for your plugin, you can remove it from the audit
 log by right clicking on the file in the audit window and choosing the `Remove From Audit` action.  Note that a removed item
@@ -80,6 +117,23 @@ if one wants to manually setup the initial audit log for a plugin.
 Once the manifest file has been created for a given plugin, the Creation Kit Audit Tool will use this manifest file to reload the audit
 log for that plugin the next time that the audit tool is used to monitor activity for that plugin.
 
+## Autodiscovery of New Plugins
+The Creation Kit Audit Tool can be configured to capture altered/created files while waiting for one to create
+a new plugin in the Creation Kit.  To do so, choose the `<autodetect>` option in the `Plugin Name` dropdown and
+then click on the `Start` button to start the audit process.  The Creation Kit Audit Tool will capture files
+that are created in the Starfield Installation tree while it waits for a new *MyMod.ESP* file to show up in
+the Starfield Data folder.  When creates the new *MyMod.ESP* file via Creation Kit, the Creation Kit Audit Tool
+will automatically add the new plugin to its list of registered plugins and initialize its manifest with the
+files that have been captured so far.
+
+## %USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool
+This folder is created by the Creation Kit Audit Tool and is used to store persistent data used or generated
+by the tool:
+
+- *.manifest: These are the manifest files for all plugins known to the audit tool
+- *.achlist: These are the ACHLIST packing files generated by the audit tool
+- CustomFilters.txt: This holds the customized list of audit filters
+
 # Runtime Requirements
 The Creation Kit Audit Tool will run on Windows 10 or 11 using the .NET runtime version 4.7.2 or later.
 
@@ -87,5 +141,8 @@ The Creation Kit Audit Tool will run on Windows 10 or 11 using the .NET runtime 
 One can download the project files from GitHub and build the tool locally if one so desires.  In order to do so
 one must first prepare their build environment as follows:
 1. Download and install [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/)
-2. Go into `Tools | Get Tools and Features ...` and ensure that you have the `Desktop development with C++` feature installed with the `C++/CLI support for v143 build tools` package included.  See the third-party video here for a walk-through: [Create your first C++ GUI WIndows Form using Visual Studio 2022](https://youtu.be/AINCOpXma6M?t=90)
-3. Go into `Git | Clone repository` to pull down the repo from GitHub: `https://github.com/ebkarlson404/CreationKitAuditTool.git`
+2. Go into `Tools | Get Tools and Features ...` and ensure that you have the `Desktop development with C++` feature installed with the `C++/CLI support for v143 build tools` package included.  See this third-party video for a walk-through: [Create your first C++ GUI WIndows Form using Visual Studio 2022](https://youtu.be/AINCOpXma6M?t=90)
+3. Go into `Git | Clone repository` to pull down the repo from GitHub: `https://github.com/ebkarlson404/CreationKitAuditTool.git`.
+
+Note that GitHub has a choice in the `<> Code` drop down () for `Open with Visual Studio` that will launch Visual Studio for you and automatically launch the cloning of the repo.
+<img width="1383" height="804" alt="GitHubVisualStudio" src="https://github.com/user-attachments/assets/27d84db0-a8db-4987-b718-7d0bfdfff1a9" />
