@@ -642,8 +642,9 @@ namespace CreationKitAuditTool {
 			ListViewItem^ item = (ListViewItem^)iter->Current;
 			String^ filename = item->Text;
 			if (filename->StartsWith(xboxPrefix, StringComparison::InvariantCultureIgnoreCase)) {
+				filename = EspToEsmReplication(filename, espDirName, esmDirName);
 				hmap->Add(filename->Substring(xboxPrefix->Length)->ToUpper(), filename);
-				xbList->Add(EspToEsmReplication(filename, espDirName, esmDirName));
+				xbList->Add(filename);
 			}
 		}
 
