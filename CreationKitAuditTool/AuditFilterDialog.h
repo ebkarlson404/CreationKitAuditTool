@@ -79,9 +79,10 @@ namespace CreationKitAuditTool {
 			System::Windows::Forms::ListViewItem^ listViewItem2 = (gcnew System::Windows::Forms::ListViewItem(L".ba2"));
 			System::Windows::Forms::ListViewItem^ listViewItem3 = (gcnew System::Windows::Forms::ListViewItem(L".esm"));
 			System::Windows::Forms::ListViewItem^ listViewItem4 = (gcnew System::Windows::Forms::ListViewItem(L".esp"));
-			System::Windows::Forms::ListViewItem^ listViewItem5 = (gcnew System::Windows::Forms::ListViewItem(L".psc"));
-			System::Windows::Forms::ListViewItem^ listViewItem6 = (gcnew System::Windows::Forms::ListViewItem(L".tmp"));
-			System::Windows::Forms::ListViewItem^ listViewItem7 = (gcnew System::Windows::Forms::ListViewItem(L".wav"));
+			System::Windows::Forms::ListViewItem^ listViewItem5 = (gcnew System::Windows::Forms::ListViewItem(L".pas"));
+			System::Windows::Forms::ListViewItem^ listViewItem6 = (gcnew System::Windows::Forms::ListViewItem(L".psc"));
+			System::Windows::Forms::ListViewItem^ listViewItem7 = (gcnew System::Windows::Forms::ListViewItem(L".tmp"));
+			System::Windows::Forms::ListViewItem^ listViewItem8 = (gcnew System::Windows::Forms::ListViewItem(L".wav"));
 			this->auditFilterContextMenuStrip = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
 			this->toolStripRemoveMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->okButton = (gcnew System::Windows::Forms::Button());
@@ -144,9 +145,9 @@ namespace CreationKitAuditTool {
 			// 
 			this->auditFiltersListView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(1) { this->filterColumnHeader });
 			this->auditFiltersListView->HideSelection = false;
-			this->auditFiltersListView->Items->AddRange(gcnew cli::array< System::Windows::Forms::ListViewItem^  >(7) {
+			this->auditFiltersListView->Items->AddRange(gcnew cli::array< System::Windows::Forms::ListViewItem^  >(8) {
 				listViewItem1,
-					listViewItem2, listViewItem3, listViewItem4, listViewItem5, listViewItem6, listViewItem7
+					listViewItem2, listViewItem3, listViewItem4, listViewItem5, listViewItem6, listViewItem7, listViewItem8
 			});
 			this->auditFiltersListView->Location = System::Drawing::Point(17, 62);
 			this->auditFiltersListView->MultiSelect = false;

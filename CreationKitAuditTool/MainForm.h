@@ -1,5 +1,6 @@
 #pragma once
 #include "AuditFilterDialog.h"
+#include "FileType.h"
 
 namespace CreationKitAuditTool {
 
@@ -60,6 +61,7 @@ namespace CreationKitAuditTool {
 				delete components;
 			}
 		}
+
 	private: System::IO::FileSystemWatcher^ fileSystemWatcher;
 	protected: bool running = false;
 	protected: String^ starfieldPrefix;
@@ -921,7 +923,7 @@ namespace CreationKitAuditTool {
 				// Skip and report any files not within the Starfield or XBox Data folders.
 				// Skip and report any file that resides within a plugin folder
 				// that is not related to the current plugin.
-				if (!IsNormalFile(filename)) {
+				if (NORMAL_FILE != ClassifyFile(filename)) {
 					// Silent ignore
 				}
 				else if (!FileResidesWithinEitherDataFolder(filename)) {
@@ -970,9 +972,9 @@ namespace CreationKitAuditTool {
 			if (IsESPFile(e->FullPath) && IsAutodetectMode()) {
 				AutoBindPlugin(e->FullPath);
 			}
-			else if (ShouldLog(e->FullPath, false)) {
+			else if (ShouldLog(e->FullPath)) {
 				String^ rpath = RelativePath(e->FullPath);
-				if (nullptr == auditListView->FindItemWithText(rpath)) {
+				if (nullptr == FindItem(auditListView, rpath)) {
 					auditListView->Items->Add(gcnew ListViewItem(rpath));
 					WriteManifest(pluginComboBox->Text);
 				}
@@ -981,8 +983,9 @@ namespace CreationKitAuditTool {
 	}
 	private: System::Void fileSystemWatcher_Deleted(System::Object^ sender, System::IO::FileSystemEventArgs^ e) {
 		if (running) {
-			if (ShouldLog(e->FullPath, true)) {
-				auditListView->Items->Remove(auditListView->FindItemWithText(RelativePath(e->FullPath)));
+			ListViewItem^ item = FindItem(auditListView, RelativePath(e->FullPath));
+			if (nullptr != item) {
+				auditListView->Items->Remove(item);
 				WriteManifest(pluginComboBox->Text);
 			}
 		}
@@ -991,9 +994,9 @@ namespace CreationKitAuditTool {
 		if (running) {
 			if (IsESPFile(e->FullPath) && IsAutodetectMode()) {
 				AutoBindPlugin(e->FullPath);
-			} else if (ShouldLog(e->FullPath, false)) {
+			} else if (ShouldLog(e->FullPath)) {
 				String^ rpath = RelativePath(e->FullPath);
-				if (nullptr == auditListView->FindItemWithText(rpath)) {
+				if (nullptr == FindItem(auditListView, rpath)) {
 					auditListView->Items->Add(gcnew ListViewItem(rpath));
 					WriteManifest(pluginComboBox->Text);
 				}
@@ -1002,13 +1005,14 @@ namespace CreationKitAuditTool {
 	}
 	private: System::Void fileSystemWatcher_Renamed(System::Object^ sender, System::IO::RenamedEventArgs^ e) {
 		if (running) {
-			if (ShouldLog(e->OldFullPath, true)) {
-				auditListView->Items->Remove(auditListView->FindItemWithText(RelativePath(e->OldFullPath)));
+			ListViewItem^ item = FindItem(auditListView, RelativePath(e->OldFullPath));
+			if (nullptr != item) {
+				auditListView->Items->Remove(item);
 				WriteManifest(pluginComboBox->Text);
 			}
-			if (ShouldLog(e->FullPath, false)) {
+			if (ShouldLog(e->FullPath)) {
 				String^ rpath = RelativePath(e->FullPath);
-				if (nullptr == auditListView->FindItemWithText(rpath)) {
+				if (nullptr == FindItem(auditListView, rpath)) {
 					auditListView->Items->Add(gcnew ListViewItem(rpath));
 					WriteManifest(pluginComboBox->Text);
 				}
@@ -1018,6 +1022,12 @@ namespace CreationKitAuditTool {
 	//
 	// Utility functions
 	//
+	private: ListViewItem^ FindItem(ListView^ listview, String^ text) {
+		if (listview->Items->Count == 0) {
+			return nullptr;
+		}
+		return listview->FindItemWithText(text, true, 0, false);
+	}
 	private: System::Void AutoBindPlugin(String^ fullname) {
 		// Extract the base plugin name
 		String^ plugin = fullname->Substring(starfieldDataPrefix->Length,
@@ -1090,19 +1100,34 @@ namespace CreationKitAuditTool {
 		}
 		return strings;
 	}
-	private: bool IsNormalFile(String^ fullname) {
+	private: FileType ClassifyFile(String^ fullname) {
 		FileAttributes attr;
 		try {
-			FileAttributes attr = File::GetAttributes(fullname);
+			attr = File::GetAttributes(fullname);
+		}
+		catch (FileNotFoundException^) {
+			return DELETED;
+		}
+		catch(DirectoryNotFoundException^) {
+			return DELETED;
 		}
 		catch (System::Exception^) {
 			// Assume that the file was deleted.
-			return false;
+			return UNKNOWN;
 		}
-		return !attr.HasFlag(FileAttributes::Directory) &&
-			!attr.HasFlag(FileAttributes::Hidden) &&
-			!attr.HasFlag(FileAttributes::System) &&
-			!attr.HasFlag(FileAttributes::Temporary);
+		if (attr.HasFlag(FileAttributes::Directory)) {
+			return DIRECTORY;
+		}
+		if (attr.HasFlag(FileAttributes::System)) {
+			return SYSTEM_FILE;
+		}
+		if (attr.HasFlag(FileAttributes::Hidden)) {
+			return HIDDEN_FILE;
+		}
+		if (attr.HasFlag(FileAttributes::Temporary)) {
+			return TEMPORARY_FILE;
+		}
+		return NORMAL_FILE;
 	}
 	private: bool FileRelatedToPlugIn(String^ fullname, String^ plugin) {
 		// Force the filename to upper case as there is no case-insensitive version
@@ -1126,11 +1151,9 @@ namespace CreationKitAuditTool {
 		// or it is not specific to any given plugin
 		return true;
 	}
-	private: bool ShouldLog(String^ fullName, bool isDelete) {
-		if (!isDelete) {
-			if (!IsNormalFile(fullName)) {
-				return false;
-			}
+	private: bool ShouldLog(String^ fullName) {
+		if (NORMAL_FILE != ClassifyFile(fullName)) {
+			return false;
 		}
 
 		// Ignore any file not under the Starfield Data or Starfield XBox folders
@@ -1146,9 +1169,11 @@ namespace CreationKitAuditTool {
 			}
 		}
 
-		// Also the TEMP.WEM files that are generated by WWise.
+		// Also the WISE.DAT & TEMP.WEM files that are generated by WWise.
 		// And anything inside of Starfield's Data\Backup folder.
-		if (HasSuffix(L"\\TEMP.WEM", fullName) || HasPrefixPath(starfieldBackupPrefix, fullName)) {
+		if (HasSuffix(L"\\TEMP.WEM", fullName) || 
+			HasSuffix(L"\\WISE.DAT", fullName) ||
+			HasPrefixPath(starfieldBackupPrefix, fullName)) {
 			return false;
 		}
 
