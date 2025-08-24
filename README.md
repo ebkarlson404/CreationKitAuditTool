@@ -125,6 +125,20 @@ the Starfield Data folder.  When one creates the new *MyMod.ESP* file via Creati
 will automatically add the new plugin to its list of registered plugins and initialize its manifest with the
 files that have been captured so far.
 
+## Continuous Replication
+Normally files are not replicated from *ESP* directories to *ESM* directories until one clicks on the `Generate`
+button to regenerate the ACHLIST files.  This means that the contents of the *ESM* directories can become stale
+with respect to their *ESP* counterpoints.  Continuous Replication will perform this replication immediately with
+every file-change notification that is received by the audit tool, thereby keeping the *ESM* directories
+synchronized to their corresponding *ESP* directories in real time.  This can be useful if one has some other
+tool or process that requires fully synchronized *ESM* directories.
+
+Note that the *ESP* to *ESM* replication will still happen when one clicks on the `Generate` button irrespective
+of whether one has enabled the Continuous Replication feature.
+
+Note that Continuous Replication only takes place while the audit process is running.  If one pauses the audit
+process, Continuous Replication will also be paused until the audit process is resumed.
+
 ## %USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool
 This folder is created by the Creation Kit Audit Tool and is used to store persistent data used or generated
 by the tool:
