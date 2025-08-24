@@ -697,7 +697,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			ListViewItem^ item = (ListViewItem^)iter->Current;
 			String^ filename = item->Text;
 			if (filename->StartsWith(xboxPrefix, StringComparison::InvariantCultureIgnoreCase)) {
-				filename = EspToEsmReplication(filename);
+				filename = EspToEsmReplication(filename, false);
 				hmap->Add(filename->Substring(xboxPrefix->Length)->ToUpper(), filename);
 				xbList->Add(filename);
 			}
@@ -713,7 +713,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			// We've already processed the XBox WEM files, so skip them this time
 			if (!filename->StartsWith(xboxPrefix, StringComparison::InvariantCultureIgnoreCase)) {
 				// Replicate the file to the ESM directory if required
-				filename = EspToEsmReplication(filename);
+				filename = EspToEsmReplication(filename, false);
 
 				// All files at this point are PC files
 				pcList->Add(filename);
@@ -1011,7 +1011,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			L"Generates platform-specific ACHLIST files for packaging PC and XBox WEM files.\n\n" +
 			L"Generated ACHLIST files are stored in one's >Documents\\My Games\\Starfield\\CreationKitAuditTool< folder.\n\n" +
 			L"GitHub: " + githubUrl + L"\n\n" +
-			L"Version 1.1.0\n\n" +
+			L"Version 1.1.1\n\n" +
 			L"Copyright 2025, Eric Karlson\n\n" +
 			L"Distrbuted under the terms of the Apache License version 2.0, January 2004",
 			L"Creation Kit Audit Log Help",
@@ -1106,7 +1106,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 	private: System::Void fileSystemWatcher_Changed(System::Object^ sender, System::IO::FileSystemEventArgs^ e) {
 		if (running) {
 			if (replicationCheckBox->Checked) {
-				MaybeReplicateFile(e->FullPath);
+				MaybeReplicateFile(e->FullPath, false);
 			}
 			if (IsESPFile(e->FullPath) && IsAutodetectMode()) {
 				AutoBindPlugin(e->FullPath);
@@ -1135,7 +1135,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 	private: System::Void fileSystemWatcher_Created(System::Object^ sender, System::IO::FileSystemEventArgs^ e) {
 		if (running) {
 			if (replicationCheckBox->Checked) {
-				MaybeReplicateFile(e->FullPath);
+				MaybeReplicateFile(e->FullPath, true);
 			}
 			if (IsESPFile(e->FullPath) && IsAutodetectMode()) {
 				AutoBindPlugin(e->FullPath);
@@ -1152,7 +1152,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 		if (running) {
 			if (replicationCheckBox->Checked) {
 				MaybeDeleteReplica(e->OldFullPath);
-				MaybeReplicateFile(e->FullPath);
+				MaybeReplicateFile(e->FullPath, false);
 			}
 			ListViewItem^ item = FindListViewItem(auditListView, GetRelativeName(e->OldFullPath));
 			if (nullptr != item) {
@@ -1512,9 +1512,9 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 		}
 		return filename->Substring(0, pos) + esmDirName + filename->Substring(pos + espDirName->Length);
 	}
-	private: System::Void MaybeReplicateFile(String^ fullname) {
+	private: System::Void MaybeReplicateFile(String^ fullname, bool ignoreIOException) {
 		if (ShouldLog(fullname)) {
-			EspToEsmReplication(GetRelativeName(fullname));
+			EspToEsmReplication(GetRelativeName(fullname), ignoreIOException);
 		}
 	}
 	private: System::Void MaybeDeleteReplica(String^ fullname) {
@@ -1538,7 +1538,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			}
 		}
 	}
-	private: String^ EspToEsmReplication(String^ espRelativeName) {
+	private: String^ EspToEsmReplication(String^ espRelativeName, bool ignoreIOException) {
 		String^ esmRelativeName = EspToEsmNameTransform(espRelativeName);
 		if (nullptr == esmRelativeName) {
 			return espRelativeName;
@@ -1547,6 +1547,20 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 		try {
 			Directory::CreateDirectory(esmDirectory);
 			File::Copy(starfieldPrefix + espRelativeName, starfieldPrefix + esmRelativeName, true);
+		}
+		catch (IOException^ e) {
+			if (!ignoreIOException) {
+				MessageBox::Show(this,
+					L"Error while replicating " +
+					starfieldPrefix + espRelativeName +
+					L" to " +
+					starfieldPrefix + esmRelativeName +
+					L": " +
+					e->Message,
+					L"ESP to ESM Replication Failure",
+					MessageBoxButtons::OK,
+					MessageBoxIcon::Error);
+			}
 		}
 		catch (Exception^ e) {
 			MessageBox::Show(this,
