@@ -798,6 +798,14 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			return;
 		}
 
+		// If the form is being resized to something less than its minimum values
+		// this means that it is being minimized to the task bar.  Do nothing
+		// in such a case.
+		if (this->Height < this->MinimumSize.Height ||
+			this->Width < this->MinimumSize.Width) {
+			return;
+		}
+
 		// Compute the change in the form's size
 		int deltaHeight = this->Height - lastHeight;
 		int deltaWidth = this->Width - lastWidth;
