@@ -42,9 +42,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\..\..\..\Documents\AllEye.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="AllEye.ico">
       <Filter>Resource Files</Filter>
     </Image>
