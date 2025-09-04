@@ -178,6 +178,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->auditFiltersToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->helpToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->auditProcessAndFilteringToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->continuousReplicationToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->wWiseConfigurationToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->gitHubToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
@@ -191,7 +192,6 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->findPluginDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->importAchlistDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->addFileToAuditDialog = (gcnew System::Windows::Forms::OpenFileDialog());
-			this->auditProcessAndFilteringToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pluginEnumerator))->BeginInit();
 			this->auditGroupBox->SuspendLayout();
@@ -467,6 +467,13 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->helpToolStripMenuItem->Size = System::Drawing::Size(74, 34);
 			this->helpToolStripMenuItem->Text = L"Help";
 			// 
+			// auditProcessAndFilteringToolStripMenuItem
+			// 
+			this->auditProcessAndFilteringToolStripMenuItem->Name = L"auditProcessAndFilteringToolStripMenuItem";
+			this->auditProcessAndFilteringToolStripMenuItem->Size = System::Drawing::Size(378, 40);
+			this->auditProcessAndFilteringToolStripMenuItem->Text = L"Audit Process and Filtering";
+			this->auditProcessAndFilteringToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::auditProcessAndFilteringToolStripMenuItem_Click);
+			// 
 			// continuousReplicationToolStripMenuItem
 			// 
 			this->continuousReplicationToolStripMenuItem->Name = L"continuousReplicationToolStripMenuItem";
@@ -568,13 +575,6 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->addFileToAuditDialog->ReadOnlyChecked = true;
 			this->addFileToAuditDialog->Title = L"Select a File to add to the Audit Log";
 			// 
-			// auditProcessAndFilteringToolStripMenuItem
-			// 
-			this->auditProcessAndFilteringToolStripMenuItem->Name = L"auditProcessAndFilteringToolStripMenuItem";
-			this->auditProcessAndFilteringToolStripMenuItem->Size = System::Drawing::Size(378, 40);
-			this->auditProcessAndFilteringToolStripMenuItem->Text = L"Audit Process and Filtering";
-			this->auditProcessAndFilteringToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::auditProcessAndFilteringToolStripMenuItem_Click);
-			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(11, 24);
@@ -595,6 +595,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->Controls->Add(this->starfieldFolderTextBox);
 			this->Controls->Add(this->label1);
 			this->Controls->Add(this->menuStrip1);
+			this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 			this->MainMenuStrip = this->menuStrip1;
 			this->MinimumSize = System::Drawing::Size(1050, 880);
 			this->Name = L"MainForm";
@@ -1019,7 +1020,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			L"Generates platform-specific ACHLIST files for packaging PC and XBox WEM files.\n\n" +
 			L"Generated ACHLIST files are stored in one's >Documents\\My Games\\Starfield\\CreationKitAuditTool< folder.\n\n" +
 			L"GitHub: " + githubUrl + L"\n\n" +
-			L"Version 1.1.2\n\n" +
+			L"Version 1.1.3\n\n" +
 			L"Copyright 2025, Eric Karlson\n\n" +
 			L"Distrbuted under the terms of the Apache License version 2.0, January 2004",
 			L"Creation Kit Audit Log Help",

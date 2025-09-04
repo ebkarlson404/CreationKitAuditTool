@@ -224,7 +224,7 @@ namespace CreationKitAuditTool {
 		MoveControl(newFilterTextBox, 0, deltaHeight);
 		MoveControl(newFilterLabel, 0, deltaHeight);
 		newFilterTextBox->Width += deltaWidth;
-		MoveControl(addFilterButton, 0, deltaHeight);
+		MoveControl(addFilterButton, deltaWidth, deltaHeight);
 		MoveControl(okButton, deltaWidth, deltaHeight);
 
 		lastHeight = this->Height;
