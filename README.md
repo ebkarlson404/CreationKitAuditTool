@@ -69,6 +69,26 @@ to generate the two, platform-specific, `BA2` archive files to distributed your 
 9. Go back to Creation Kit and use the `Archive` tool to pack your `BA2` files by importing the ACHLIST files that were stored in your `%USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool` directory.
 
 # Tips, Tricks and Notes
+## Background Operation in the System Tray
+Since the Creation Kit Audit Tool is meant to run in the background while one uses the Creation Kit, closing or minimizing the application
+does not actually terminate the tool.  Instead, closing or minimizing the audit tool will hide the tool's UI while it continues
+to run in the System Tray.  This makes it less likely that one would accidentally terminate the audit tool while using the Creation
+Kit and thereby missing audit logs.  This is the same behavior exhibited by the *AssetWatcher* tool that comes with the Creation
+Kit so it should be familiar to most experienced users of the Creation Kit.
+
+Once the UI for the Creation Kit Audit Tool has been hidden, one can make the UI visibile again by finding the icon for the audit
+tool in the System Tray and then either left-clicking on it, or right-clicking on it and then clicking on the `Show UI` menu item.
+
+If one wants to actually terminate the Creation Kit Audit Tool one must go into the System Tray, right click on the audit tool's icon
+and choose the `Exit` option.
+
+Note that hovering over the audit tool's icon in the System Tray will tell one whether the tool is currently collecting audit logs
+or whether the audit process has been paused.
+
+The following image shows where one can find the System Tray and its icons on a Windows 11 system.
+
+<img width="2559" height="1599" alt="NotifyIcon" src="https://github.com/user-attachments/assets/b1899fde-7896-4f0f-b15d-98f5aac76bb7" />
+
 ## Audit Processing
 You can suspend the audit processing at any time by clicking on the `Stop` button in the Creation Kit Audit Tool and then resume audit
 processing by clicking on `Start` again.  Note that clicking on the red or green `Status` button will toggle the audit processing.
