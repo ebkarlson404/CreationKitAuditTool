@@ -140,6 +140,8 @@ private: System::Windows::Forms::NotifyIcon^ notifyIcon;
 private: System::Windows::Forms::ContextMenuStrip^ notifyContextMenuStrip;
 private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripShowItem;
 private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
+private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripResumeItem;
+private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 
 
 	private: System::ComponentModel::IContainer^ components;
@@ -202,6 +204,8 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 			this->notifyIcon = (gcnew System::Windows::Forms::NotifyIcon(this->components));
 			this->notifyContextMenuStrip = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
 			this->notifyToolStripShowItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->notifyToolStripResumeItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->notifyToolStripPauseItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->notifyToolStripExitItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pluginEnumerator))->BeginInit();
@@ -455,7 +459,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 			// auditFiltersToolStripMenuItem
 			// 
 			this->auditFiltersToolStripMenuItem->Name = L"auditFiltersToolStripMenuItem";
-			this->auditFiltersToolStripMenuItem->Size = System::Drawing::Size(315, 40);
+			this->auditFiltersToolStripMenuItem->Size = System::Drawing::Size(241, 40);
 			this->auditFiltersToolStripMenuItem->Text = L"&Audit Filters";
 			this->auditFiltersToolStripMenuItem->ToolTipText = L"File extensions excluded from discovery in the audit log";
 			this->auditFiltersToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::auditFiltersToolStripMenuItem_Click);
@@ -464,7 +468,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 			// 
 			this->exitToolStripMenuItem->Name = L"exitToolStripMenuItem";
 			this->exitToolStripMenuItem->ShortcutKeys = static_cast<System::Windows::Forms::Keys>((System::Windows::Forms::Keys::Alt | System::Windows::Forms::Keys::F4));
-			this->exitToolStripMenuItem->Size = System::Drawing::Size(315, 40);
+			this->exitToolStripMenuItem->Size = System::Drawing::Size(241, 40);
 			this->exitToolStripMenuItem->Text = L"E&xit";
 			this->exitToolStripMenuItem->ToolTipText = L"Exit the Creation Kit Audit Tool";
 			this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::exitToolStripMenuItem_Click);
@@ -598,12 +602,12 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 			// notifyContextMenuStrip
 			// 
 			this->notifyContextMenuStrip->ImageScalingSize = System::Drawing::Size(28, 28);
-			this->notifyContextMenuStrip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
+			this->notifyContextMenuStrip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(4) {
 				this->notifyToolStripShowItem,
-					this->notifyToolStripExitItem
+					this->notifyToolStripResumeItem, this->notifyToolStripPauseItem, this->notifyToolStripExitItem
 			});
 			this->notifyContextMenuStrip->Name = L"notifyContextMenuStrip";
-			this->notifyContextMenuStrip->Size = System::Drawing::Size(163, 76);
+			this->notifyContextMenuStrip->Size = System::Drawing::Size(163, 148);
 			// 
 			// notifyToolStripShowItem
 			// 
@@ -611,6 +615,21 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 			this->notifyToolStripShowItem->Size = System::Drawing::Size(162, 36);
 			this->notifyToolStripShowItem->Text = L"&Show UI";
 			this->notifyToolStripShowItem->Click += gcnew System::EventHandler(this, &MainForm::notifyToolStripShowItem_Click);
+			// 
+			// notifyToolStripResumeItem
+			// 
+			this->notifyToolStripResumeItem->Name = L"notifyToolStripResumeItem";
+			this->notifyToolStripResumeItem->Size = System::Drawing::Size(162, 36);
+			this->notifyToolStripResumeItem->Text = L"&Resume";
+			this->notifyToolStripResumeItem->Click += gcnew System::EventHandler(this, &MainForm::notifyToolStripResumeItem_Click);
+			// 
+			// notifyToolStripPauseItem
+			// 
+			this->notifyToolStripPauseItem->Enabled = false;
+			this->notifyToolStripPauseItem->Name = L"notifyToolStripPauseItem";
+			this->notifyToolStripPauseItem->Size = System::Drawing::Size(162, 36);
+			this->notifyToolStripPauseItem->Text = L"&Pause";
+			this->notifyToolStripPauseItem->Click += gcnew System::EventHandler(this, &MainForm::notifyToolStripPauseItem_Click);
 			// 
 			// notifyToolStripExitItem
 			// 
@@ -681,6 +700,12 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 	private: System::Void notifyToolStripShowItem_Click(System::Object^ sender, System::EventArgs^ e) {
 		this->Show();
 	}
+	private: System::Void notifyToolStripResumeItem_Click(System::Object^ sender, System::EventArgs^ e) {
+		startButton_Click(sender, e);
+	}
+	private: System::Void notifyToolStripPauseItem_Click(System::Object^ sender, System::EventArgs^ e) {
+		stopButton_Click(sender, e);
+	}
 	private: System::Void notifyToolStripExitItem_Click(System::Object^ sender, System::EventArgs^ e) {
 		this->notificationExit = true;
 		this->Close();
@@ -729,8 +754,10 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 			replicationCheckBox->Checked = ReadBooleanSetting(registryNameContinuousReplication, false);
 			replicationCheckBox->Enabled = true;
 		}
-		notifyIcon->Text = "Creation Kit Audit Tool - running";
+		notifyToolStripPauseItem->Enabled = true;
+		notifyToolStripResumeItem->Enabled = false;
 		running = true;
+		UpdateNotifyIcon();
 	}
 	private: System::Void stopButton_Click(System::Object^ sender, System::EventArgs^ e) {
 		statusButton->BackColor = statusPausedColor;
@@ -744,8 +771,10 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 		newPluginButton->Enabled = true;
 		replicationCheckBox->Enabled = false;
 		replicationCheckBox->Checked = false;
-		notifyIcon->Text = "Creation Kit Audit Tool - paused";
+		notifyToolStripPauseItem->Enabled = false;
+		notifyToolStripResumeItem->Enabled = true;
 		running = false;
+		UpdateNotifyIcon();
 	}
     private: System::Void statusButton_Click(System::Object^ sender, System::EventArgs^ e) {
 		// Toggle the run state
@@ -1014,6 +1043,9 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 			}
 		}
 
+		// Update the text on the Notify Icon
+		UpdateNotifyIcon();
+
 		// Record the new plugin binding
 		previousPlugInName = newPlugin;
 	}
@@ -1092,7 +1124,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 			L"Generates platform-specific ACHLIST files for packaging PC and XBox WEM files.\n\n" +
 			L"Generated ACHLIST files are stored in one's >Documents\\My Games\\Starfield\\CreationKitAuditTool< folder.\n\n" +
 			L"GitHub: " + githubUrl + L"\n\n" +
-			L"Version 1.2.0\n\n" +
+			L"Version 1.3.0\n\n" +
 			L"Copyright 2025, Eric Karlson\n\n" +
 			L"Distrbuted under the terms of the Apache License version 2.0, January 2004",
 			L"Creation Kit Audit Log Help",
@@ -1250,6 +1282,21 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 	//
 	// Utility functions
 	//
+    private: System::Void UpdateNotifyIcon() {
+		// Had to remove this logic as the text for a NotifyIcon is limited to 64 characters
+		/*
+		String^ line1 = "Creation Kit Audit Tool";
+		String^ line2 = "[" + pluginComboBox->Text + "]";
+		String^ line3 = running ? "<running>" : "<paused>";
+		int maxLength = System::Math::Max(line1->Length, System::Math::Max(line2->Length, line3->Length));
+		notifyIcon->Text = line1->PadLeft(line1->Length + (maxLength - line1->Length) / 2) +
+			"\n" +
+			line2->PadLeft(line2->Length + (maxLength - line2->Length) / 2) +
+			"\n" +
+			line3->PadLeft(line3->Length + (maxLength - line3->Length) / 2);
+		*/
+		notifyIcon->Text = "Creation Kit Audit Tool - " + (running ? "running" : "paused");
+    }
 	private: ListViewItem^ FindListViewItem(ListView^ listview, String^ text, bool prefixSearch) {
 		return (listview->Items->Count == 0) ?
 			nullptr :
@@ -1377,6 +1424,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 		return NORMAL_FILE;
 	}
 	private: System::Void HandleDirectoryDeletion(String^ fullname) {
+		/*
 		// Unlike with files, we will immediately remove the corresponding
 		// ESM directory when an ESP directory is removed because there
 		// is no way to notice the directory deletion later on.
@@ -1390,6 +1438,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 			item = FindListViewItem(auditListView, pathname, true);
 		}
 		WriteManifest(pluginComboBox->Text);
+		*/
 	}
 	private: System::Void HandleFileDeletion(String^ fullname) {
 		if (replicationCheckBox->Checked) {
@@ -1541,8 +1590,8 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 		if (nullptr == value) {
 			return defaultValue;
 		}
-		UInt32 zeroValue = 0;
-		return (value == nullptr) ? defaultValue : 0 != zeroValue.CompareTo(value);
+		Int32 zeroValue = 0;
+		return (value == nullptr) ? defaultValue : !value->Equals(zeroValue);
 	}
 	private: bool RegisterPlugInIfNeeded(String^ plugin) {
 		String^ manifestFile = userGameFolder + L"\\" + plugin + manifestFileExt;
