@@ -64,6 +64,7 @@ namespace CreationKitAuditTool {
 
 	private: System::IO::FileSystemWatcher^ fileSystemWatcher;
 	protected: bool running = false;
+	protected: bool notificationExit = false;
 	protected: String^ starfieldPrefix;
 	protected: String^ starfieldDataFolder;
 	protected: String^ starfieldDataPrefix;
@@ -105,11 +106,13 @@ namespace CreationKitAuditTool {
 
 
 	private: System::Windows::Forms::Button^ stopButton;
-	private: System::Windows::Forms::Button^ quitButton;
+	private: System::Windows::Forms::Button^ hideButton;
+
 	private: System::Windows::Forms::Button^ xboxWEMButton;
 	private: System::Windows::Forms::Button^ importButton;
 	private: System::Windows::Forms::ColumnHeader^ columnHeader1;
-	private: System::Windows::Forms::MenuStrip^ menuStrip1;
+	private: System::Windows::Forms::MenuStrip^ mainMenuStrip;
+
 	private: System::Windows::Forms::ToolStripMenuItem^ fileToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^ helpToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^ exitToolStripMenuItem;
@@ -133,6 +136,10 @@ namespace CreationKitAuditTool {
 private: System::Windows::Forms::ToolStripMenuItem^ continuousReplicationToolStripMenuItem;
 private: System::Windows::Forms::ToolStripMenuItem^ wWiseConfigurationToolStripMenuItem;
 private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringToolStripMenuItem;
+private: System::Windows::Forms::NotifyIcon^ notifyIcon;
+private: System::Windows::Forms::ContextMenuStrip^ notifyContextMenuStrip;
+private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripShowItem;
+private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 
 
 	private: System::ComponentModel::IContainer^ components;
@@ -171,9 +178,9 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->startButton = (gcnew System::Windows::Forms::Button());
 			this->importButton = (gcnew System::Windows::Forms::Button());
 			this->stopButton = (gcnew System::Windows::Forms::Button());
-			this->quitButton = (gcnew System::Windows::Forms::Button());
+			this->hideButton = (gcnew System::Windows::Forms::Button());
 			this->xboxWEMButton = (gcnew System::Windows::Forms::Button());
-			this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
+			this->mainMenuStrip = (gcnew System::Windows::Forms::MenuStrip());
 			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->auditFiltersToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
@@ -192,11 +199,16 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->findPluginDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->importAchlistDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->addFileToAuditDialog = (gcnew System::Windows::Forms::OpenFileDialog());
+			this->notifyIcon = (gcnew System::Windows::Forms::NotifyIcon(this->components));
+			this->notifyContextMenuStrip = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
+			this->notifyToolStripShowItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->notifyToolStripExitItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pluginEnumerator))->BeginInit();
 			this->auditGroupBox->SuspendLayout();
-			this->menuStrip1->SuspendLayout();
+			this->mainMenuStrip->SuspendLayout();
 			this->auditContextMenuStrip->SuspendLayout();
+			this->notifyContextMenuStrip->SuspendLayout();
 			this->SuspendLayout();
 			// 
 			// fileSystemWatcher
@@ -352,7 +364,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->clearButton->Name = L"clearButton";
 			this->clearButton->Size = System::Drawing::Size(157, 48);
 			this->clearButton->TabIndex = 5;
-			this->clearButton->Text = L"Clear";
+			this->clearButton->Text = L"C&lear";
 			this->toolTip->SetToolTip(this->clearButton, L"Merge the contents of an existing ACHLIST file into this PlugIn\'s audit log");
 			this->clearButton->UseVisualStyleBackColor = true;
 			this->clearButton->Click += gcnew System::EventHandler(this, &MainForm::clearButton_Click);
@@ -364,7 +376,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->startButton->Name = L"startButton";
 			this->startButton->Size = System::Drawing::Size(157, 48);
 			this->startButton->TabIndex = 1;
-			this->startButton->Text = L"Start";
+			this->startButton->Text = L"&Start";
 			this->toolTip->SetToolTip(this->startButton, L"Start/Resume the audit behavior for this PlugIn");
 			this->startButton->UseVisualStyleBackColor = true;
 			this->startButton->Click += gcnew System::EventHandler(this, &MainForm::startButton_Click);
@@ -376,7 +388,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->importButton->Name = L"importButton";
 			this->importButton->Size = System::Drawing::Size(157, 48);
 			this->importButton->TabIndex = 4;
-			this->importButton->Text = L"Import";
+			this->importButton->Text = L"&Import";
 			this->toolTip->SetToolTip(this->importButton, L"Merge the contents of an existing ACHLIST file into this PlugIn\'s audit log");
 			this->importButton->UseVisualStyleBackColor = true;
 			this->importButton->Click += gcnew System::EventHandler(this, &MainForm::importButton_Click);
@@ -388,21 +400,21 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->stopButton->Name = L"stopButton";
 			this->stopButton->Size = System::Drawing::Size(157, 48);
 			this->stopButton->TabIndex = 2;
-			this->stopButton->Text = L"Stop";
+			this->stopButton->Text = L"&Stop";
 			this->toolTip->SetToolTip(this->stopButton, L"Stop/Pause the audit behavior for this PlugIn");
 			this->stopButton->UseVisualStyleBackColor = true;
 			this->stopButton->Click += gcnew System::EventHandler(this, &MainForm::stopButton_Click);
 			// 
-			// quitButton
+			// hideButton
 			// 
-			this->quitButton->Location = System::Drawing::Point(775, 733);
-			this->quitButton->Name = L"quitButton";
-			this->quitButton->Size = System::Drawing::Size(157, 48);
-			this->quitButton->TabIndex = 13;
-			this->quitButton->Text = L"Quit";
-			this->toolTip->SetToolTip(this->quitButton, L"Exit the Audit Tool");
-			this->quitButton->UseVisualStyleBackColor = true;
-			this->quitButton->Click += gcnew System::EventHandler(this, &MainForm::quitButton_Click);
+			this->hideButton->Location = System::Drawing::Point(775, 733);
+			this->hideButton->Name = L"hideButton";
+			this->hideButton->Size = System::Drawing::Size(157, 48);
+			this->hideButton->TabIndex = 13;
+			this->hideButton->Text = L"Hide";
+			this->toolTip->SetToolTip(this->hideButton, L"Hide the UI - tool still runs in the notification area");
+			this->hideButton->UseVisualStyleBackColor = true;
+			this->hideButton->Click += gcnew System::EventHandler(this, &MainForm::hideButton_Click);
 			// 
 			// xboxWEMButton
 			// 
@@ -416,19 +428,19 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->xboxWEMButton->UseVisualStyleBackColor = true;
 			this->xboxWEMButton->Click += gcnew System::EventHandler(this, &MainForm::xboxWEMButton_Click);
 			// 
-			// menuStrip1
+			// mainMenuStrip
 			// 
-			this->menuStrip1->GripMargin = System::Windows::Forms::Padding(2, 2, 0, 2);
-			this->menuStrip1->ImageScalingSize = System::Drawing::Size(28, 28);
-			this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
+			this->mainMenuStrip->GripMargin = System::Windows::Forms::Padding(2, 2, 0, 2);
+			this->mainMenuStrip->ImageScalingSize = System::Drawing::Size(28, 28);
+			this->mainMenuStrip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
 				this->fileToolStripMenuItem,
 					this->helpToolStripMenuItem
 			});
-			this->menuStrip1->Location = System::Drawing::Point(0, 0);
-			this->menuStrip1->Name = L"menuStrip1";
-			this->menuStrip1->Size = System::Drawing::Size(1026, 38);
-			this->menuStrip1->TabIndex = 12;
-			this->menuStrip1->Text = L"menuStrip1";
+			this->mainMenuStrip->Location = System::Drawing::Point(0, 0);
+			this->mainMenuStrip->Name = L"mainMenuStrip";
+			this->mainMenuStrip->Size = System::Drawing::Size(1026, 38);
+			this->mainMenuStrip->TabIndex = 12;
+			this->mainMenuStrip->Text = L"menuStrip1";
 			// 
 			// fileToolStripMenuItem
 			// 
@@ -438,13 +450,13 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			});
 			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
 			this->fileToolStripMenuItem->Size = System::Drawing::Size(62, 34);
-			this->fileToolStripMenuItem->Text = L"File";
+			this->fileToolStripMenuItem->Text = L"&File";
 			// 
 			// auditFiltersToolStripMenuItem
 			// 
 			this->auditFiltersToolStripMenuItem->Name = L"auditFiltersToolStripMenuItem";
-			this->auditFiltersToolStripMenuItem->Size = System::Drawing::Size(241, 40);
-			this->auditFiltersToolStripMenuItem->Text = L"Audit Filters";
+			this->auditFiltersToolStripMenuItem->Size = System::Drawing::Size(315, 40);
+			this->auditFiltersToolStripMenuItem->Text = L"&Audit Filters";
 			this->auditFiltersToolStripMenuItem->ToolTipText = L"File extensions excluded from discovery in the audit log";
 			this->auditFiltersToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::auditFiltersToolStripMenuItem_Click);
 			// 
@@ -452,8 +464,8 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			// 
 			this->exitToolStripMenuItem->Name = L"exitToolStripMenuItem";
 			this->exitToolStripMenuItem->ShortcutKeys = static_cast<System::Windows::Forms::Keys>((System::Windows::Forms::Keys::Alt | System::Windows::Forms::Keys::F4));
-			this->exitToolStripMenuItem->Size = System::Drawing::Size(241, 40);
-			this->exitToolStripMenuItem->Text = L"Exit";
+			this->exitToolStripMenuItem->Size = System::Drawing::Size(315, 40);
+			this->exitToolStripMenuItem->Text = L"E&xit";
 			this->exitToolStripMenuItem->ToolTipText = L"Exit the Creation Kit Audit Tool";
 			this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::exitToolStripMenuItem_Click);
 			// 
@@ -465,34 +477,34 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			});
 			this->helpToolStripMenuItem->Name = L"helpToolStripMenuItem";
 			this->helpToolStripMenuItem->Size = System::Drawing::Size(74, 34);
-			this->helpToolStripMenuItem->Text = L"Help";
+			this->helpToolStripMenuItem->Text = L"&Help";
 			// 
 			// auditProcessAndFilteringToolStripMenuItem
 			// 
 			this->auditProcessAndFilteringToolStripMenuItem->Name = L"auditProcessAndFilteringToolStripMenuItem";
 			this->auditProcessAndFilteringToolStripMenuItem->Size = System::Drawing::Size(378, 40);
-			this->auditProcessAndFilteringToolStripMenuItem->Text = L"Audit Process and Filtering";
+			this->auditProcessAndFilteringToolStripMenuItem->Text = L"A&udit Process and Filtering";
 			this->auditProcessAndFilteringToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::auditProcessAndFilteringToolStripMenuItem_Click);
 			// 
 			// continuousReplicationToolStripMenuItem
 			// 
 			this->continuousReplicationToolStripMenuItem->Name = L"continuousReplicationToolStripMenuItem";
 			this->continuousReplicationToolStripMenuItem->Size = System::Drawing::Size(378, 40);
-			this->continuousReplicationToolStripMenuItem->Text = L"Continuous Replication";
+			this->continuousReplicationToolStripMenuItem->Text = L"&Continuous Replication";
 			this->continuousReplicationToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::continuousReplicationToolStripMenuItem_Click);
 			// 
 			// wWiseConfigurationToolStripMenuItem
 			// 
 			this->wWiseConfigurationToolStripMenuItem->Name = L"wWiseConfigurationToolStripMenuItem";
 			this->wWiseConfigurationToolStripMenuItem->Size = System::Drawing::Size(378, 40);
-			this->wWiseConfigurationToolStripMenuItem->Text = L"WWise Configuration";
+			this->wWiseConfigurationToolStripMenuItem->Text = L"&WWise Configuration";
 			this->wWiseConfigurationToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::wWiseConfigurationToolStripMenuItem_Click);
 			// 
 			// gitHubToolStripMenuItem
 			// 
 			this->gitHubToolStripMenuItem->Name = L"gitHubToolStripMenuItem";
 			this->gitHubToolStripMenuItem->Size = System::Drawing::Size(378, 40);
-			this->gitHubToolStripMenuItem->Text = L"GitHub";
+			this->gitHubToolStripMenuItem->Text = L"&GitHub";
 			this->gitHubToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::gitHubToolStripMenuItem_Click);
 			// 
 			// aboutToolStripMenuItem
@@ -500,7 +512,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->aboutToolStripMenuItem->Name = L"aboutToolStripMenuItem";
 			this->aboutToolStripMenuItem->ShortcutKeys = static_cast<System::Windows::Forms::Keys>((System::Windows::Forms::Keys::Control | System::Windows::Forms::Keys::F1));
 			this->aboutToolStripMenuItem->Size = System::Drawing::Size(378, 40);
-			this->aboutToolStripMenuItem->Text = L"About";
+			this->aboutToolStripMenuItem->Text = L"&About";
 			this->aboutToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::aboutToolStripMenuItem_Click);
 			// 
 			// auditContextMenuStrip
@@ -548,7 +560,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->generateButton->Name = L"generateButton";
 			this->generateButton->Size = System::Drawing::Size(157, 48);
 			this->generateButton->TabIndex = 12;
-			this->generateButton->Text = L"Generate";
+			this->generateButton->Text = L"&Generate";
 			this->toolTip->SetToolTip(this->generateButton, L"Replicates files from *.ESP folders to *.ESM folders and then generate the PC and"
 				L" XBox ACHLIST files from the current audit log");
 			this->generateButton->UseVisualStyleBackColor = true;
@@ -575,6 +587,38 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->addFileToAuditDialog->ReadOnlyChecked = true;
 			this->addFileToAuditDialog->Title = L"Select a File to add to the Audit Log";
 			// 
+			// notifyIcon
+			// 
+			this->notifyIcon->ContextMenuStrip = this->notifyContextMenuStrip;
+			this->notifyIcon->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"notifyIcon.Icon")));
+			this->notifyIcon->Text = L"Creation Kit Audit Tool - paused";
+			this->notifyIcon->Visible = true;
+			this->notifyIcon->MouseClick += gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::notifyIcon_MouseClick);
+			// 
+			// notifyContextMenuStrip
+			// 
+			this->notifyContextMenuStrip->ImageScalingSize = System::Drawing::Size(28, 28);
+			this->notifyContextMenuStrip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
+				this->notifyToolStripShowItem,
+					this->notifyToolStripExitItem
+			});
+			this->notifyContextMenuStrip->Name = L"notifyContextMenuStrip";
+			this->notifyContextMenuStrip->Size = System::Drawing::Size(163, 76);
+			// 
+			// notifyToolStripShowItem
+			// 
+			this->notifyToolStripShowItem->Name = L"notifyToolStripShowItem";
+			this->notifyToolStripShowItem->Size = System::Drawing::Size(162, 36);
+			this->notifyToolStripShowItem->Text = L"&Show UI";
+			this->notifyToolStripShowItem->Click += gcnew System::EventHandler(this, &MainForm::notifyToolStripShowItem_Click);
+			// 
+			// notifyToolStripExitItem
+			// 
+			this->notifyToolStripExitItem->Name = L"notifyToolStripExitItem";
+			this->notifyToolStripExitItem->Size = System::Drawing::Size(162, 36);
+			this->notifyToolStripExitItem->Text = L"E&xit";
+			this->notifyToolStripExitItem->Click += gcnew System::EventHandler(this, &MainForm::notifyToolStripExitItem_Click);
+			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(11, 24);
@@ -584,7 +628,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->Controls->Add(this->addAuditFileButton);
 			this->Controls->Add(this->newPluginButton);
 			this->Controls->Add(this->xboxWEMButton);
-			this->Controls->Add(this->quitButton);
+			this->Controls->Add(this->hideButton);
 			this->Controls->Add(this->auditGroupBox);
 			this->Controls->Add(this->auditListView);
 			this->Controls->Add(this->pluginComboBox);
@@ -594,20 +638,23 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			this->Controls->Add(this->starfieldFolderButton);
 			this->Controls->Add(this->starfieldFolderTextBox);
 			this->Controls->Add(this->label1);
-			this->Controls->Add(this->menuStrip1);
+			this->Controls->Add(this->mainMenuStrip);
 			this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
-			this->MainMenuStrip = this->menuStrip1;
+			this->MainMenuStrip = this->mainMenuStrip;
 			this->MinimumSize = System::Drawing::Size(1050, 880);
 			this->Name = L"MainForm";
 			this->Text = L"Starfield Creation Kit Audit Tool";
+			this->FormClosing += gcnew System::Windows::Forms::FormClosingEventHandler(this, &MainForm::MainForm_FormClosing);
 			this->Layout += gcnew System::Windows::Forms::LayoutEventHandler(this, &MainForm::MainForm_Layout);
+			this->Resize += gcnew System::EventHandler(this, &MainForm::MainForm_Resize);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher))->EndInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pluginEnumerator))->EndInit();
 			this->auditGroupBox->ResumeLayout(false);
 			this->auditGroupBox->PerformLayout();
-			this->menuStrip1->ResumeLayout(false);
-			this->menuStrip1->PerformLayout();
+			this->mainMenuStrip->ResumeLayout(false);
+			this->mainMenuStrip->PerformLayout();
 			this->auditContextMenuStrip->ResumeLayout(false);
+			this->notifyContextMenuStrip->ResumeLayout(false);
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
@@ -616,6 +663,28 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 	//
 	// Event handlers for the various controls
 	//
+	private: System::Void MainForm_FormClosing(System::Object^ sender, System::Windows::Forms::FormClosingEventArgs^ e) {
+		// Only close the application if one chooses the 'Exit' option from the
+		// context menu on the notification icon.
+		if (!notificationExit) {
+			this->Hide();
+			e->Cancel = true;
+		}
+	}
+	private: System::Void notifyIcon_MouseClick(System::Object^ sender, System::Windows::Forms::MouseEventArgs^ e) {
+		// On a left-click, show the UI
+		// On a right-click, show the context menu
+		if (System::Windows::Forms::MouseButtons::Left == e->Button) {
+			this->Show();
+		}
+	}
+	private: System::Void notifyToolStripShowItem_Click(System::Object^ sender, System::EventArgs^ e) {
+		this->Show();
+	}
+	private: System::Void notifyToolStripExitItem_Click(System::Object^ sender, System::EventArgs^ e) {
+		this->notificationExit = true;
+		this->Close();
+	}
 	private: System::Void starfieldFolderButton_Click(System::Object^ sender, System::EventArgs^ e) {
 		folderBrowser->Description = "Select the Starfield Installation Folder";
 		folderBrowser->SelectedPath = starfieldFolderTextBox->Text;
@@ -660,6 +729,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			replicationCheckBox->Checked = ReadBooleanSetting(registryNameContinuousReplication, false);
 			replicationCheckBox->Enabled = true;
 		}
+		notifyIcon->Text = "Creation Kit Audit Tool - running";
 		running = true;
 	}
 	private: System::Void stopButton_Click(System::Object^ sender, System::EventArgs^ e) {
@@ -674,6 +744,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 		newPluginButton->Enabled = true;
 		replicationCheckBox->Enabled = false;
 		replicationCheckBox->Checked = false;
+		notifyIcon->Text = "Creation Kit Audit Tool - paused";
 		running = false;
 	}
     private: System::Void statusButton_Click(System::Object^ sender, System::EventArgs^ e) {
@@ -746,8 +817,8 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			MessageBoxIcon::Information);
 
 	}
-	private: System::Void quitButton_Click(System::Object^ sender, System::EventArgs^ e) {
-		this->Close();
+	private: System::Void hideButton_Click(System::Object^ sender, System::EventArgs^ e) {
+		this->Hide();
 	}
 	private: System::Void replicationCheckBox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
 		if (replicationCheckBox->Enabled) {
@@ -793,17 +864,18 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			WriteManifest(pluginComboBox->Text);
 		}
 	}
+	private: System::Void MainForm_Resize(System::Object^ sender, System::EventArgs^ e) {
+		if (this->WindowState == FormWindowState::Minimized) {
+			this->Hide();
+		}
+	}
 	private: System::Void MainForm_Layout(System::Object^ sender, System::Windows::Forms::LayoutEventArgs^ e) {
-		// If the last height/width are not yet initialized, do nothing
 		if (0 > lastHeight || 0 > lastWidth) {
 			return;
 		}
 
-		// If the form is being resized to something less than its minimum values
-		// this means that it is being minimized to the task bar.  Do nothing
-		// in such a case.
-		if (this->Height < this->MinimumSize.Height ||
-			this->Width < this->MinimumSize.Width) {
+		// If we are minimizing the window, do not change the layout
+		if (this->WindowState == FormWindowState::Minimized) {
 			return;
 		}
 
@@ -821,7 +893,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			MoveControl(auditGroupBox, 0, deltaHeight);
 			MoveControl(newPluginButton, deltaWidth, 0);
 			MoveControl(generateButton, deltaWidth, deltaHeight);
-			MoveControl(quitButton, deltaWidth, deltaHeight);
+			MoveControl(hideButton, deltaWidth, deltaHeight);
 			MoveControl(starfieldFolderButton, deltaWidth, 0);
 			MoveControl(xboxWEMButton, deltaWidth, 0);
 			addAuditFileButton->Left += deltaWidth;
@@ -998,9 +1070,9 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			L"One can provide a suitable configuration for WWise by ensuring that the [Audio] " +
 			L"section of the CreationKitCustom.ini file " +
 			L"has the following settings:\n\n[Audio]\nbProcessAudioForPC = 1\nbProcessAudioForXB = 1\n" +
-			L"sPathToVoiceOutputPC =\nsPathToVoiceOutputXB = XBOX\Data\Sound\Voice\n" +
-			L"sPathToSoundBankOutputPC =\nsPathToSoundBankOutputXB = XBOX\Data\Sound\SoundBanks\n" +
-			L"bLogWwiseConversationOutput = 1\nsPathToWwiseProj = Tools\wwise\Starfield\Starfield.wproj\n\n" +
+			L"sPathToVoiceOutputPC =\nsPathToVoiceOutputXB = XBOX\\Data\\Sound\\Voice\n" +
+			L"sPathToSoundBankOutputPC =\nsPathToSoundBankOutputXB = XBOX\\Data\\Sound\\SoundBanks\n" +
+			L"bLogWwiseConversationOutput = 1\nsPathToWwiseProj = Tools\\wwise\\Starfield\\Starfield.wproj\n\n" +
 			L"Once WWise has been configured, one should configure the 'XBox WEM Folder' property " +
 			L"of the audit tool to point at the root of the XBox Alternate folder.  Using the " +
 			L"WWise configuration shown above, this would be your Starfield Installation folder " +
@@ -1020,7 +1092,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			L"Generates platform-specific ACHLIST files for packaging PC and XBox WEM files.\n\n" +
 			L"Generated ACHLIST files are stored in one's >Documents\\My Games\\Starfield\\CreationKitAuditTool< folder.\n\n" +
 			L"GitHub: " + githubUrl + L"\n\n" +
-			L"Version 1.1.4\n\n" +
+			L"Version 1.2.0\n\n" +
 			L"Copyright 2025, Eric Karlson\n\n" +
 			L"Distrbuted under the terms of the Apache License version 2.0, January 2004",
 			L"Creation Kit Audit Log Help",
@@ -1122,7 +1194,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			}
 			else if (ShouldLog(e->FullPath)) {
 				String^ rpath = GetRelativeName(e->FullPath);
-				if (nullptr == FindListViewItem(auditListView, rpath)) {
+				if (nullptr == FindListViewItem(auditListView, rpath, false)) {
 					auditListView->Items->Add(gcnew ListViewItem(rpath));
 					WriteManifest(pluginComboBox->Text);
 				}
@@ -1131,13 +1203,11 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 	}
 	private: System::Void fileSystemWatcher_Deleted(System::Object^ sender, System::IO::FileSystemEventArgs^ e) {
 		if (running) {
-			if (replicationCheckBox->Checked) {
-				MaybeDeleteReplica(e->FullPath);
+			if (DIRECTORY == ClassifyFile(e->FullPath)) {
+				HandleDirectoryDeletion(e->FullPath);
 			}
-			ListViewItem^ item = FindListViewItem(auditListView, GetRelativeName(e->FullPath));
-			if (nullptr != item) {
-				auditListView->Items->Remove(item);
-				WriteManifest(pluginComboBox->Text);
+			else {
+				HandleFileDeletion(e->FullPath);
 			}
 		}
 	}
@@ -1150,7 +1220,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 				AutoBindPlugin(e->FullPath);
 			} else if (ShouldLog(e->FullPath)) {
 				String^ rpath = GetRelativeName(e->FullPath);
-				if (nullptr == FindListViewItem(auditListView, rpath)) {
+				if (nullptr == FindListViewItem(auditListView, rpath, false)) {
 					auditListView->Items->Add(gcnew ListViewItem(rpath));
 					WriteManifest(pluginComboBox->Text);
 				}
@@ -1163,14 +1233,14 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 				MaybeDeleteReplica(e->OldFullPath);
 				MaybeReplicateFile(e->FullPath, false);
 			}
-			ListViewItem^ item = FindListViewItem(auditListView, GetRelativeName(e->OldFullPath));
+			ListViewItem^ item = FindListViewItem(auditListView, GetRelativeName(e->OldFullPath), false);
 			if (nullptr != item) {
 				auditListView->Items->Remove(item);
 				WriteManifest(pluginComboBox->Text);
 			}
 			if (ShouldLog(e->FullPath)) {
 				String^ rpath = GetRelativeName(e->FullPath);
-				if (nullptr == FindListViewItem(auditListView, rpath)) {
+				if (nullptr == FindListViewItem(auditListView, rpath, false)) {
 					auditListView->Items->Add(gcnew ListViewItem(rpath));
 					WriteManifest(pluginComboBox->Text);
 				}
@@ -1180,10 +1250,10 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 	//
 	// Utility functions
 	//
-	private: ListViewItem^ FindListViewItem(ListView^ listview, String^ text) {
+	private: ListViewItem^ FindListViewItem(ListView^ listview, String^ text, bool prefixSearch) {
 		return (listview->Items->Count == 0) ?
 			nullptr :
-			listview->FindItemWithText(text, true, 0, false);
+			listview->FindItemWithText(text, true, 0, prefixSearch);
 	}
 	private: System::Void AutoBindPlugin(String^ fullname) {
 		// Extract the base plugin name
@@ -1305,6 +1375,31 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 			return TEMPORARY_FILE;
 		}
 		return NORMAL_FILE;
+	}
+	private: System::Void HandleDirectoryDeletion(String^ fullname) {
+		// Unlike with files, we will immediately remove the corresponding
+		// ESM directory when an ESP directory is removed because there
+		// is no way to notice the directory deletion later on.
+		MaybeDeleteReplica(fullname);
+
+		// Now remove all audit logs whose directory matches the one being deleted
+		String^ pathname = GetRelativeName(fullname);
+		ListViewItem^ item = FindListViewItem(auditListView, pathname, true);
+		while (nullptr != item) {
+			auditListView->Items->Remove(item);
+			item = FindListViewItem(auditListView, pathname, true);
+		}
+		WriteManifest(pluginComboBox->Text);
+	}
+	private: System::Void HandleFileDeletion(String^ fullname) {
+		if (replicationCheckBox->Checked) {
+			MaybeDeleteReplica(fullname);
+		}
+		ListViewItem^ item = FindListViewItem(auditListView, GetRelativeName(fullname), false);
+		if (nullptr != item) {
+			auditListView->Items->Remove(item);
+			WriteManifest(pluginComboBox->Text);
+		}
 	}
 	private: bool FileRelatedToPlugIn(String^ fullname, String^ plugin) {
 		// Force the filename to upper case as there is no case-insensitive version
@@ -1443,7 +1538,11 @@ private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringTool
 		catch (Exception^) {
 			// Ignore
 		}
-		return (value == nullptr) ? defaultValue : !value->Equals(0);
+		if (nullptr == value) {
+			return defaultValue;
+		}
+		UInt32 zeroValue = 0;
+		return (value == nullptr) ? defaultValue : 0 != zeroValue.CompareTo(value);
 	}
 	private: bool RegisterPlugInIfNeeded(String^ plugin) {
 		String^ manifestFile = userGameFolder + L"\\" + plugin + manifestFileExt;
