@@ -56,7 +56,13 @@ will detect both files and add them to the audit log for the plugin.  When one u
 the ACHLIST packing lists for the plugin, it will create two such lists - one for the PC platform that packs the PC WEM
 files, and one for the XBox platform that packs the XBox WEM files.  One can pull these ACHLIST files into Creation Kit
 to generate the two, platform-specific, `BA2` archive files to distributed your plugin to both platforms.
-
+## Dovetails with AssetWatcher for multi-platform Texture Files
+If one configures the *AssetWatcher* tool that comes with Creation Kit to place the XBox versions of one's texture files into the
+same `Starfield\XBox\Data` folder used by the WWise configuration above, then the Creation Kit Audit Tool will also track
+the XBox versions of one's texture files in the same way that it tracks the XBox verbsions of one's WEM files and generate
+appropriate ACHLIST packing lists for both XBox and PC.  The PC ACHLIST file will draw the WEM and DDS files from the standard
+`Starfield\Data` folder while the XBox ACHLIST file will draw the WEM and DDS files from the alternate `Starfield\XBox\Data`
+folder.
 # Quick Start Instructions
 1. Ensure that you have a properly deployed Starfield Creation Kit
 2. If you will be generating WEM files as part of your plugin work, ensure that you have setup the `Audio` configuration block as detailed above
