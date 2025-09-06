@@ -59,7 +59,7 @@ to generate the two, platform-specific, `BA2` archive files to distributed your 
 ## Dovetails with AssetWatcher for multi-platform Texture Files
 If one configures the *AssetWatcher* tool that comes with Creation Kit to place the XBox versions of one's texture files into the
 same `Starfield\XBox\Data` folder used by the WWise configuration above, then the Creation Kit Audit Tool will also track
-the XBox versions of one's texture files in the same way that it tracks the XBox verbsions of one's WEM files and generate
+the XBox versions of one's texture files in the same way that it tracks the XBox versions of one's WEM files and generate
 appropriate ACHLIST packing lists for both XBox and PC.  The PC ACHLIST file will draw the WEM and DDS files from the standard
 `Starfield\Data` folder while the XBox ACHLIST file will draw the WEM and DDS files from the alternate `Starfield\XBox\Data`
 folder.
