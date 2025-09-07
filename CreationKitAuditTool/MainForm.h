@@ -23,9 +23,7 @@ namespace CreationKitAuditTool {
 		MainForm(void)
 		{
 			InitializeComponent();
-			//
-			//TODO: Add the constructor code here
-			//
+
 			// Record initial window size
 			lastHeight = this->Height;
 			lastWidth = this->Width;
@@ -39,6 +37,12 @@ namespace CreationKitAuditTool {
 			if (nullptr != value && xboxRootFolderTextBox->Enabled) {
 				xboxRootFolderTextBox->Text = cli::safe_cast<String^>(value);
 			}
+
+			// Compute name of the Windows recycle bin
+			// Ideally we should use something like GetFolderPath to find this path, except that
+			// it doesn't include support for the Recycle Bin folder.  So I am hard-coding the
+			// standard Windows naming scheme here until I can find an API to look it up.
+			recycleBin = L"$RECYCLE.BIN\\" + System::Security::Principal::WindowsIdentity::GetCurrent()->User->Value;
 
 			// Generate the name of the folder that Creation Kit Audit Tool will
 			// use for storing manifests and generated ARCHLIST files
@@ -65,11 +69,13 @@ namespace CreationKitAuditTool {
 	private: System::IO::FileSystemWatcher^ fileSystemWatcher;
 	protected: bool running = false;
 	protected: bool notificationExit = false;
+	protected: String^ recycleBin;
 	protected: String^ starfieldPrefix;
 	protected: String^ starfieldDataFolder;
 	protected: String^ starfieldDataPrefix;
 	protected: String^ starfieldBackupPrefix;
 	protected: String^ starfieldXBoxDataFolder;
+	protected: String^ starfieldXBoxRelativePrefix;
 	protected: String^ starfieldXBoxDataPrefix;
 	protected: String^ espDirName = nullptr;
 	protected: String^ esmDirName = nullptr;
@@ -260,9 +266,9 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 			this->label2->AutoSize = true;
 			this->label2->Location = System::Drawing::Point(40, 102);
 			this->label2->Name = L"label2";
-			this->label2->Size = System::Drawing::Size(184, 25);
+			this->label2->Size = System::Drawing::Size(174, 25);
 			this->label2->TabIndex = 3;
-			this->label2->Text = L"XBOX WEM Folder";
+			this->label2->Text = L"XBOX Root Folder";
 			// 
 			// xboxRootFolderTextBox
 			// 
@@ -428,7 +434,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 			this->xboxWEMButton->Size = System::Drawing::Size(47, 39);
 			this->xboxWEMButton->TabIndex = 5;
 			this->xboxWEMButton->Text = L"...";
-			this->toolTip->SetToolTip(this->xboxWEMButton, L"Select the root of the XBox WEM Folder");
+			this->toolTip->SetToolTip(this->xboxWEMButton, L"Select the root of the XBox Alternate Path");
 			this->xboxWEMButton->UseVisualStyleBackColor = true;
 			this->xboxWEMButton->Click += gcnew System::EventHandler(this, &MainForm::xboxWEMButton_Click);
 			// 
@@ -442,7 +448,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 			});
 			this->mainMenuStrip->Location = System::Drawing::Point(0, 0);
 			this->mainMenuStrip->Name = L"mainMenuStrip";
-			this->mainMenuStrip->Size = System::Drawing::Size(1026, 38);
+			this->mainMenuStrip->Size = System::Drawing::Size(1026, 42);
 			this->mainMenuStrip->TabIndex = 12;
 			this->mainMenuStrip->Text = L"menuStrip1";
 			// 
@@ -453,7 +459,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 					this->exitToolStripMenuItem
 			});
 			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
-			this->fileToolStripMenuItem->Size = System::Drawing::Size(62, 34);
+			this->fileToolStripMenuItem->Size = System::Drawing::Size(62, 38);
 			this->fileToolStripMenuItem->Text = L"&File";
 			// 
 			// auditFiltersToolStripMenuItem
@@ -480,7 +486,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 					this->continuousReplicationToolStripMenuItem, this->wWiseConfigurationToolStripMenuItem, this->gitHubToolStripMenuItem, this->aboutToolStripMenuItem
 			});
 			this->helpToolStripMenuItem->Name = L"helpToolStripMenuItem";
-			this->helpToolStripMenuItem->Size = System::Drawing::Size(74, 34);
+			this->helpToolStripMenuItem->Size = System::Drawing::Size(74, 38);
 			this->helpToolStripMenuItem->Text = L"&Help";
 			// 
 			// auditProcessAndFilteringToolStripMenuItem
@@ -786,7 +792,6 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 		}
     }
 	private: System::Void generateButton_Click(System::Object^ sender, System::EventArgs^ e) {
-		String^ xboxPrefix = L"Data\\.." + xboxRootFolderTextBox->Text->Substring(starfieldFolderTextBox->Text->Length) + L"\\";
 		Hashtable^ hmap = gcnew Hashtable();
 		ArrayList^ xbList = gcnew ArrayList;
 		ArrayList^ pcList = gcnew ArrayList;
@@ -796,11 +801,11 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 		IEnumerator^ iter = auditListView->Items->GetEnumerator();
 		while (iter->MoveNext()) {
 			ListViewItem^ item = (ListViewItem^)iter->Current;
-			String^ filename = item->Text;
-			if (filename->StartsWith(xboxPrefix, StringComparison::InvariantCultureIgnoreCase)) {
-				filename = EspToEsmReplication(filename, false);
-				hmap->Add(filename->Substring(xboxPrefix->Length)->ToUpper(), filename);
-				xbList->Add(filename);
+			String^ relativeName = item->Text;
+			if (relativeName->StartsWith(starfieldXBoxRelativePrefix, StringComparison::InvariantCultureIgnoreCase)) {
+				relativeName = EspToEsmReplication(relativeName, false);
+				hmap->Add(relativeName->Substring(starfieldXBoxRelativePrefix->Length)->ToUpper(), relativeName);
+				xbList->Add(relativeName);
 			}
 		}
 
@@ -809,26 +814,27 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 		iter = auditListView->Items->GetEnumerator();
 		while (iter->MoveNext()) {
 			ListViewItem^ item = (ListViewItem^)iter->Current;
-			String^ filename = item->Text;
+			String^ relativeName = item->Text;
 
 			// We've already processed the XBox WEM files, so skip them this time
-			if (!filename->StartsWith(xboxPrefix, StringComparison::InvariantCultureIgnoreCase)) {
+			if (!relativeName->StartsWith(starfieldXBoxRelativePrefix, StringComparison::InvariantCultureIgnoreCase)) {
 				// Replicate the file to the ESM directory if required
-				filename = EspToEsmReplication(filename, false);
+				relativeName = EspToEsmReplication(relativeName, false);
 
 				// All files at this point are PC files
-				pcList->Add(filename);
+				pcList->Add(relativeName);
 
 				// If this is not a PC WEM file, add it to the XBox list as well
-				if (!hmap->ContainsKey(filename->ToUpper())) {
-					xbList->Add(filename);
+				if (!hmap->ContainsKey(relativeName->ToUpper())) {
+					xbList->Add(relativeName);
 				}
 			}
 		}
 
 		// Convert the lists to arrays for serialization
-		System::Array^ pcFiles = pcList->ToArray(xboxPrefix->GetType());
-		System::Array^ xbFiles = xbList->ToArray(xboxPrefix->GetType());
+		System::Type^ t = starfieldXBoxRelativePrefix->GetType();
+		System::Array^ pcFiles = pcList->ToArray(t);
+		System::Array^ xbFiles = xbList->ToArray(t);
 
 		// Write the arrays out to the ACHLIST files
 		WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-PC.achlist");
@@ -982,6 +988,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 		}
 		else {
 			starfieldXBoxDataFolder = xboxRootFolderTextBox->Text + L"\\DATA";
+			starfieldXBoxRelativePrefix = L"Data\\.." + xboxRootFolderTextBox->Text->Substring(starfieldFolderTextBox->Text->Length) + L"\\";
 			starfieldXBoxDataPrefix = starfieldXBoxDataFolder + L"\\";
 			pluginComboBox->Enabled = true;
 			newPluginButton->Enabled = true;
@@ -1218,64 +1225,52 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 	//
 	private: System::Void fileSystemWatcher_Changed(System::Object^ sender, System::IO::FileSystemEventArgs^ e) {
 		if (running) {
-			if (replicationCheckBox->Checked) {
-				MaybeReplicateFile(e->FullPath, false);
-			}
-			if (IsESPFile(e->FullPath) && IsAutodetectMode()) {
-				AutoBindPlugin(e->FullPath);
-			}
-			else if (ShouldLog(e->FullPath)) {
-				String^ rpath = GetRelativeName(e->FullPath);
-				if (nullptr == FindListViewItem(auditListView, rpath, false)) {
-					auditListView->Items->Add(gcnew ListViewItem(rpath));
-					WriteManifest(pluginComboBox->Text);
-				}
+			FileType ft = ClassifyFile(e->FullPath);
+			if (NORMAL_FILE == ft) {
+				HandleFileCreation(e->FullPath);
 			}
 		}
 	}
 	private: System::Void fileSystemWatcher_Deleted(System::Object^ sender, System::IO::FileSystemEventArgs^ e) {
 		if (running) {
-			if (DIRECTORY == ClassifyFile(e->FullPath)) {
-				HandleDirectoryDeletion(e->FullPath);
-			}
-			else {
-				HandleFileDeletion(e->FullPath);
-			}
+			// Since we cannot tell at this point whether the deleted object was a file
+			// or a directory, we try both possibilities for deleting potential replicas
+			// of the orginal object.
+			// Both of these routines perform checking to see whether the replicated
+			// object is a directory or file, so we can call both of them without
+			// knowing ahead of time which one is correct.
+			// Both of these functions will also handle removing the object from
+			// the audit log.
+			HandleFileDeletion(e->FullPath);
+			HandleFolderDeletion(e->FullPath);
 		}
 	}
 	private: System::Void fileSystemWatcher_Created(System::Object^ sender, System::IO::FileSystemEventArgs^ e) {
 		if (running) {
-			if (replicationCheckBox->Checked) {
-				MaybeReplicateFile(e->FullPath, true);
+			FileType ft = ClassifyFile(e->FullPath);
+			if (NORMAL_FILE == ft) {
+				HandleFileCreation(e->FullPath);
 			}
-			if (IsESPFile(e->FullPath) && IsAutodetectMode()) {
-				AutoBindPlugin(e->FullPath);
-			} else if (ShouldLog(e->FullPath)) {
-				String^ rpath = GetRelativeName(e->FullPath);
-				if (nullptr == FindListViewItem(auditListView, rpath, false)) {
-					auditListView->Items->Add(gcnew ListViewItem(rpath));
-					WriteManifest(pluginComboBox->Text);
-				}
+			else if (DIRECTORY == ft) {
+				HandleFolderCreation(e->FullPath);
 			}
 		}
 	}
 	private: System::Void fileSystemWatcher_Renamed(System::Object^ sender, System::IO::RenamedEventArgs^ e) {
 		if (running) {
-			if (replicationCheckBox->Checked) {
-				MaybeDeleteReplica(e->OldFullPath);
-				MaybeReplicateFile(e->FullPath, false);
+			FileType ft = ClassifyFile(e->FullPath);
+			if (NORMAL_FILE == ft) {
+				HandleRenamedFile(e->OldFullPath, e->FullPath);
 			}
-			ListViewItem^ item = FindListViewItem(auditListView, GetRelativeName(e->OldFullPath), false);
-			if (nullptr != item) {
-				auditListView->Items->Remove(item);
-				WriteManifest(pluginComboBox->Text);
+			else if (DIRECTORY == ft) {
+				HandleRenamedFolder(e->OldFullPath, e->FullPath);
 			}
-			if (ShouldLog(e->FullPath)) {
-				String^ rpath = GetRelativeName(e->FullPath);
-				if (nullptr == FindListViewItem(auditListView, rpath, false)) {
-					auditListView->Items->Add(gcnew ListViewItem(rpath));
-					WriteManifest(pluginComboBox->Text);
-				}
+			else {
+				// The renamed object is gone or unknown, so all we know is that the
+				// original object is gone.  Treat this as a DELETE action on the
+				// original, unknown, object.
+				HandleFileDeletion(e->OldFullPath);
+				HandleFolderDeletion(e->OldFullPath);
 			}
 		}
 	}
@@ -1406,7 +1401,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 			return DELETED;
 		}
 		catch (System::Exception^) {
-			// Assume that the file was deleted.
+			// Unknown problem getting the file's attributes
 			return UNKNOWN;
 		}
 		if (attr.HasFlag(FileAttributes::Directory)) {
@@ -1423,31 +1418,106 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 		}
 		return NORMAL_FILE;
 	}
-	private: System::Void HandleDirectoryDeletion(String^ fullname) {
-		/*
-		// Unlike with files, we will immediately remove the corresponding
-		// ESM directory when an ESP directory is removed because there
-		// is no way to notice the directory deletion later on.
-		MaybeDeleteReplica(fullname);
+	private: System::Void HandleFileCreation(String^ fullname) {
+		if (replicationCheckBox->Checked) {
+			MaybeReplicateFile(fullname, true);
+		}
+		if (IsESPFile(fullname) && IsAutodetectMode()) {
+			AutoBindPlugin(fullname);
+		}
+		else if (ShouldLog(fullname)) {
+			String^ rpath = GetRelativeName(fullname);
+			if (nullptr == FindListViewItem(auditListView, rpath, false)) {
+				auditListView->Items->Add(gcnew ListViewItem(rpath));
+				WriteManifest(pluginComboBox->Text);
+			}
+		}
+	}
+	private: System::Void HandleFolderCreation(String^ fullname) {
+		if (replicationCheckBox->Checked) {
+			MaybeReplicateFolderContents(fullname);
+		}
+	}
+	private: System::Void HandleFolderDeletion(String^ fullname) {
+		if (replicationCheckBox->Checked) {
+			MaybeDeleteReplicaFolder(fullname);
+		}
 
 		// Now remove all audit logs whose directory matches the one being deleted
+		bool manifestAltered = false;
 		String^ pathname = GetRelativeName(fullname);
 		ListViewItem^ item = FindListViewItem(auditListView, pathname, true);
 		while (nullptr != item) {
 			auditListView->Items->Remove(item);
+			manifestAltered = true;
 			item = FindListViewItem(auditListView, pathname, true);
 		}
-		WriteManifest(pluginComboBox->Text);
-		*/
+
+		if (manifestAltered) {
+			WriteManifest(pluginComboBox->Text);
+		}
 	}
 	private: System::Void HandleFileDeletion(String^ fullname) {
 		if (replicationCheckBox->Checked) {
-			MaybeDeleteReplica(fullname);
+			MaybeDeleteReplicaFile(fullname);
 		}
-		ListViewItem^ item = FindListViewItem(auditListView, GetRelativeName(fullname), false);
+		String^ relativeName = GetRelativeName(fullname);
+		ListViewItem^ item = FindListViewItem(auditListView, relativeName, false);
 		if (nullptr != item) {
 			auditListView->Items->Remove(item);
 			WriteManifest(pluginComboBox->Text);
+		}
+	}
+	private: System::Void HandleRenamedFile(String^ oldFullName, String^ newFullName) {
+		if (replicationCheckBox->Checked) {
+			MaybeRenameReplicaFiles(oldFullName, newFullName);
+		}
+
+		// Remove audit logs for the old filename
+		bool manifestAltered = false;
+		String^ relativeName = GetRelativeName(oldFullName);
+		ListViewItem^ item = FindListViewItem(auditListView, relativeName, false);
+		if (nullptr != item) {
+			auditListView->Items->Remove(item);
+			manifestAltered = true;
+		}
+
+		// Add audit logs for the new filename
+		if (ShouldLog(newFullName)) {
+			relativeName = GetRelativeName(newFullName);
+			if (nullptr == FindListViewItem(auditListView, relativeName, false)) {
+				auditListView->Items->Add(gcnew ListViewItem(relativeName));
+				manifestAltered = true;
+			}
+		}
+
+		if (manifestAltered) {
+			WriteManifest(pluginComboBox->Text);
+		}
+	}
+	private: System::Void HandleRenamedFolder(String^ oldFullName, String^ newFullName) {
+		if (replicationCheckBox->Checked) {
+			MaybeRenameReplicasFolders(oldFullName, newFullName);
+		}
+		
+		// Find and remove all audit logs for files that reside in the oldFullName.
+		// Save all such items so that we can reinstroduce them when the newFullName.
+		Generic::List<String^>^ oldNames = gcnew Generic::List<String^>();
+		String^ oldRelativeName = GetRelativeName(oldFullName);
+		ListViewItem^ item = FindListViewItem(auditListView, oldRelativeName, true);
+		while (nullptr != item) {
+			oldNames->Add(item->Text);
+			auditListView->Items->Remove(item);
+			item = FindListViewItem(auditListView, oldRelativeName, true);
+		}
+
+		// Now add all the audit logs back, but replacing the old folder
+		// name with the new one.
+		String^ newRelativeName = GetRelativeName(newFullName);
+		Generic::IEnumerator<String^>^ iter = oldNames->GetEnumerator();
+		while (iter->MoveNext()) {
+			String^ newAuditName = newRelativeName + iter->Current->Substring(oldRelativeName->Length);
+			auditListView->Items->Add(gcnew ListViewItem(newAuditName));
 		}
 	}
 	private: bool FileRelatedToPlugIn(String^ fullname, String^ plugin) {
@@ -1512,8 +1582,13 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 			return L"Data\\..\\" + fullname->Substring(starfieldFolderTextBox->Text->Length + 1);
 		}
 
-		// A normal Starfield Data file, just compute a simple relative path
-		return fullname->Substring(starfieldFolderTextBox->Text->Length + 1);
+		// For a normal Starfield Data file, just compute a simple relative path
+		if (FileResidesWithinStarfieldDataFolder(fullname)) {
+			return fullname->Substring(starfieldFolderTextBox->Text->Length + 1);
+		}
+
+		// Anything else is not within one of our Data folders, so there is no relative name
+		return nullptr;
 	}
 	private: bool FileResidesWithinStarfieldFolder(String^ fullFilename) {
 		return HasPrefixPath(starfieldPrefix, fullFilename);
@@ -1659,40 +1734,269 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 			}
 		}
 	}
-	private: String^ EspToEsmNameTransform(String^ filename) {
+	private: String^ EspToEsmNameTransform(String^ relativeName) {
 		if (espDirName == nullptr) {
 			return nullptr;
 		}
-		int pos = filename->IndexOf(espDirName, StringComparison::InvariantCultureIgnoreCase);
+		int pos = relativeName->IndexOf(espDirName, StringComparison::InvariantCultureIgnoreCase);
 		if (pos < 0) {
 			return nullptr;
 		}
-		return filename->Substring(0, pos) + esmDirName + filename->Substring(pos + espDirName->Length);
+		return relativeName->Substring(0, pos) + esmDirName + relativeName->Substring(pos + espDirName->Length);
+	}
+    private: String^ PCToXBoxNameTransform(String^ fullname) {
+		if (!fullname->StartsWith(starfieldDataPrefix, StringComparison::InvariantCultureIgnoreCase)) {
+			return nullptr;
+		}
+		return starfieldXBoxDataPrefix + fullname->Substring(starfieldDataPrefix->Length);
 	}
 	private: System::Void MaybeReplicateFile(String^ fullname, bool ignoreIOException) {
 		if (ShouldLog(fullname)) {
 			EspToEsmReplication(GetRelativeName(fullname), ignoreIOException);
 		}
 	}
-	private: System::Void MaybeDeleteReplica(String^ fullname) {
-		if (ShouldLog(fullname)) {
-			String^ esmRelativeName = EspToEsmNameTransform(GetRelativeName(fullname));
-			if (nullptr != esmRelativeName) {
-				String^ esmFullName = starfieldPrefix + esmRelativeName;
-				try {
-					File::Delete(esmFullName);
-				}
-				catch (Exception^ e) {
-					MessageBox::Show(this,
-						L"Error while deleting ESM replica file " +
-						esmFullName +
-						L": " +
-						e->Message,
-						L"ESP to ESM Replication Failure",
-						MessageBoxButtons::OK,
-						MessageBoxIcon::Error);
+    private: System::Void MaybeReplicateFolderContents(String^ fullname) {
+		// Emulate a CREATE operation on all files that reside within this
+		// directory tree.  In cases where one has moved a folder there are
+		// no notifications about the items that move with the folder, so
+		// we have to walk the tree to discover them.
+		Generic::IEnumerator<String^>^ iter = Directory::EnumerateFiles(fullname, L"*.*", SearchOption::AllDirectories)->GetEnumerator();
+		while (iter->MoveNext()) {
+			HandleFileCreation(iter->Current);
+		}
+	}
+	private: System::Void MaybeRenameReplicaFiles(String^ oldFullName, String^ newFullName) {
+		// Renames should not change the folder name - verify that
+		if (!Path::GetDirectoryName(oldFullName)->Equals(Path::GetDirectoryName(newFullName))) {
+			MessageBox::Show(L"File rename crosses directories, which should not be possible.  "
+				L"Replication of rename skipped.",
+				L"Rename Replication Assertion Failure",
+				MessageBoxButtons::OK,
+				MessageBoxIcon::Warning);
+			return;
+		}
+
+		// Get the relative names for the old and new files
+		String^ oldRelativeName = GetRelativeName(oldFullName);
+		String^ newRelativeName = GetRelativeName(newFullName);
+		if (nullptr == oldRelativeName || nullptr == newRelativeName) {
+			return;
+		}
+
+		// If the folders lie within an ESP directory, rename
+		// the corresponding folder in the corresponding ESM directory.
+		String^ oldEsmRelativeName = EspToEsmNameTransform(oldRelativeName);
+		String^ newEsmRelativeName = EspToEsmNameTransform(newRelativeName);
+		if (nullptr != oldEsmRelativeName && nullptr != newEsmRelativeName) {
+			String^ oldEsmFullName = starfieldPrefix + oldEsmRelativeName;
+			String^ newEsmFullName = starfieldPrefix + newEsmRelativeName;
+			try {
+				if (File::Exists(oldEsmFullName)) {
+					File::Move(oldEsmFullName, newEsmFullName);
 				}
 			}
+			catch (Exception^ e) {
+				MessageBox::Show(this,
+					L"Error while renaming ESM replica folders: " +
+					e->Message,
+					L"ESM Replica Rename Failure",
+					MessageBoxButtons::OK,
+					MessageBoxIcon::Error);
+			}
+		}
+
+		// If the renamed folder lies within the standard Starfield Data tree
+		// rename its corresponding XBox replica, if there is one.
+		String^ oldXboxFullname = PCToXBoxNameTransform(oldFullName);
+		String^ newXBoxFullName = PCToXBoxNameTransform(newFullName);
+		if (nullptr != oldXboxFullname && nullptr != newXBoxFullName) {
+			try {
+				if (File::Exists(oldXboxFullname)) {
+					File::Move(oldXboxFullname, newXBoxFullName);
+				}
+			}
+			catch (Exception^ e) {
+				MessageBox::Show(this,
+					L"Error while renaming XBox replica folders: " +
+					e->Message,
+					L"XBox Replica Deletion Failure",
+					MessageBoxButtons::OK,
+					MessageBoxIcon::Error);
+			}
+		}
+	}
+	private: System::Void MaybeRenameReplicasFolders(String^ oldFullName, String^ newFullName) {
+		// Get the relative names for the old and new files
+		String^ oldRelativeName = GetRelativeName(oldFullName);
+		String^ newRelativeName = GetRelativeName(newFullName);
+		if (nullptr == oldRelativeName || nullptr == newRelativeName) {
+			return;
+		}
+
+		// If the files lie within an ESP directory, rename
+		// the corresponding file in the corresponding ESM directory.
+		String^ oldEsmRelativeName = EspToEsmNameTransform(oldRelativeName);
+		String^ newEsmRelativeName = EspToEsmNameTransform(newRelativeName);
+		if (nullptr != oldEsmRelativeName && nullptr != newEsmRelativeName) {
+			String^ oldEsmFullName = starfieldPrefix + oldEsmRelativeName;
+			String^ newEsmFullName = starfieldPrefix + newEsmRelativeName;
+			try {
+				if (Directory::Exists(oldEsmFullName)) {
+					Directory::Move(oldEsmFullName, newEsmFullName);
+				}
+			}
+			catch (Exception^ e) {
+				MessageBox::Show(this,
+					L"Error while renaming ESM replica files: " +
+					e->Message,
+					L"ESM Replica Rename Failure",
+					MessageBoxButtons::OK,
+					MessageBoxIcon::Error);
+			}
+		}
+
+		// If the renamed file lies within the standard Starfield Data tree
+		// rename its corresponding XBox replica, if there is one.
+		String^ oldXboxFullname = PCToXBoxNameTransform(oldFullName);
+		String^ newXBoxFullName = PCToXBoxNameTransform(newFullName);
+		if (nullptr != oldXboxFullname && nullptr != newXBoxFullName) {
+			try {
+				if (Directory::Exists(oldXboxFullname)) {
+					Directory::Move(oldXboxFullname, newXBoxFullName);
+				}
+			}
+			catch (Exception^ e) {
+				MessageBox::Show(this,
+					L"Error while renaming XBox replica files: " +
+					e->Message,
+					L"XBox Replica Deletion Failure",
+					MessageBoxButtons::OK,
+					MessageBoxIcon::Error);
+			}
+		}
+	}
+	private: System::Void MaybeDeleteReplicaFile(String^ fullname) {
+		// Ensure that the deleted file resides within one of our Data folders.
+		String^ relativeName = GetRelativeName(fullname);
+		if (nullptr == relativeName) {
+			return;
+		}
+
+		// If the deleted files lies within an ESP directory, delete
+		// the corresponding file in the corresponding ESM directory.
+		String^ esmRelativeName = EspToEsmNameTransform(relativeName);
+		if (nullptr != esmRelativeName) {
+			String^ esmFullName = starfieldPrefix + esmRelativeName;
+			try {
+				if (File::Exists(esmFullName)) {
+					File::Delete(esmFullName);
+				}
+			}
+			catch (Exception^ e) {
+				MessageBox::Show(this,
+					L"Error while deleting ESM replica file " +
+					esmFullName +
+					L": " +
+					e->Message,
+					L"ESM Replica Deletion Failure",
+					MessageBoxButtons::OK,
+					MessageBoxIcon::Error);
+			}
+		}
+
+		// If the deleted file lies within the standard Starfield Data tree
+		// delete its corresponding XBox replica, if there is one.
+		String^ xboxFullname = PCToXBoxNameTransform(fullname);
+		if (nullptr != xboxFullname) {
+			try {
+				if (File::Exists(xboxFullname)) {
+					File::Delete(xboxFullname);
+				}
+			}
+			catch (Exception^ e) {
+				MessageBox::Show(this,
+					L"Error while deleting XBox replica file " +
+					xboxFullname +
+					L": " +
+					e->Message,
+					L"XBox Replica Deletion Failure",
+					MessageBoxButtons::OK,
+					MessageBoxIcon::Error);
+			}
+		}
+	}
+	private: System::Void MaybeDeleteReplicaFolder(String^ fullname) {
+		// Ensure that the deleted folder resides within one of our Data folders
+		String^ relativeName = GetRelativeName(fullname);
+		if (nullptr == relativeName) {
+			return;
+		}
+
+		// If the deleted folder lies within an ESP folder, delete the
+		// corresponding folder under the corresponding ESM folder.
+		String^ esmRelativeName = EspToEsmNameTransform(relativeName);
+		if (nullptr != esmRelativeName) {
+			DeleteFolder(starfieldPrefix + esmRelativeName);
+		}
+
+		// If the deleted folder has been replicated into the XBox tree,
+		// also delete the XBox replica folder.
+		String^ xboxFullname = PCToXBoxNameTransform(fullname);
+		if (nullptr != xboxFullname) {
+			DeleteFolder(xboxFullname);
+		}
+	}
+	private: System::Void DeleteFolder(String^ fullname) {
+		// Nothing to do if the directory does not exist
+		if (!Directory::Exists(fullname)) {
+			return;
+		}
+
+		// First try to move the folder directly into the Recycling Bin
+		try {
+			String^ recycleFolder = Path::GetPathRoot(fullname) + recycleBin;
+			if (Directory::Exists(recycleFolder)) {
+				String^ target = recycleFolder + L"\\" + Path::GetFileName(fullname);
+				Directory::Move(fullname, target);
+				return;
+			}
+		}
+		catch (Exception^) {
+			// Ignore
+		}
+
+		// Something didn't work - fallback to a brute force recursive delete
+		RecursiveDeleteFolder(fullname);
+	}
+   private: System::Void RecursiveDeleteFolder(String^ fullname) {
+	   // Nothing to do if the directory does not exist
+	   if (!Directory::Exists(fullname)) {
+		   return;
+	   }
+	   
+	   try {
+			// Recursive brute-force deletion of everything in the directory and
+			// then the directory itself.  Has a potential race-condition if other
+			// processes are creating files into the same directory tree.
+			Generic::IEnumerator<String^>^ iter = Directory::EnumerateDirectories(fullname)->GetEnumerator();
+			while (iter->MoveNext()) {
+				RecursiveDeleteFolder(iter->Current);
+			}
+			iter = Directory::EnumerateFiles(fullname)->GetEnumerator();
+			while (iter->MoveNext()) {
+				File::Delete(iter->Current);
+			}
+			Directory::Delete(fullname);
+		}
+		catch (Exception^ e) {
+			MessageBox::Show(this,
+				L"Error during recursive delete of folder " +
+				fullname +
+				L": " +
+				e->Message,
+				L"Recursive Folder Deletion Failure",
+				MessageBoxButtons::OK,
+				MessageBoxIcon::Error);
 		}
 	}
 	private: String^ EspToEsmReplication(String^ espRelativeName, bool ignoreIOException) {
