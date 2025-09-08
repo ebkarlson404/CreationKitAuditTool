@@ -1131,7 +1131,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 			L"Generates platform-specific ACHLIST files for packaging PC and XBox WEM files.\n\n" +
 			L"Generated ACHLIST files are stored in one's >Documents\\My Games\\Starfield\\CreationKitAuditTool< folder.\n\n" +
 			L"GitHub: " + githubUrl + L"\n\n" +
-			L"Version 1.3.1\n\n" +
+			L"Version 1.3.2\n\n" +
 			L"Copyright 2025, Eric Karlson\n\n" +
 			L"Distrbuted under the terms of the Apache License version 2.0, January 2004",
 			L"Creation Kit Audit Log Help",
@@ -1439,18 +1439,24 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 		}
 	}
 	private: System::Void HandleFolderDeletion(String^ fullname) {
+		String^ relativeName = GetRelativeName(fullname);
+		if (nullptr == relativeName) {
+			// Folder is not in one of the Data folders - ignore
+			return;
+		}
+
+		// Replicate the folder deletion, if needed
 		if (replicationCheckBox->Checked) {
 			MaybeDeleteReplicaFolder(fullname);
 		}
 
 		// Now remove all audit logs whose directory matches the one being deleted
 		bool manifestAltered = false;
-		String^ pathname = GetRelativeName(fullname);
-		ListViewItem^ item = FindListViewItem(auditListView, pathname, true);
+		ListViewItem^ item = FindListViewItem(auditListView, relativeName, true);
 		while (nullptr != item) {
 			auditListView->Items->Remove(item);
 			manifestAltered = true;
-			item = FindListViewItem(auditListView, pathname, true);
+			item = FindListViewItem(auditListView, relativeName, true);
 		}
 
 		if (manifestAltered) {
@@ -1458,10 +1464,14 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 		}
 	}
 	private: System::Void HandleFileDeletion(String^ fullname) {
+		String^ relativeName = GetRelativeName(fullname);
+		if (nullptr == relativeName) {
+			// File does not reside in one of the Data folders - ignore
+			return;
+		}
 		if (replicationCheckBox->Checked) {
 			MaybeDeleteReplicaFile(fullname);
 		}
-		String^ relativeName = GetRelativeName(fullname);
 		ListViewItem^ item = FindListViewItem(auditListView, relativeName, false);
 		if (nullptr != item) {
 			auditListView->Items->Remove(item);
@@ -1469,13 +1479,19 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 		}
 	}
 	private: System::Void HandleRenamedFile(String^ oldFullName, String^ newFullName) {
+		String^ relativeName = GetRelativeName(oldFullName);
+		if (nullptr == relativeName) {
+			// File does not reside in one of the Data folders - ignore
+			return;
+		}
+
+		// Replicate the rename, if needed
 		if (replicationCheckBox->Checked) {
 			MaybeRenameReplicaFiles(oldFullName, newFullName);
 		}
 
 		// Remove audit logs for the old filename
 		bool manifestAltered = false;
-		String^ relativeName = GetRelativeName(oldFullName);
 		ListViewItem^ item = FindListViewItem(auditListView, relativeName, false);
 		if (nullptr != item) {
 			auditListView->Items->Remove(item);
@@ -1496,6 +1512,13 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 		}
 	}
 	private: System::Void HandleRenamedFolder(String^ oldFullName, String^ newFullName) {
+		String^ oldRelativeName = GetRelativeName(oldFullName);
+		if (nullptr == oldRelativeName) {
+			// Folder does not reside in one of the Data folders - ignore
+			return;
+		}
+
+		// Replicate the rename, if needed
 		if (replicationCheckBox->Checked) {
 			MaybeRenameReplicasFolders(oldFullName, newFullName);
 		}
@@ -1503,7 +1526,6 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 		// Find and remove all audit logs for files that reside in the oldFullName.
 		// Save all such items so that we can reinstroduce them when the newFullName.
 		Generic::List<String^>^ oldNames = gcnew Generic::List<String^>();
-		String^ oldRelativeName = GetRelativeName(oldFullName);
 		ListViewItem^ item = FindListViewItem(auditListView, oldRelativeName, true);
 		while (nullptr != item) {
 			oldNames->Add(item->Text);
