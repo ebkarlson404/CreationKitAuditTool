@@ -4,6 +4,8 @@ three of the most problematic aspects of Starfield's Creation Kit design/impleme
 1. Reliably detects all files that have been changed within one's Starfield Installation Tree
 2. Automatically handles replicating files from the *MyMod.ESP* directories created by Creation Kit into corresponding *MyMod.ESM* directories for distribution with one's ESM-based plugin.
 3. Works with a suitably configured WWise deployment to create platform-specific ACHLIST packing lists in a single pass.
+
+In addition, as of version 1.4.0, support has been added to assist in the packaging of *Localized Plugins*.
 ## Reliable File Detection
 One known issue with Starfield's Creation Kit is that the *Archive* tool does not reliably detect all the files that have been added/altered as part
 of a given plugin.  The Creation Kit Audit Tool solves this problem by using the native Windows API's to watch for any file changes
@@ -73,6 +75,36 @@ folder.
 7. Go back to your Creation Kit and work on your plugin
 8. When you are ready to package the plugin, go back to the Creation Kit Audit Tool and click on the `Generate` button to create the two platform-specific ACHLIST files.  They will be created in your `%USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool` directory.
 9. Go back to Creation Kit and use the `Archive` tool to pack your `BA2` files by importing the ACHLIST files that were stored in your `%USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool` directory.
+
+# Localized Plugins
+The vast majority of plugins that are published by independent modders are English-only.  However, as of version 1.15.222 of the Starfield Creation Kit, the basic tools for
+creating *Localized* plugins now exists.  This allows one to publish plugins that support multiple languages instead of just English.  Starfield itself supports textual localization
+for nine languages, and voice localization for five languages.  Please see Bethesda's official page for their list of supported languages: [What languages does Starfield support?](https://help.bethesda.net/#en/answer/60444)
+
+There are two components to localizing a plugin: *String Translations* and *Alternate Voice Files*.  A localized plugin can have one or the other or both of these elements, though
+not localizing strings would be an odd ommission.
+## Localized Strings
+One can provide *string translation* files that will translate any textual information presented to the player into the langauge of choice.  These translation files take
+the form of a set of three files for each language that are stored in the `Starfield\Data\Strings` folder.  When one packs the BA2 file for one's plugin, simply include
+these translation files along with any other files that are part of one's plugin.
+
+The specifics of how these translation files are created can be found in Bethesda's Verified Creators Wiki.
+## Localized Voices
+If one's plugin has voice audio files (found in `Starfield\Data\Sound\Voice\<modname>`), one can package language-specific alternatives for those voice files.
+While this process is not documented and not supported as of version 1.15.222 of the Starfield Creation Kit, one can manually create and pack these
+alternate voice files.  The Creation Kit Audit Tool facilitates this manual packing by generating alternate ACHLIST files suitable for packing plugins that
+have localized voice files.
+
+The process to manually package the localized voice files is as follows:
+
+1. Create your plugin as normal, using the Creation Kit Audit Tool to generate a manifest for the plugin
+2. Use the `Generate` button to create the ACHLIST packing lists
+3. Assuming that your plugin was originally created for the English language you will need to create two BA2 archive files using the alternate ACHLIST packing files (see below for details)
+4. Go back to your `Starfield\Data\Sound\Voice\<modname>` folder and replace the **WEM** files with new files recorded in the language of choice
+5. Use the alternate voice-specific ACHLIST packing file to create your next language-specific BA2 archive file
+6. Repeat steps 4 & 5 for each additional language that you wish to support
+
+7. 
 
 # Tips, Tricks and Notes
 ## Background Operation in the System Tray
