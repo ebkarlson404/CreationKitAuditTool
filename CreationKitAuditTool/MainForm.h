@@ -73,10 +73,12 @@ namespace CreationKitAuditTool {
 	protected: String^ starfieldPrefix;
 	protected: String^ starfieldDataFolder;
 	protected: String^ starfieldDataPrefix;
+	protected: String^ starfieldRelativeVoicePrefix = L"Data\\Sound\\Voice\\";
 	protected: String^ starfieldBackupPrefix;
 	protected: String^ starfieldXBoxDataFolder;
 	protected: String^ starfieldXBoxRelativePrefix;
 	protected: String^ starfieldXBoxDataPrefix;
+	protected: String^ starfieldXBoxRelativeVoicePrefix;
 	protected: String^ espDirName = nullptr;
 	protected: String^ esmDirName = nullptr;
 	protected: int lastHeight = -1;
@@ -148,6 +150,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripShowItem;
 private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
 private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripResumeItem;
 private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
+private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuItem;
 
 
 	private: System::ComponentModel::IContainer^ components;
@@ -213,6 +216,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 			this->notifyToolStripResumeItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->notifyToolStripPauseItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->notifyToolStripExitItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->localizationToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pluginEnumerator))->BeginInit();
 			this->auditGroupBox->SuspendLayout();
@@ -448,7 +452,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 			});
 			this->mainMenuStrip->Location = System::Drawing::Point(0, 0);
 			this->mainMenuStrip->Name = L"mainMenuStrip";
-			this->mainMenuStrip->Size = System::Drawing::Size(1026, 42);
+			this->mainMenuStrip->Size = System::Drawing::Size(1026, 38);
 			this->mainMenuStrip->TabIndex = 12;
 			this->mainMenuStrip->Text = L"menuStrip1";
 			// 
@@ -459,7 +463,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 					this->exitToolStripMenuItem
 			});
 			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
-			this->fileToolStripMenuItem->Size = System::Drawing::Size(62, 38);
+			this->fileToolStripMenuItem->Size = System::Drawing::Size(62, 34);
 			this->fileToolStripMenuItem->Text = L"&File";
 			// 
 			// auditFiltersToolStripMenuItem
@@ -481,12 +485,13 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 			// 
 			// helpToolStripMenuItem
 			// 
-			this->helpToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(5) {
+			this->helpToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(6) {
 				this->auditProcessAndFilteringToolStripMenuItem,
-					this->continuousReplicationToolStripMenuItem, this->wWiseConfigurationToolStripMenuItem, this->gitHubToolStripMenuItem, this->aboutToolStripMenuItem
+					this->continuousReplicationToolStripMenuItem, this->wWiseConfigurationToolStripMenuItem, this->localizationToolStripMenuItem,
+					this->gitHubToolStripMenuItem, this->aboutToolStripMenuItem
 			});
 			this->helpToolStripMenuItem->Name = L"helpToolStripMenuItem";
-			this->helpToolStripMenuItem->Size = System::Drawing::Size(74, 38);
+			this->helpToolStripMenuItem->Size = System::Drawing::Size(74, 34);
 			this->helpToolStripMenuItem->Text = L"&Help";
 			// 
 			// auditProcessAndFilteringToolStripMenuItem
@@ -644,6 +649,13 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 			this->notifyToolStripExitItem->Text = L"E&xit";
 			this->notifyToolStripExitItem->Click += gcnew System::EventHandler(this, &MainForm::notifyToolStripExitItem_Click);
 			// 
+			// localizationToolStripMenuItem
+			// 
+			this->localizationToolStripMenuItem->Name = L"localizationToolStripMenuItem";
+			this->localizationToolStripMenuItem->Size = System::Drawing::Size(378, 40);
+			this->localizationToolStripMenuItem->Text = L"&Localization Support";
+			this->localizationToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::localizationToolStripMenuItem_Click);
+			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(11, 24);
@@ -793,60 +805,94 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
     }
 	private: System::Void generateButton_Click(System::Object^ sender, System::EventArgs^ e) {
 		Hashtable^ hmap = gcnew Hashtable();
-		ArrayList^ xbList = gcnew ArrayList;
-		ArrayList^ pcList = gcnew ArrayList;
+		ArrayList^ xbFullList = gcnew ArrayList;
+		ArrayList^ xbVoiceList = gcnew ArrayList;
+		ArrayList^ xbNonVoiceList = gcnew ArrayList;
+		ArrayList^ pcFullList = gcnew ArrayList;
+		ArrayList^ pcVoiceList = gcnew ArrayList;
+		ArrayList^ pcNonVoiceList = gcnew ArrayList;
 
-		// Build out PC and XBox file lists.  First accumulate all the XBox WEM
-		// files so that we can build our map of multi-platform WEM files.
+		// Build out PC and XBox file lists.  First accumulate all the XBox specific
+		// files so that we can build our map of multi-platform files.
 		IEnumerator^ iter = auditListView->Items->GetEnumerator();
 		while (iter->MoveNext()) {
 			ListViewItem^ item = (ListViewItem^)iter->Current;
 			String^ relativeName = item->Text;
-			if (relativeName->StartsWith(starfieldXBoxRelativePrefix, StringComparison::InvariantCultureIgnoreCase)) {
+			if (HasPrefix(relativeName, starfieldXBoxRelativePrefix)) {
 				relativeName = EspToEsmReplication(relativeName, false);
 				hmap->Add(relativeName->Substring(starfieldXBoxRelativePrefix->Length)->ToUpper(), relativeName);
-				xbList->Add(relativeName);
+				xbFullList->Add(relativeName);
+				if (HasPrefix(relativeName, starfieldXBoxRelativeVoicePrefix) &&
+					HasSuffix(relativeName, L".WEM")) {
+					xbVoiceList->Add(relativeName);
+				}
+				else {
+					xbNonVoiceList->Add(relativeName);
+				}
 			}
 		}
 
 		// Iterate through the list of files again, using the previously constructed
-		// hashtable to prevent adding PC WEM files to the XBox list.
+		// hashtable to prevent adding PC only files to the XBox list.
 		iter = auditListView->Items->GetEnumerator();
 		while (iter->MoveNext()) {
 			ListViewItem^ item = (ListViewItem^)iter->Current;
 			String^ relativeName = item->Text;
 
 			// We've already processed the XBox WEM files, so skip them this time
-			if (!relativeName->StartsWith(starfieldXBoxRelativePrefix, StringComparison::InvariantCultureIgnoreCase)) {
+			if (!HasPrefix(relativeName, starfieldXBoxRelativePrefix)) {
 				// Replicate the file to the ESM directory if required
 				relativeName = EspToEsmReplication(relativeName, false);
 
 				// All files at this point are PC files
-				pcList->Add(relativeName);
+				pcFullList->Add(relativeName);
+				if (HasPrefix(relativeName, starfieldRelativeVoicePrefix) &&
+					HasSuffix(relativeName, L".WEM")) {
+					pcVoiceList->Add(relativeName);
+				}
+				else {
+					pcNonVoiceList->Add(relativeName);
+				}
 
-				// If this is not a PC WEM file, add it to the XBox list as well
+				// If this is not a PC only file, add it to the XBox list as well
 				if (!hmap->ContainsKey(relativeName->ToUpper())) {
-					xbList->Add(relativeName);
+					xbFullList->Add(relativeName);
+					xbNonVoiceList->Add(relativeName);
 				}
 			}
 		}
 
 		// Convert the lists to arrays for serialization
 		System::Type^ t = starfieldXBoxRelativePrefix->GetType();
-		System::Array^ pcFiles = pcList->ToArray(t);
-		System::Array^ xbFiles = xbList->ToArray(t);
+		System::Array^ pcFiles = pcFullList->ToArray(t);
+		System::Array^ xbFiles = xbFullList->ToArray(t);
 
-		// Write the arrays out to the ACHLIST files
+		// Write the arrays out to the FULL ACHLIST files
 		WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-PC.achlist");
 		WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-XB.achlist");
 
+		// Write the arrays out to the VOICE ACHLIST files
+		pcFiles = pcVoiceList->ToArray(t);
+		xbFiles = xbVoiceList->ToArray(t);
+		WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-VOICE-PC.achlist");
+		WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-VOICE-XB.achlist");
+
+		// Write the arrays out to the NONVOICE ACHLIST files
+		pcFiles = pcNonVoiceList->ToArray(t);
+		xbFiles = xbNonVoiceList->ToArray(t);
+		WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-NONVOICE-PC.achlist");
+		WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-NONVOICE-XB.achlist");
+
 		// Tell the user what was done
 		MessageBox::Show(this,
-			pluginComboBox->Text + 
-			L"-PC.achlist and " + 
-			pluginComboBox->Text + 
-			L"-XB.achlist\nwere generated in\n" + 
-			userGameFolder,
+			L"Generated the following ACLIST files in " +
+			userGameFolder + L"\n\n * " +
+			pluginComboBox->Text + L"-PC.achlist\n * " + 
+			pluginComboBox->Text + L"-VOICE-PC.achlist\n * " +
+			pluginComboBox->Text + L"-NONVOICE-PC.achlist\n * " +
+			pluginComboBox->Text + L"-XB.achlist\n * " +
+			pluginComboBox->Text + L"-VOICE-XB.achlist\n * " +
+			pluginComboBox->Text + L"-NONVOICE-XB.achlist",
 			L"ACHLIST Generation Complete",
 			MessageBoxButtons::OK,
 			MessageBoxIcon::Information);
@@ -990,6 +1036,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 			starfieldXBoxDataFolder = xboxRootFolderTextBox->Text + L"\\DATA";
 			starfieldXBoxRelativePrefix = L"Data\\.." + xboxRootFolderTextBox->Text->Substring(starfieldFolderTextBox->Text->Length) + L"\\";
 			starfieldXBoxDataPrefix = starfieldXBoxDataFolder + L"\\";
+			starfieldXBoxRelativeVoicePrefix = starfieldXBoxRelativePrefix + L"Data\\Sound\\Voice\\";
 			pluginComboBox->Enabled = true;
 			newPluginButton->Enabled = true;
 			startButton->Enabled = true;
@@ -1117,6 +1164,31 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 			L"WWise configuration shown above, this would be your Starfield Installation folder " +
 			L"followed by '\\XBOX'.",
 			L"WWise Configuration",
+			MessageBoxButtons::OK,
+			MessageBoxIcon::Information);
+	}
+	private: System::Void localizationToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) {
+		MessageBox::Show(L"The Creation Kit Audit Tool will generate addition ACHLIST packing files to assist " +
+			L"in the creation of Localized Plugins.  Plugins that have been localized have two special " +
+			L"characteristics: String Translation Files and Localized Voice Files\n\n" +
+			L"The String Translation Files are generated using the CreationKit.exe tool and are " +
+			L"packaged as a collection of language-specific files stored in the Data\\Strings folder. " +
+			L"Please refer to Bethesda's Verified Creators Wiki for specifics of the process.\n\n" +
+			L"If one's localized plugin has localized voice files, one has to pack the BA2 archives " +
+			L"slightly differently then one does for non-localized plugins.  One must pack all " +
+			L"non-voice files into the standard '<mod> - Main.ba2' and '<mod> - Textures.ba2' files.  " +
+			L"The voice files need to be packed into files named '<mod> - Voices_<lang>.ba2' where " +
+			L"<lang> is one of the ISO 639 language codes - e.g. 'en', 'it', 'fr', 'de'.  One then " +
+			L"distributes the non-voice BA2 file and all of the language-specific voice BA2 files with the " +
+			L"plugin.\n\nNote that the Starfield Creation Kit version 1.15.222 does not provide a " +
+			L"mechanism for shipping the language-specific voice BA2 files with a plugin.  Users would have " +
+			L"acquire the localized voice files from some other source and then drop them into their " +
+			L"Starfield\\Data folder manually.  One can publish plugins with localized voice resources " +
+			L"on Nexus.\n\n" +
+			L"The Creation Kit Audit Tool assists with this alternate packing scheme by generating " +
+			L"three variations of the ACHLIST files.  One that packs everything, one that packs the " +
+			L"non-voice files and one that packs just the voice files.",
+			L"Localization Support",
 			MessageBoxButtons::OK,
 			MessageBoxIcon::Information);
 	}
@@ -1311,15 +1383,14 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 	private: bool IsAutodetectMode() {
 		return autodetectPluginName->Equals(pluginComboBox->Text);
 	}
-	private: bool HasSuffix(String^ suffix, String^ filename) {
+	private: bool HasPrefix(String^ filename, String^ prefix) {
+		return filename->StartsWith(prefix, StringComparison::InvariantCultureIgnoreCase);
+	}
+	private: bool HasSuffix(String^ filename, String^ suffix) {
 		return filename->EndsWith(suffix, StringComparison::InvariantCultureIgnoreCase);
 	}
-	private: bool HasPrefixPath(String^ prefix, String^ fullname) {
-		return prefix->Length <= fullname->Length &&
-			0 == String::Compare(prefix, 0, fullname, 0, prefix->Length, true);
-	}
 	private: bool IsESPFile(String^ fullname) {
-		return HasSuffix(L".ESP", fullname) && HasPrefixPath(starfieldDataPrefix, fullname);
+		return HasSuffix(fullname, L".ESP") && HasPrefix(fullname, starfieldDataPrefix);
 	}
 	private: System::Void WriteArrayToJsonFile(System::Array^ strings, String^ filename) {
 		DataContractJsonSerializer^ deser = gcnew DataContractJsonSerializer(filename->GetType());
@@ -1577,16 +1648,16 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 		// Ignore files whose extensions are in the configured audit filter list
 		ListView::ListViewItemCollection^ filters = auditFilterDialog->GetAuditFilters();
 		for (int i = 0; i < filters->Count; i++) {
-			if (HasSuffix(filters[i]->Text, fullName)) {
+			if (HasSuffix(fullName, filters[i]->Text)) {
 				return false;
 			}
 		}
 
 		// Also the WISE.DAT & TEMP.WEM files that are generated by WWise.
 		// And anything inside of Starfield's Data\Backup folder.
-		if (HasSuffix(L"\\TEMP.WEM", fullName) || 
-			HasSuffix(L"\\WWISE.DAT", fullName) ||
-			HasPrefixPath(starfieldBackupPrefix, fullName)) {
+		if (HasSuffix(fullName, L"\\TEMP.WEM") ||
+			HasSuffix(fullName, L"\\WWISE.DAT") ||
+			HasPrefix(fullName, starfieldBackupPrefix)) {
 			return false;
 		}
 
@@ -1613,17 +1684,17 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 		return nullptr;
 	}
 	private: bool FileResidesWithinStarfieldFolder(String^ fullFilename) {
-		return HasPrefixPath(starfieldPrefix, fullFilename);
+		return HasPrefix(fullFilename, starfieldPrefix);
 	}
 	private: bool FileResidesWithinEitherDataFolder(String^ fullFilename) {
 		return FileResidesWithinStarfieldDataFolder(fullFilename) ||
 			   FileResidesWithinXBoxDataFolder(fullFilename);
 	}
 	private: bool FileResidesWithinStarfieldDataFolder(String^ fullFilename) {
-		return HasPrefixPath(starfieldDataPrefix, fullFilename);
+		return HasPrefix(fullFilename, starfieldDataPrefix);
 	}
 	private: bool FileResidesWithinXBoxDataFolder(String^ fullFilename) {
-		return HasPrefixPath(starfieldXBoxDataPrefix, fullFilename);
+		return HasPrefix(fullFilename, starfieldXBoxDataPrefix);
 	}
 	private: bool AuditFileAlreadyPresent(String^ relativeFilename) {
 		IEnumerator^ iter = auditListView->Items->GetEnumerator();
@@ -1767,7 +1838,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
 		return relativeName->Substring(0, pos) + esmDirName + relativeName->Substring(pos + espDirName->Length);
 	}
     private: String^ PCToXBoxNameTransform(String^ fullname) {
-		if (!fullname->StartsWith(starfieldDataPrefix, StringComparison::InvariantCultureIgnoreCase)) {
+		if (!HasPrefix( fullname, starfieldDataPrefix)) {
 			return nullptr;
 		}
 		return starfieldXBoxDataPrefix + fullname->Substring(starfieldDataPrefix->Length);
