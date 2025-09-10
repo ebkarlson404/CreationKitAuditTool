@@ -12,6 +12,7 @@ namespace CreationKitAuditTool {
 	using namespace System::IO;
 	using namespace System::ComponentModel;
 	using namespace System::Collections;
+	using namespace System::Collections::Generic;
 	using namespace System::Windows::Forms;
 	using namespace System::Data;
 	using namespace System::Drawing;
@@ -68,29 +69,8 @@ namespace CreationKitAuditTool {
 			}
 		}
 
-	private: System::IO::FileSystemWatcher^ fileSystemWatcher;
-	protected: bool running = false;
-	protected: bool notificationExit = false;
-	protected: int lastHeight = -1;
-	protected: int lastWidth = -1;
-	protected: static Color statusRunningColor = Color::Lime;
-	protected: static Color runningTextColor = Color::Black;
-	protected: static Color statusPausedColor = Color::Red;
-	protected: static Color pausedTextColor = Color::White;
-	protected: static String^ registryKey = L"SOFTWARE\\GrizBane\\CreationKitAuditTool";
-	protected: static String^ registryNameStarfieldFolder = L"StarfieldFolder";
-	protected: static String^ registryNameXBoxWEMFolder = L"XBoxWEMFolder";
-	protected: static String^ registryNameContinuousReplication = L"ContinuousReplication";
-	protected: static String^ registryLocalizationFolder = L"LocalizationRootFolder";
-	protected: static String^ autodetectPluginName = L"<autodetect>";
-	protected: String^ previousPlugInName = L"<autodetect>";
-	protected: String^ userGameFolder;
-	protected: static String^ manifestFileExt = L".manifest";
-	protected: static String^ githubUrl = L"https://github.com/ebkarlson404/CreationKitAuditTool";
-	protected: ListViewItem^ selectedAuditItem;
-	protected: AuditFilterDialog^ auditFilterDialog = gcnew AuditFilterDialog();
-	protected: PackDialog^ packDialog = gcnew PackDialog();
 
+	private: System::IO::FileSystemWatcher^ fileSystemWatcher;
 	private: System::Windows::Forms::FolderBrowserDialog^ folderBrowser;
 	private: System::Windows::Forms::TextBox^ starfieldFolderTextBox;
 	private: System::Windows::Forms::Label^ label1;
@@ -147,6 +127,28 @@ namespace CreationKitAuditTool {
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
+	protected: bool running = false;
+	protected: bool notificationExit = false;
+	protected: int lastHeight = -1;
+	protected: int lastWidth = -1;
+	protected: static Color statusRunningColor = Color::Lime;
+	protected: static Color runningTextColor = Color::Black;
+	protected: static Color statusPausedColor = Color::Red;
+	protected: static Color pausedTextColor = Color::White;
+	protected: static String^ registryKey = L"SOFTWARE\\GrizBane\\CreationKitAuditTool";
+	protected: static String^ registryNameStarfieldFolder = L"StarfieldFolder";
+	protected: static String^ registryNameXBoxWEMFolder = L"XBoxWEMFolder";
+	protected: static String^ registryNameContinuousReplication = L"ContinuousReplication";
+	protected: static String^ registryLocalizationFolder = L"LocalizationRootFolder";
+	protected: static String^ autodetectPluginName = L"<autodetect>";
+	protected: String^ previousPlugInName = L"<autodetect>";
+	protected: String^ userGameFolder;
+	protected: static String^ manifestFileExt = L".manifest";
+	protected: static String^ githubUrl = L"https://github.com/ebkarlson404/CreationKitAuditTool";
+	protected: ListViewItem^ selectedAuditItem;
+	protected: AuditFilterDialog^ auditFilterDialog = gcnew AuditFilterDialog();
+	protected: PackDialog^ packDialog = gcnew PackDialog();
+	protected:
 
 #pragma region Windows Form Designer generated code
 		/// <summary>
@@ -217,7 +219,7 @@ namespace CreationKitAuditTool {
 			// 
 			// fileSystemWatcher
 			// 
-			this->fileSystemWatcher->EnableRaisingEvents = true;
+			this->fileSystemWatcher->EnableRaisingEvents = false;
 			this->fileSystemWatcher->SynchronizingObject = this;
 			this->fileSystemWatcher->Changed += gcnew System::IO::FileSystemEventHandler(this, &MainForm::fileSystemWatcher_Changed);
 			this->fileSystemWatcher->Created += gcnew System::IO::FileSystemEventHandler(this, &MainForm::fileSystemWatcher_Created);
@@ -848,82 +850,74 @@ namespace CreationKitAuditTool {
 		}
     }
 	private: System::Void generateButton_Click(System::Object^ sender, System::EventArgs^ e) {
-		Hashtable^ hmap = gcnew Hashtable();
-		ArrayList^ xbFullList = gcnew ArrayList;
-		ArrayList^ xbVoiceList = gcnew ArrayList;
-		ArrayList^ xbNonVoiceList = gcnew ArrayList;
-		ArrayList^ pcFullList = gcnew ArrayList;
-		ArrayList^ pcVoiceList = gcnew ArrayList;
-		ArrayList^ pcNonVoiceList = gcnew ArrayList;
+		List<String^>^ xbFullList = gcnew List<String^>;
+		List<String^>^ xbVoiceList = gcnew List<String^>;
+		List<String^>^ xbNonVoiceList = gcnew List<String^>;
+		List<String^>^ pcFullList = gcnew List<String^>;
+		List<String^>^ pcVoiceList = gcnew List<String^>;
+		List<String^>^ pcNonVoiceList = gcnew List<String^>;
 
-		// Build out PC and XBox file lists.  First accumulate all the XBox specific
-		// files so that we can build our map of multi-platform files.
-		IEnumerator^ iter = auditListView->Items->GetEnumerator();
+		// Iterate through the audit log to find the primary copies of all
+		// files in the manifest.  For WEM and DDS files, also find their
+		// XBox versions in the Starfield XBox alternate directory tree.
+		Collections::IEnumerator^ iter = auditListView->Items->GetEnumerator();
 		while (iter->MoveNext()) {
-			ListViewItem^ item = (ListViewItem^)iter->Current;
-			String^ relativeName = item->Text;
-			if (Util::HasPrefix(relativeName, StarfieldData::starfieldXBoxRelativePrefix)) {
-				relativeName = Replication::EspToEsmReplication(relativeName, false, this);
-				hmap->Add(relativeName->Substring(StarfieldData::starfieldXBoxRelativePrefix->Length)->ToUpper(), relativeName);
+			// Replicate the file to the ESM directory if required
+			ListViewItem^ item = cli::safe_cast<ListViewItem^>(iter->Current);
+			String^ relativeName = Replication::EspToEsmReplication(item->Text, false, this);
+			if (nullptr == relativeName) {
+				return;
+			}
+
+			// Marshall the file into the correct PC packing lists
+			pcFullList->Add(relativeName);
+			if (Util::HasPrefix(relativeName, StarfieldData::starfieldRelativeVoicePrefix) &&
+				Util::HasSuffix(relativeName, L".WEM")) {
+				pcVoiceList->Add(relativeName);
+			}
+			else {
+				pcNonVoiceList->Add(relativeName);
+			}
+
+			// If this is a platform-specific file format, go find the XBox
+			// version of the file.  Otherwise it is a platform-neutral file
+			// which should be added to teh XBox non-voice manifest
+			if (Util::HasSuffix(relativeName, L".WEM")) {
+				String^ xboxRelativeName = PCEspToXBoxEsmReplication(item->Text);
+				if (nullptr == xboxRelativeName) {
+					return;
+				}
+				xbFullList->Add(xboxRelativeName);
+				xbVoiceList->Add(xboxRelativeName);
+			} else if (Util::HasSuffix(relativeName, L".DDS")) {
+				String^ xboxRelativeName = PCEspToXBoxEsmReplication(item->Text);
+				if (nullptr == xboxRelativeName) {
+					return;
+				}
+				xbFullList->Add(xboxRelativeName);
+				xbNonVoiceList->Add(xboxRelativeName);
+			}
+			else {
 				xbFullList->Add(relativeName);
-				if (Util::HasPrefix(relativeName, StarfieldData::starfieldXBoxRelativeVoicePrefix) &&
-					Util::HasSuffix(relativeName, L".WEM")) {
-					xbVoiceList->Add(relativeName);
-				}
-				else {
-					xbNonVoiceList->Add(relativeName);
-				}
+				xbNonVoiceList->Add(relativeName);
 			}
 		}
-
-		// Iterate through the list of files again, using the previously constructed
-		// hashtable to prevent adding PC only files to the XBox list.
-		iter = auditListView->Items->GetEnumerator();
-		while (iter->MoveNext()) {
-			ListViewItem^ item = (ListViewItem^)iter->Current;
-			String^ relativeName = item->Text;
-
-			// We've already processed the XBox WEM files, so skip them this time
-			if (!Util::HasPrefix(relativeName, StarfieldData::starfieldXBoxRelativePrefix)) {
-				// Replicate the file to the ESM directory if required
-				relativeName = Replication::EspToEsmReplication(relativeName, false, this);
-
-				// All files at this point are PC files
-				pcFullList->Add(relativeName);
-				if (Util::HasPrefix(relativeName, StarfieldData::starfieldRelativeVoicePrefix) &&
-					Util::HasSuffix(relativeName, L".WEM")) {
-					pcVoiceList->Add(relativeName);
-				}
-				else {
-					pcNonVoiceList->Add(relativeName);
-				}
-
-				// If this is not a PC only file, add it to the XBox list as well
-				if (!hmap->ContainsKey(relativeName->ToUpper())) {
-					xbFullList->Add(relativeName);
-					xbNonVoiceList->Add(relativeName);
-				}
-			}
-		}
-
-		// Convert the lists to arrays for serialization
-		System::Type^ t = StarfieldData::starfieldXBoxRelativePrefix->GetType();
-		System::Array^ pcFiles = pcFullList->ToArray(t);
-		System::Array^ xbFiles = xbFullList->ToArray(t);
 
 		// Write the arrays out to the FULL ACHLIST files
+		array<String^>^ pcFiles = pcFullList->ToArray();
+		array<String^>^ xbFiles = xbFullList->ToArray();
 		AchList::WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-PC.achlist", this);
 		AchList::WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-XB.achlist", this);
 
 		// Write the arrays out to the VOICE ACHLIST files
-		pcFiles = pcVoiceList->ToArray(t);
-		xbFiles = xbVoiceList->ToArray(t);
+		pcFiles = pcVoiceList->ToArray();
+		xbFiles = xbVoiceList->ToArray();
 		AchList::WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-VOICE-PC.achlist", this);
 		AchList::WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-VOICE-XB.achlist", this);
 
 		// Write the arrays out to the NONVOICE ACHLIST files
-		pcFiles = pcNonVoiceList->ToArray(t);
-		xbFiles = xbNonVoiceList->ToArray(t);
+		pcFiles = pcNonVoiceList->ToArray();
+		xbFiles = xbNonVoiceList->ToArray();
 		AchList::WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-NONVOICE-PC.achlist", this);
 		AchList::WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-NONVOICE-XB.achlist", this);
 
@@ -942,8 +936,12 @@ namespace CreationKitAuditTool {
 			MessageBoxIcon::Information);
 
 	}
+	private: String^ PCEspToXBoxEsmReplication(String^ pcEspRelativePath) {
+		String^ xBoxEspRelativeName = StarfieldData::starfieldXBoxRelativePrefix + pcEspRelativePath;
+		return Replication::EspToEsmReplication(xBoxEspRelativeName, false, this);
+	}
 	private: System::Void packButton_Click(System::Object^ sender, System::EventArgs^ e) {
-		packDialog->Text = pluginComboBox->Text + L": Localization and Packing";
+		packDialog->Initialize(pluginComboBox->Text, auditListView);
 		packDialog->ShowDialog(this);
 	}
 	private: System::Void replicationCheckBox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
@@ -969,9 +967,9 @@ namespace CreationKitAuditTool {
 			importAchlistDialog->InitialDirectory = Directory::GetParent(importFile)->FullName;
 
 			// Read the ACHLIST file and add all files to the audit log
-			System::Array^ files = AchList::ReadArrayFromJsonFile(importFile, this);
+			array<String^>^ files = AchList::ReadArrayFromJsonFile(importFile, this);
 			for (int i = 0; i < files->Length; i++) {
-				String^ filename = (String^)files->GetValue(i);
+				String^ filename = files[i];
 				
 				// Since the foreign ACHLIST file may have been created for ESM
 				// distribution, ensure that we transform any references to
@@ -981,8 +979,10 @@ namespace CreationKitAuditTool {
 					filename = filename->Substring(0, pos) + StarfieldData::espDirName + filename->Substring(pos + StarfieldData::esmDirName->Length);
 				}
 
-				// Add the file to the audit log if it is not already present
-				if (!AuditFileAlreadyPresent(filename)) {
+				// Add the file to the audit log if it is not already present and not
+				// a direct reference to an XBox files
+				if (!Util::HasPrefix(filename, StarfieldData::starfieldXBoxRelativePrefix) &&
+					!AuditFileAlreadyPresent(filename)) {
 					auditListView->Items->Add(gcnew ListViewItem(filename));
 				}
 			}
@@ -1050,8 +1050,9 @@ namespace CreationKitAuditTool {
 		StarfieldData::starfieldDataFolder = StarfieldData::starfieldPrefix + L"DATA";
 		StarfieldData::starfieldDataPrefix = StarfieldData::starfieldDataFolder + L"\\";
 		StarfieldData::starfieldBackupPrefix = StarfieldData::starfieldDataPrefix + L"BACKUP\\";
-		fileSystemWatcher->Path = starfieldFolderTextBox->Text;
+		fileSystemWatcher->Path = StarfieldData::starfieldDataFolder;
 		fileSystemWatcher->IncludeSubdirectories = true;
+		fileSystemWatcher->EnableRaisingEvents = true;
 		findPluginDialog->InitialDirectory = StarfieldData::starfieldDataFolder;
 		importAchlistDialog->InitialDirectory = starfieldFolderTextBox->Text;
 		addFileToAuditDialog->InitialDirectory = StarfieldData::starfieldDataFolder;
@@ -1102,6 +1103,10 @@ namespace CreationKitAuditTool {
 	}
 	private: System::Void localizationFolderTextBox_TextChanged(System::Object^ sender, System::EventArgs^ e) {
 		Util::WriteSetting(registryKey, registryLocalizationFolder, localizationFolderTextBox->Text);
+		StarfieldData::localizationFolder = localizationFolderTextBox->Text;
+		StarfieldData::localizationPrefix = localizationFolderTextBox->Text + L"\\";
+		StarfieldData::localizationRelativePrefix = L"Data\\.." +
+			StarfieldData::localizationPrefix->Substring(StarfieldData::starfieldPrefix->Length - 1);
 	}
 	private: System::Void pluginComboBox_TextChanged(System::Object^ sender, System::EventArgs^ e) {
 		// If the current value in the control is an empty string, this is
@@ -1615,7 +1620,7 @@ namespace CreationKitAuditTool {
 		return StarfieldData::FileRelatedToPlugIn(fullName, pluginComboBox->Text);
 	}
 	private: bool AuditFileAlreadyPresent(String^ relativeFilename) {
-		IEnumerator^ iter = auditListView->Items->GetEnumerator();
+		Collections::IEnumerator^ iter = auditListView->Items->GetEnumerator();
 		while (iter->MoveNext()) {
 			if (0 == String::Compare(relativeFilename, (cli::safe_cast<ListViewItem^>(iter->Current))->Text, true)) {
 				return true;
@@ -1655,7 +1660,14 @@ namespace CreationKitAuditTool {
 		try {
 			array<String^>^ lines = File::ReadAllLines(manifestFile);
 			for (int i = 0; i < lines->Length; i++) {
-				auditListView->Items->Add(gcnew ListViewItem(lines[i]));
+				// Older versions tried to track both the PC and XBox files
+				// separately. In the new version, the XBox files are
+				// implied by the PC files and are not explicitly tracked
+				// in the manifest.  So we have to filter out any obsolete
+				// audit logs related to XBox files.
+				if (!Util::HasPrefix(lines[i], StarfieldData::starfieldXBoxRelativePrefix)) {
+					auditListView->Items->Add(gcnew ListViewItem(lines[i]));
+				}
 			}
 		} catch (Exception^ e) {
 			MessageBox::Show(this,
@@ -1669,7 +1681,7 @@ namespace CreationKitAuditTool {
 		// If we are not bound to a specific plugin, do not write a manifest
 		if (!plugin->Equals(autodetectPluginName)) {
 			String^ manifestFile = userGameFolder + L"\\" + plugin + manifestFileExt;
-			IEnumerator^ iter = auditListView->Items->GetEnumerator();
+			Collections::IEnumerator^ iter = auditListView->Items->GetEnumerator();
 			try {
 				StreamWriter^ fh = nullptr;
 				try {
@@ -1705,10 +1717,10 @@ namespace CreationKitAuditTool {
 		// Add the invariant <none> choice
 		pluginComboBox->Items->Add(autodetectPluginName);
 
-		IEnumerable^ enumeration = Directory::EnumerateFiles(userGameFolder, L"*" + manifestFileExt);
-		IEnumerator^ iter = enumeration->GetEnumerator();
+		Generic::IEnumerable<String^>^ enumeration = Directory::EnumerateFiles(userGameFolder, L"*" + manifestFileExt);
+		Generic::IEnumerator<String^>^ iter = enumeration->GetEnumerator();
 		while (iter->MoveNext()) {
-			String^ filename = (cli::safe_cast<String^>(iter->Current))->Substring(userGameFolder->Length + 1);
+			String^ filename = iter->Current->Substring(userGameFolder->Length + 1);
 			String^ plugin = filename->Substring(0, filename->Length - manifestFileExt->Length);
 			if (currentPlugIn->Equals(plugin)) {
 				restoreOriginalChoice = true;

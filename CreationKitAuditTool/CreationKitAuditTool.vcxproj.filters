@@ -53,6 +53,9 @@
     <ClInclude Include="Replication.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PackingTask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CreationKitAuditTool.rc">

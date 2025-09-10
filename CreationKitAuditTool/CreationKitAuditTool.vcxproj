@@ -135,6 +135,7 @@
     <ClInclude Include="AuditFilterDialog.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="PackingTask.h" />
     <ClInclude Include="Replication.h" />
     <ClInclude Include="StarfieldData.h" />
     <ClInclude Include="FileType.h" />

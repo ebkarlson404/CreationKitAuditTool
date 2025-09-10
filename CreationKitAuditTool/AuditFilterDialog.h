@@ -196,6 +196,7 @@ namespace CreationKitAuditTool {
 			this->Controls->Add(this->auditListLabel);
 			this->Controls->Add(this->addFilterButton);
 			this->Controls->Add(this->okButton);
+			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
 			this->MaximizeBox = false;
 			this->MinimizeBox = false;
 			this->MinimumSize = System::Drawing::Size(360, 710);

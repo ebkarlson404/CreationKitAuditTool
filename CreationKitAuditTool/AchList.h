@@ -11,7 +11,7 @@ namespace CreationKitAuditTool {
 
 	class AchList
 	{
-	public: static System::Void WriteArrayToJsonFile(System::Array^ strings, String^ filename, IWin32Window^ caller) {
+	public: static bool WriteArrayToJsonFile(array<String^>^ strings, String^ filename, IWin32Window^ caller) {
 		DataContractJsonSerializer^ deser = gcnew DataContractJsonSerializer(filename->GetType());
 		try {
 			// Since the standard .NET Json DeSer has no format controls, in order
@@ -26,7 +26,7 @@ namespace CreationKitAuditTool {
 				sw->Write(L"[");
 				sw->Flush();
 				String^ prefix = L"\n\t";
-				IEnumerator^ iter = strings->GetEnumerator();
+				Collections::IEnumerator^ iter = strings->GetEnumerator();
 				while (iter->MoveNext()) {
 					sw->Write(prefix);
 					sw->Flush();
@@ -51,20 +51,20 @@ namespace CreationKitAuditTool {
 				L"File Creation Error",
 				MessageBoxButtons::OK,
 				MessageBoxIcon::Error);
+			return false;
 		}
+		return true;
 	}
-	public: static System::Array^ ReadArrayFromJsonFile(String^ filename, IWin32Window^ caller) {
-		// Some contortions to force the type data needed for the JSON Serializer
-		ArrayList^ typedArray = gcnew ArrayList(0);
-		System::Array^ strings = typedArray->ToArray(filename->GetType());
-
+	public: static array<String^>^ ReadArrayFromJsonFile(String^ filename, IWin32Window^ caller) {
 		// Construct the serializer and read the data
+		Array^ manifest;
+		array<String^>^ strings = gcnew array<String^>(0);
 		DataContractJsonSerializer^ deser = gcnew DataContractJsonSerializer(strings->GetType());
 		try {
 			System::IO::FileStream^ fh = nullptr;
 			try {
 				fh = File::OpenRead(filename);
-				strings = cli::safe_cast<System::Array^>(deser->ReadObject(fh));
+				manifest = cli::safe_cast<Array^>(deser->ReadObject(fh));
 			}
 			finally {
 				if (nullptr != fh) {
@@ -78,6 +78,11 @@ namespace CreationKitAuditTool {
 				L"File Creation Error",
 				MessageBoxButtons::OK,
 				MessageBoxIcon::Error);
+			return nullptr;
+		}
+		strings = gcnew array<String^>(manifest->Length);
+		for (int i; i < manifest->Length; i++) {
+			strings[i] = cli::safe_cast<String^>(manifest->GetValue(i));
 		}
 		return strings;
 	}

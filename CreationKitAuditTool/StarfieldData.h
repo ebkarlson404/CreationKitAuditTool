@@ -18,6 +18,9 @@ namespace CreationKitAuditTool {
 	public: static String^ starfieldXBoxRelativeVoicePrefix;
 	public: static String^ espDirName = nullptr;
 	public: static String^ esmDirName = nullptr;
+	public: static String^ localizationFolder;
+	public: static String^ localizationPrefix;
+	public: static String^ localizationRelativePrefix;
 
 	public: static bool IsESPFile(String^ fullname) {
 		return Util::HasSuffix(fullname, L".ESP") && Util::HasPrefix(fullname, starfieldDataPrefix);

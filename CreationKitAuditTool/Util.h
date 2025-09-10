@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FileType.h"
+
 using namespace System;
 using namespace System::IO;
 using namespace System::Collections;
@@ -106,10 +108,10 @@ namespace CreationKitAuditTool {
 		}
 		return NORMAL_FILE;
 	}
-	public: static System::Void DeleteFolder(String^ fullname, IWin32Window^ caller) {
+	public: static bool DeleteFolder(String^ fullname, IWin32Window^ caller) {
 		// Nothing to do if the directory does not exist
 		if (!Directory::Exists(fullname)) {
-			return;
+			return true;
 		}
 
 		// First try to move the folder directly into the Recycling Bin
@@ -118,7 +120,7 @@ namespace CreationKitAuditTool {
 			if (Directory::Exists(recycleFolder)) {
 				String^ target = recycleFolder + L"\\" + Path::GetFileName(fullname);
 				Directory::Move(fullname, target);
-				return;
+				return true;
 			}
 		}
 		catch (Exception^) {
@@ -126,12 +128,12 @@ namespace CreationKitAuditTool {
 		}
 
 		// Something didn't work - fallback to a brute force recursive delete
-		Util::RecursiveDeleteFolder(fullname, caller);
+		return Util::RecursiveDeleteFolder(fullname, caller);
 	}
-	private: static System::Void RecursiveDeleteFolder(String^ fullname, IWin32Window^ caller) {
+	private: static bool RecursiveDeleteFolder(String^ fullname, IWin32Window^ caller) {
 		// Nothing to do if the directory does not exist
 		if (!Directory::Exists(fullname)) {
-			return;
+			return true;
 		}
 
 		try {
@@ -157,7 +159,9 @@ namespace CreationKitAuditTool {
 				L"Recursive Folder Deletion Failure",
 				MessageBoxButtons::OK,
 				MessageBoxIcon::Error);
+			return false;
 		}
+		return true;
 	}
 	};
 
