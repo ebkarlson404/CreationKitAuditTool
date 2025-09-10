@@ -200,6 +200,7 @@ namespace CreationKitAuditTool {
 			this->MinimizeBox = false;
 			this->MinimumSize = System::Drawing::Size(360, 710);
 			this->Name = L"AuditFilterDialog";
+			this->ShowInTaskbar = false;
 			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
 			this->Text = L"Manage Audit Filters";
 			this->Layout += gcnew System::Windows::Forms::LayoutEventHandler(this, &AuditFilterDialog::AuditFilterDialog_Layout);

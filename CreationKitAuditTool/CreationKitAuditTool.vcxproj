@@ -128,16 +128,24 @@
   <ItemGroup>
     <ClCompile Include="AuditFilterDialog.cpp" />
     <ClCompile Include="MainForm.cpp" />
+    <ClCompile Include="PackDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AchList.h" />
     <ClInclude Include="AuditFilterDialog.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="Replication.h" />
+    <ClInclude Include="StarfieldData.h" />
     <ClInclude Include="FileType.h" />
     <ClInclude Include="MainForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="PackDialog.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="AuditFilterDialog.resx">
@@ -145,6 +153,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PackDialog.resx">
+      <DependentUpon>PackDialog.h</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

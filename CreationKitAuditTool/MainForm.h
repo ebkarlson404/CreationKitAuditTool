@@ -1,6 +1,10 @@
 #pragma once
+#include "AchList.h"
 #include "AuditFilterDialog.h"
 #include "FileType.h"
+#include "PackDialog.h"
+#include "Replication.h"
+#include "StarfieldData.h"
 
 namespace CreationKitAuditTool {
 
@@ -12,7 +16,6 @@ namespace CreationKitAuditTool {
 	using namespace System::Data;
 	using namespace System::Drawing;
 	using namespace Microsoft::Win32;
-	using namespace System::Runtime::Serialization::Json;
 
 	/// <summary>
 	/// Summary for MainForm
@@ -23,26 +26,25 @@ namespace CreationKitAuditTool {
 		MainForm(void)
 		{
 			InitializeComponent();
+			Util::Initialize();
 
 			// Record initial window size
 			lastHeight = this->Height;
 			lastWidth = this->Width;
 
 			// Reload the last parameter values for the Starfield Folder and XBox WEM Folder
-			Object^ value = ReadStringSetting(registryNameStarfieldFolder);
+			Object^ value = Util::ReadStringSetting(registryKey, registryNameStarfieldFolder);
 			if (nullptr != value) {
 				starfieldFolderTextBox->Text = cli::safe_cast<String^>(value);
 			}
-			value = ReadStringSetting(registryNameXBoxWEMFolder);
+			value = Util::ReadStringSetting(registryKey, registryNameXBoxWEMFolder);
 			if (nullptr != value && xboxRootFolderTextBox->Enabled) {
 				xboxRootFolderTextBox->Text = cli::safe_cast<String^>(value);
 			}
-
-			// Compute name of the Windows recycle bin
-			// Ideally we should use something like GetFolderPath to find this path, except that
-			// it doesn't include support for the Recycle Bin folder.  So I am hard-coding the
-			// standard Windows naming scheme here until I can find an API to look it up.
-			recycleBin = L"$RECYCLE.BIN\\" + System::Security::Principal::WindowsIdentity::GetCurrent()->User->Value;
+			value = Util::ReadStringSetting(registryKey, registryLocalizationFolder);
+			if (nullptr != value && localizationFolderTextBox->Enabled) {
+				localizationFolderTextBox->Text = cli::safe_cast<String^>(value);
+			}
 
 			// Generate the name of the folder that Creation Kit Audit Tool will
 			// use for storing manifests and generated ARCHLIST files
@@ -69,18 +71,6 @@ namespace CreationKitAuditTool {
 	private: System::IO::FileSystemWatcher^ fileSystemWatcher;
 	protected: bool running = false;
 	protected: bool notificationExit = false;
-	protected: String^ recycleBin;
-	protected: String^ starfieldPrefix;
-	protected: String^ starfieldDataFolder;
-	protected: String^ starfieldDataPrefix;
-	protected: String^ starfieldRelativeVoicePrefix = L"Data\\Sound\\Voice\\";
-	protected: String^ starfieldBackupPrefix;
-	protected: String^ starfieldXBoxDataFolder;
-	protected: String^ starfieldXBoxRelativePrefix;
-	protected: String^ starfieldXBoxDataPrefix;
-	protected: String^ starfieldXBoxRelativeVoicePrefix;
-	protected: String^ espDirName = nullptr;
-	protected: String^ esmDirName = nullptr;
 	protected: int lastHeight = -1;
 	protected: int lastWidth = -1;
 	protected: static Color statusRunningColor = Color::Lime;
@@ -91,6 +81,7 @@ namespace CreationKitAuditTool {
 	protected: static String^ registryNameStarfieldFolder = L"StarfieldFolder";
 	protected: static String^ registryNameXBoxWEMFolder = L"XBoxWEMFolder";
 	protected: static String^ registryNameContinuousReplication = L"ContinuousReplication";
+	protected: static String^ registryLocalizationFolder = L"LocalizationRootFolder";
 	protected: static String^ autodetectPluginName = L"<autodetect>";
 	protected: String^ previousPlugInName = L"<autodetect>";
 	protected: String^ userGameFolder;
@@ -98,29 +89,24 @@ namespace CreationKitAuditTool {
 	protected: static String^ githubUrl = L"https://github.com/ebkarlson404/CreationKitAuditTool";
 	protected: ListViewItem^ selectedAuditItem;
 	protected: AuditFilterDialog^ auditFilterDialog = gcnew AuditFilterDialog();
+	protected: PackDialog^ packDialog = gcnew PackDialog();
 
-	protected:
 	private: System::Windows::Forms::FolderBrowserDialog^ folderBrowser;
 	private: System::Windows::Forms::TextBox^ starfieldFolderTextBox;
 	private: System::Windows::Forms::Label^ label1;
 	private: System::Windows::Forms::Button^ starfieldFolderButton;
 	private: System::Windows::Forms::Label^ label3;
 	private: System::Windows::Forms::TextBox^ xboxRootFolderTextBox;
-
 	private: System::Windows::Forms::Label^ label2;
 	private: System::Windows::Forms::ComboBox^ pluginComboBox;
 	private: System::Windows::Forms::GroupBox^ auditGroupBox;
 	private: System::Windows::Forms::ListView^ auditListView;
-
-
 	private: System::Windows::Forms::Button^ stopButton;
-	private: System::Windows::Forms::Button^ hideButton;
-
+	private: System::Windows::Forms::Button^ packButton;
 	private: System::Windows::Forms::Button^ xboxWEMButton;
 	private: System::Windows::Forms::Button^ importButton;
 	private: System::Windows::Forms::ColumnHeader^ columnHeader1;
 	private: System::Windows::Forms::MenuStrip^ mainMenuStrip;
-
 	private: System::Windows::Forms::ToolStripMenuItem^ fileToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^ helpToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^ exitToolStripMenuItem;
@@ -141,17 +127,19 @@ namespace CreationKitAuditTool {
 	private: System::Windows::Forms::Button^ statusButton;
 	private: System::Windows::Forms::ToolStripMenuItem^ auditFiltersToolStripMenuItem;
 	private: System::Windows::Forms::CheckBox^ replicationCheckBox;
-private: System::Windows::Forms::ToolStripMenuItem^ continuousReplicationToolStripMenuItem;
-private: System::Windows::Forms::ToolStripMenuItem^ wWiseConfigurationToolStripMenuItem;
-private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringToolStripMenuItem;
-private: System::Windows::Forms::NotifyIcon^ notifyIcon;
-private: System::Windows::Forms::ContextMenuStrip^ notifyContextMenuStrip;
-private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripShowItem;
-private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
-private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripResumeItem;
-private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
-private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuItem;
-
+	private: System::Windows::Forms::ToolStripMenuItem^ continuousReplicationToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^ wWiseConfigurationToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^ auditProcessAndFilteringToolStripMenuItem;
+	private: System::Windows::Forms::NotifyIcon^ notifyIcon;
+	private: System::Windows::Forms::ContextMenuStrip^ notifyContextMenuStrip;
+	private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripShowItem;
+	private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripExitItem;
+	private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripResumeItem;
+	private: System::Windows::Forms::ToolStripMenuItem^ notifyToolStripPauseItem;
+	private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuItem;
+	private: System::Windows::Forms::Label^ label4;
+	private: System::Windows::Forms::Button^ localizationButton;
+	private: System::Windows::Forms::TextBox^ localizationFolderTextBox;
 
 	private: System::ComponentModel::IContainer^ components;
 
@@ -159,7 +147,6 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
-
 
 #pragma region Windows Form Designer generated code
 		/// <summary>
@@ -189,7 +176,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			this->startButton = (gcnew System::Windows::Forms::Button());
 			this->importButton = (gcnew System::Windows::Forms::Button());
 			this->stopButton = (gcnew System::Windows::Forms::Button());
-			this->hideButton = (gcnew System::Windows::Forms::Button());
+			this->packButton = (gcnew System::Windows::Forms::Button());
 			this->xboxWEMButton = (gcnew System::Windows::Forms::Button());
 			this->mainMenuStrip = (gcnew System::Windows::Forms::MenuStrip());
 			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
@@ -199,6 +186,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			this->auditProcessAndFilteringToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->continuousReplicationToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->wWiseConfigurationToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->localizationToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->gitHubToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->aboutToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->auditContextMenuStrip = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
@@ -207,6 +195,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			this->newPluginButton = (gcnew System::Windows::Forms::Button());
 			this->addAuditFileButton = (gcnew System::Windows::Forms::Button());
 			this->generateButton = (gcnew System::Windows::Forms::Button());
+			this->localizationButton = (gcnew System::Windows::Forms::Button());
 			this->findPluginDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->importAchlistDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->addFileToAuditDialog = (gcnew System::Windows::Forms::OpenFileDialog());
@@ -216,7 +205,8 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			this->notifyToolStripResumeItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->notifyToolStripPauseItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->notifyToolStripExitItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->localizationToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->label4 = (gcnew System::Windows::Forms::Label());
+			this->localizationFolderTextBox = (gcnew System::Windows::Forms::TextBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pluginEnumerator))->BeginInit();
 			this->auditGroupBox->SuspendLayout();
@@ -256,7 +246,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			// 
 			// starfieldFolderButton
 			// 
-			this->starfieldFolderButton->Location = System::Drawing::Point(963, 63);
+			this->starfieldFolderButton->Location = System::Drawing::Point(963, 60);
 			this->starfieldFolderButton->Name = L"starfieldFolderButton";
 			this->starfieldFolderButton->Size = System::Drawing::Size(47, 39);
 			this->starfieldFolderButton->TabIndex = 2;
@@ -268,7 +258,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			// label2
 			// 
 			this->label2->AutoSize = true;
-			this->label2->Location = System::Drawing::Point(40, 102);
+			this->label2->Location = System::Drawing::Point(40, 103);
 			this->label2->Name = L"label2";
 			this->label2->Size = System::Drawing::Size(174, 25);
 			this->label2->TabIndex = 3;
@@ -277,7 +267,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			// xboxRootFolderTextBox
 			// 
 			this->xboxRootFolderTextBox->BackColor = System::Drawing::SystemColors::InactiveCaption;
-			this->xboxRootFolderTextBox->Location = System::Drawing::Point(286, 102);
+			this->xboxRootFolderTextBox->Location = System::Drawing::Point(286, 103);
 			this->xboxRootFolderTextBox->Name = L"xboxRootFolderTextBox";
 			this->xboxRootFolderTextBox->ReadOnly = true;
 			this->xboxRootFolderTextBox->Size = System::Drawing::Size(646, 29);
@@ -288,7 +278,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			// label3
 			// 
 			this->label3->AutoSize = true;
-			this->label3->Location = System::Drawing::Point(40, 141);
+			this->label3->Location = System::Drawing::Point(40, 183);
 			this->label3->Name = L"label3";
 			this->label3->Size = System::Drawing::Size(201, 25);
 			this->label3->TabIndex = 6;
@@ -299,11 +289,11 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			this->pluginComboBox->DropDownStyle = System::Windows::Forms::ComboBoxStyle::DropDownList;
 			this->pluginComboBox->Enabled = false;
 			this->pluginComboBox->FormattingEnabled = true;
-			this->pluginComboBox->Location = System::Drawing::Point(286, 141);
+			this->pluginComboBox->Location = System::Drawing::Point(286, 183);
 			this->pluginComboBox->MaxDropDownItems = 16;
 			this->pluginComboBox->Name = L"pluginComboBox";
 			this->pluginComboBox->Size = System::Drawing::Size(646, 32);
-			this->pluginComboBox->TabIndex = 7;
+			this->pluginComboBox->TabIndex = 8;
 			this->toolTip->SetToolTip(this->pluginComboBox, L"Select which PlugIn to audit");
 			this->pluginComboBox->TextChanged += gcnew System::EventHandler(this, &MainForm::pluginComboBox_TextChanged);
 			// 
@@ -312,12 +302,12 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			this->auditListView->BackColor = System::Drawing::SystemColors::Window;
 			this->auditListView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(1) { this->columnHeader1 });
 			this->auditListView->HideSelection = false;
-			this->auditListView->Location = System::Drawing::Point(45, 179);
+			this->auditListView->Location = System::Drawing::Point(45, 221);
 			this->auditListView->MultiSelect = false;
 			this->auditListView->Name = L"auditListView";
 			this->auditListView->Size = System::Drawing::Size(887, 422);
 			this->auditListView->Sorting = System::Windows::Forms::SortOrder::Ascending;
-			this->auditListView->TabIndex = 9;
+			this->auditListView->TabIndex = 10;
 			this->auditListView->TabStop = false;
 			this->toolTip->SetToolTip(this->auditListView, L"RIght click on a file to remove it from the audit log");
 			this->auditListView->UseCompatibleStateImageBehavior = false;
@@ -327,7 +317,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			// columnHeader1
 			// 
 			this->columnHeader1->Text = L"Audit Log";
-			this->columnHeader1->Width = 800;
+			this->columnHeader1->Width = 879;
 			// 
 			// auditGroupBox
 			// 
@@ -339,10 +329,10 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			this->auditGroupBox->Controls->Add(this->importButton);
 			this->auditGroupBox->Controls->Add(this->stopButton);
 			this->auditGroupBox->ForeColor = System::Drawing::SystemColors::ControlText;
-			this->auditGroupBox->Location = System::Drawing::Point(45, 629);
+			this->auditGroupBox->Location = System::Drawing::Point(45, 671);
 			this->auditGroupBox->Name = L"auditGroupBox";
 			this->auditGroupBox->Size = System::Drawing::Size(612, 168);
-			this->auditGroupBox->TabIndex = 11;
+			this->auditGroupBox->TabIndex = 12;
 			this->auditGroupBox->TabStop = false;
 			this->auditGroupBox->Text = L"Audit Control";
 			// 
@@ -419,21 +409,22 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			this->stopButton->UseVisualStyleBackColor = true;
 			this->stopButton->Click += gcnew System::EventHandler(this, &MainForm::stopButton_Click);
 			// 
-			// hideButton
+			// packButton
 			// 
-			this->hideButton->Location = System::Drawing::Point(775, 733);
-			this->hideButton->Name = L"hideButton";
-			this->hideButton->Size = System::Drawing::Size(157, 48);
-			this->hideButton->TabIndex = 13;
-			this->hideButton->Text = L"Hide";
-			this->toolTip->SetToolTip(this->hideButton, L"Hide the UI - tool still runs in the notification area");
-			this->hideButton->UseVisualStyleBackColor = true;
-			this->hideButton->Click += gcnew System::EventHandler(this, &MainForm::hideButton_Click);
+			this->packButton->Enabled = false;
+			this->packButton->Location = System::Drawing::Point(710, 699);
+			this->packButton->Name = L"packButton";
+			this->packButton->Size = System::Drawing::Size(222, 48);
+			this->packButton->TabIndex = 13;
+			this->packButton->Text = L"Localize and &Pack";
+			this->toolTip->SetToolTip(this->packButton, L"Pack files from the Audit Log into BA2 Archive Files");
+			this->packButton->UseVisualStyleBackColor = true;
+			this->packButton->Click += gcnew System::EventHandler(this, &MainForm::packButton_Click);
 			// 
 			// xboxWEMButton
 			// 
 			this->xboxWEMButton->Enabled = false;
-			this->xboxWEMButton->Location = System::Drawing::Point(963, 102);
+			this->xboxWEMButton->Location = System::Drawing::Point(963, 100);
 			this->xboxWEMButton->Name = L"xboxWEMButton";
 			this->xboxWEMButton->Size = System::Drawing::Size(47, 39);
 			this->xboxWEMButton->TabIndex = 5;
@@ -515,6 +506,13 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			this->wWiseConfigurationToolStripMenuItem->Text = L"&WWise Configuration";
 			this->wWiseConfigurationToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::wWiseConfigurationToolStripMenuItem_Click);
 			// 
+			// localizationToolStripMenuItem
+			// 
+			this->localizationToolStripMenuItem->Name = L"localizationToolStripMenuItem";
+			this->localizationToolStripMenuItem->Size = System::Drawing::Size(378, 40);
+			this->localizationToolStripMenuItem->Text = L"&Localization Support";
+			this->localizationToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::localizationToolStripMenuItem_Click);
+			// 
 			// gitHubToolStripMenuItem
 			// 
 			this->gitHubToolStripMenuItem->Name = L"gitHubToolStripMenuItem";
@@ -547,10 +545,10 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			// newPluginButton
 			// 
 			this->newPluginButton->Enabled = false;
-			this->newPluginButton->Location = System::Drawing::Point(963, 141);
+			this->newPluginButton->Location = System::Drawing::Point(963, 180);
 			this->newPluginButton->Name = L"newPluginButton";
 			this->newPluginButton->Size = System::Drawing::Size(47, 39);
-			this->newPluginButton->TabIndex = 8;
+			this->newPluginButton->TabIndex = 9;
 			this->newPluginButton->Text = L"+";
 			this->toolTip->SetToolTip(this->newPluginButton, L"Add a new PlugIn to the repository of known PlugIns");
 			this->newPluginButton->UseVisualStyleBackColor = true;
@@ -559,10 +557,10 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			// addAuditFileButton
 			// 
 			this->addAuditFileButton->Enabled = false;
-			this->addAuditFileButton->Location = System::Drawing::Point(963, 370);
+			this->addAuditFileButton->Location = System::Drawing::Point(963, 412);
 			this->addAuditFileButton->Name = L"addAuditFileButton";
 			this->addAuditFileButton->Size = System::Drawing::Size(47, 39);
-			this->addAuditFileButton->TabIndex = 10;
+			this->addAuditFileButton->TabIndex = 11;
 			this->addAuditFileButton->Text = L"+";
 			this->toolTip->SetToolTip(this->addAuditFileButton, L"Manually add a file to the Audit Log");
 			this->addAuditFileButton->UseVisualStyleBackColor = true;
@@ -571,15 +569,27 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			// generateButton
 			// 
 			this->generateButton->Enabled = false;
-			this->generateButton->Location = System::Drawing::Point(775, 657);
+			this->generateButton->Location = System::Drawing::Point(710, 775);
 			this->generateButton->Name = L"generateButton";
-			this->generateButton->Size = System::Drawing::Size(157, 48);
-			this->generateButton->TabIndex = 12;
-			this->generateButton->Text = L"&Generate";
+			this->generateButton->Size = System::Drawing::Size(222, 48);
+			this->generateButton->TabIndex = 14;
+			this->generateButton->Text = L"&Generate ACHLIST";
 			this->toolTip->SetToolTip(this->generateButton, L"Replicates files from *.ESP folders to *.ESM folders and then generate the PC and"
 				L" XBox ACHLIST files from the current audit log");
 			this->generateButton->UseVisualStyleBackColor = true;
 			this->generateButton->Click += gcnew System::EventHandler(this, &MainForm::generateButton_Click);
+			// 
+			// localizationButton
+			// 
+			this->localizationButton->Enabled = false;
+			this->localizationButton->Location = System::Drawing::Point(963, 140);
+			this->localizationButton->Name = L"localizationButton";
+			this->localizationButton->Size = System::Drawing::Size(47, 39);
+			this->localizationButton->TabIndex = 7;
+			this->localizationButton->Text = L"...";
+			this->toolTip->SetToolTip(this->localizationButton, L"Set the root of the Localization Folder");
+			this->localizationButton->UseVisualStyleBackColor = true;
+			this->localizationButton->Click += gcnew System::EventHandler(this, &MainForm::localizationButton_Click);
 			// 
 			// findPluginDialog
 			// 
@@ -649,23 +659,39 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			this->notifyToolStripExitItem->Text = L"E&xit";
 			this->notifyToolStripExitItem->Click += gcnew System::EventHandler(this, &MainForm::notifyToolStripExitItem_Click);
 			// 
-			// localizationToolStripMenuItem
+			// label4
 			// 
-			this->localizationToolStripMenuItem->Name = L"localizationToolStripMenuItem";
-			this->localizationToolStripMenuItem->Size = System::Drawing::Size(378, 40);
-			this->localizationToolStripMenuItem->Text = L"&Localization Support";
-			this->localizationToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::localizationToolStripMenuItem_Click);
+			this->label4->AutoSize = true;
+			this->label4->Location = System::Drawing::Point(40, 143);
+			this->label4->Name = L"label4";
+			this->label4->Size = System::Drawing::Size(220, 25);
+			this->label4->TabIndex = 14;
+			this->label4->Text = L"Localization Root Folder";
+			// 
+			// localizationFolderTextBox
+			// 
+			this->localizationFolderTextBox->BackColor = System::Drawing::SystemColors::InactiveCaption;
+			this->localizationFolderTextBox->Location = System::Drawing::Point(286, 143);
+			this->localizationFolderTextBox->Name = L"localizationFolderTextBox";
+			this->localizationFolderTextBox->ReadOnly = true;
+			this->localizationFolderTextBox->Size = System::Drawing::Size(646, 29);
+			this->localizationFolderTextBox->TabIndex = 6;
+			this->localizationFolderTextBox->TabStop = false;
+			this->localizationFolderTextBox->TextChanged += gcnew System::EventHandler(this, &MainForm::localizationFolderTextBox_TextChanged);
 			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(11, 24);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(1026, 816);
+			this->ClientSize = System::Drawing::Size(1026, 856);
+			this->Controls->Add(this->localizationButton);
+			this->Controls->Add(this->localizationFolderTextBox);
+			this->Controls->Add(this->label4);
 			this->Controls->Add(this->generateButton);
 			this->Controls->Add(this->addAuditFileButton);
 			this->Controls->Add(this->newPluginButton);
 			this->Controls->Add(this->xboxWEMButton);
-			this->Controls->Add(this->hideButton);
+			this->Controls->Add(this->packButton);
 			this->Controls->Add(this->auditGroupBox);
 			this->Controls->Add(this->auditListView);
 			this->Controls->Add(this->pluginComboBox);
@@ -678,7 +704,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			this->Controls->Add(this->mainMenuStrip);
 			this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 			this->MainMenuStrip = this->mainMenuStrip;
-			this->MinimumSize = System::Drawing::Size(1050, 880);
+			this->MinimumSize = System::Drawing::Size(1050, 920);
 			this->Name = L"MainForm";
 			this->Text = L"Starfield Creation Kit Audit Tool";
 			this->FormClosing += gcnew System::Windows::Forms::FormClosingEventHandler(this, &MainForm::MainForm_FormClosing);
@@ -737,20 +763,38 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 		}
 	}
 	private: System::Void xboxWEMButton_Click(System::Object^ sender, System::EventArgs^ e) {
-		folderBrowser->Description = "Select the XBox Alternate WEM Folder";
+		folderBrowser->Description = "Select the XBox Alternate Folder";
 		folderBrowser->SelectedPath = starfieldFolderTextBox->Text;
 		folderBrowser->ShowNewFolderButton = true;
 		if (folderBrowser->ShowDialog(this) == System::Windows::Forms::DialogResult::OK) {
 			String^ path = folderBrowser->SelectedPath;
-			if (!FileResidesWithinStarfieldFolder(path)) {
-				MessageBox::Show(
-					L"XBox WEM Folder must reside within the Starfield Folder.",
-					L"Invalid XBox WEM Folder",
+			if (!StarfieldData::FileResidesWithinStarfieldFolder(path)) {
+				MessageBox::Show( this,
+					L"XBox Folder must reside within the Starfield Folder.",
+					L"Invalid XBox Folder",
 					MessageBoxButtons::OK,
 					MessageBoxIcon::Error);
 			}
 			else {
 				xboxRootFolderTextBox->Text = path;
+			}
+		}
+	}
+	private: System::Void localizationButton_Click(System::Object^ sender, System::EventArgs^ e) {
+		folderBrowser->Description = "Select the Localization Folder";
+		folderBrowser->SelectedPath = starfieldFolderTextBox->Text;
+		folderBrowser->ShowNewFolderButton = true;
+		if (folderBrowser->ShowDialog(this) == System::Windows::Forms::DialogResult::OK) {
+			String^ path = folderBrowser->SelectedPath;
+			if (!StarfieldData::FileResidesWithinStarfieldFolder(path)) {
+				MessageBox::Show( this,
+					L"Localization Folder must reside within the Starfield Folder.",
+					L"Invalid Localization Folder",
+					MessageBoxButtons::OK,
+					MessageBoxIcon::Error);
+			}
+			else {
+				localizationFolderTextBox->Text = path;
 			}
 		}
 	}
@@ -769,7 +813,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			replicationCheckBox->Checked = false;
 		}
 		else {
-			replicationCheckBox->Checked = ReadBooleanSetting(registryNameContinuousReplication, false);
+			replicationCheckBox->Checked = Util::ReadBooleanSetting(registryKey, registryNameContinuousReplication, false);
 			replicationCheckBox->Enabled = true;
 		}
 		notifyToolStripPauseItem->Enabled = true;
@@ -818,12 +862,12 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 		while (iter->MoveNext()) {
 			ListViewItem^ item = (ListViewItem^)iter->Current;
 			String^ relativeName = item->Text;
-			if (HasPrefix(relativeName, starfieldXBoxRelativePrefix)) {
-				relativeName = EspToEsmReplication(relativeName, false);
-				hmap->Add(relativeName->Substring(starfieldXBoxRelativePrefix->Length)->ToUpper(), relativeName);
+			if (Util::HasPrefix(relativeName, StarfieldData::starfieldXBoxRelativePrefix)) {
+				relativeName = Replication::EspToEsmReplication(relativeName, false, this);
+				hmap->Add(relativeName->Substring(StarfieldData::starfieldXBoxRelativePrefix->Length)->ToUpper(), relativeName);
 				xbFullList->Add(relativeName);
-				if (HasPrefix(relativeName, starfieldXBoxRelativeVoicePrefix) &&
-					HasSuffix(relativeName, L".WEM")) {
+				if (Util::HasPrefix(relativeName, StarfieldData::starfieldXBoxRelativeVoicePrefix) &&
+					Util::HasSuffix(relativeName, L".WEM")) {
 					xbVoiceList->Add(relativeName);
 				}
 				else {
@@ -840,14 +884,14 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			String^ relativeName = item->Text;
 
 			// We've already processed the XBox WEM files, so skip them this time
-			if (!HasPrefix(relativeName, starfieldXBoxRelativePrefix)) {
+			if (!Util::HasPrefix(relativeName, StarfieldData::starfieldXBoxRelativePrefix)) {
 				// Replicate the file to the ESM directory if required
-				relativeName = EspToEsmReplication(relativeName, false);
+				relativeName = Replication::EspToEsmReplication(relativeName, false, this);
 
 				// All files at this point are PC files
 				pcFullList->Add(relativeName);
-				if (HasPrefix(relativeName, starfieldRelativeVoicePrefix) &&
-					HasSuffix(relativeName, L".WEM")) {
+				if (Util::HasPrefix(relativeName, StarfieldData::starfieldRelativeVoicePrefix) &&
+					Util::HasSuffix(relativeName, L".WEM")) {
 					pcVoiceList->Add(relativeName);
 				}
 				else {
@@ -863,25 +907,25 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 		}
 
 		// Convert the lists to arrays for serialization
-		System::Type^ t = starfieldXBoxRelativePrefix->GetType();
+		System::Type^ t = StarfieldData::starfieldXBoxRelativePrefix->GetType();
 		System::Array^ pcFiles = pcFullList->ToArray(t);
 		System::Array^ xbFiles = xbFullList->ToArray(t);
 
 		// Write the arrays out to the FULL ACHLIST files
-		WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-PC.achlist");
-		WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-XB.achlist");
+		AchList::WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-PC.achlist", this);
+		AchList::WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-XB.achlist", this);
 
 		// Write the arrays out to the VOICE ACHLIST files
 		pcFiles = pcVoiceList->ToArray(t);
 		xbFiles = xbVoiceList->ToArray(t);
-		WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-VOICE-PC.achlist");
-		WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-VOICE-XB.achlist");
+		AchList::WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-VOICE-PC.achlist", this);
+		AchList::WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-VOICE-XB.achlist", this);
 
 		// Write the arrays out to the NONVOICE ACHLIST files
 		pcFiles = pcNonVoiceList->ToArray(t);
 		xbFiles = xbNonVoiceList->ToArray(t);
-		WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-NONVOICE-PC.achlist");
-		WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-NONVOICE-XB.achlist");
+		AchList::WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-NONVOICE-PC.achlist", this);
+		AchList::WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-NONVOICE-XB.achlist", this);
 
 		// Tell the user what was done
 		MessageBox::Show(this,
@@ -898,17 +942,19 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			MessageBoxIcon::Information);
 
 	}
-	private: System::Void hideButton_Click(System::Object^ sender, System::EventArgs^ e) {
-		this->Hide();
+	private: System::Void packButton_Click(System::Object^ sender, System::EventArgs^ e) {
+		packDialog->Text = pluginComboBox->Text + L": Localization and Packing";
+		packDialog->ShowDialog(this);
 	}
 	private: System::Void replicationCheckBox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
 		if (replicationCheckBox->Enabled) {
-			WriteSetting(registryNameContinuousReplication, replicationCheckBox->Checked);
+			Util::WriteSetting(registryKey, registryNameContinuousReplication, replicationCheckBox->Checked);
 		}
 	}
 	private: System::Void clearButton_Click(System::Object^ sender, System::EventArgs^ e) {
 		// Clear the audit log and update the plugin's manifest
-		if (MessageBox::Show(this, L"Do you want to clear the audit log?",
+		if (MessageBox::Show(this,
+			L"Do you want to clear the audit log?",
 			L"CLear Audit Confirmation",
 			MessageBoxButtons::OKCancel,
 			MessageBoxIcon::Question) == System::Windows::Forms::DialogResult::OK) {
@@ -917,24 +963,22 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 		}
 	}
 	private: System::Void importButton_Click(System::Object^ sender, System::EventArgs^ e) {
-		String^ esmDirName = L"\\" + pluginComboBox->Text + L".esm\\";
-		String^ espDirName = L"\\" + pluginComboBox->Text + L".esp\\";
 		if (importAchlistDialog->ShowDialog(this) == System::Windows::Forms::DialogResult::OK) {
 			// Set the folder for the import file as the initial folder for the next time
 			String^ importFile = importAchlistDialog->FileName;
 			importAchlistDialog->InitialDirectory = Directory::GetParent(importFile)->FullName;
 
 			// Read the ACHLIST file and add all files to the audit log
-			System::Array^ files = ReadArrayFromJsonFile(importFile);
+			System::Array^ files = AchList::ReadArrayFromJsonFile(importFile, this);
 			for (int i = 0; i < files->Length; i++) {
 				String^ filename = (String^)files->GetValue(i);
 				
 				// Since the foreign ACHLIST file may have been created for ESM
 				// distribution, ensure that we transform any references to
 				// directories name MyMod.ESM to MyMod.ESP.
-				int pos = filename->IndexOf(esmDirName, StringComparison::InvariantCultureIgnoreCase);
+				int pos = filename->IndexOf(StarfieldData::esmDirName, StringComparison::InvariantCultureIgnoreCase);
 				if (pos >= 0) {
-					filename = filename->Substring(0, pos) + espDirName + filename->Substring(pos + esmDirName->Length);
+					filename = filename->Substring(0, pos) + StarfieldData::espDirName + filename->Substring(pos + StarfieldData::esmDirName->Length);
 				}
 
 				// Add the file to the audit log if it is not already present
@@ -974,15 +1018,17 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			MoveControl(auditGroupBox, 0, deltaHeight);
 			MoveControl(newPluginButton, deltaWidth, 0);
 			MoveControl(generateButton, deltaWidth, deltaHeight);
-			MoveControl(hideButton, deltaWidth, deltaHeight);
+			MoveControl(packButton, deltaWidth, deltaHeight);
 			MoveControl(starfieldFolderButton, deltaWidth, 0);
 			MoveControl(xboxWEMButton, deltaWidth, 0);
+			MoveControl(localizationButton, deltaWidth, 0);
 			addAuditFileButton->Left += deltaWidth;
 			addAuditFileButton->Top = auditListView->Top + ((auditListView->Height - addAuditFileButton->Height) / 2);
 
 			// Change the size of the text-based controls to track the change-of-size
 			starfieldFolderTextBox->Width += deltaWidth;
 			xboxRootFolderTextBox->Width += deltaWidth;
+			localizationFolderTextBox->Width += deltaWidth;
 			pluginComboBox->Width += deltaWidth;
 			auditListView->Width += deltaWidth;
 			auditListView->Height += deltaHeight;
@@ -999,18 +1045,22 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 		lastWidth = this->Width;
 	}
 	private: System::Void starfieldFolderTextBox_TextChanged(System::Object^ sender, System::EventArgs^ e) {
-		WriteSetting(registryNameStarfieldFolder, starfieldFolderTextBox->Text);
-		starfieldPrefix = starfieldFolderTextBox->Text + L"\\";
-		starfieldDataFolder = starfieldPrefix + L"DATA";
-		starfieldDataPrefix = starfieldDataFolder + L"\\";
-		starfieldBackupPrefix = starfieldDataPrefix + L"BACKUP\\";
+		Util::WriteSetting(registryKey, registryNameStarfieldFolder, starfieldFolderTextBox->Text);
+		StarfieldData::starfieldPrefix = starfieldFolderTextBox->Text + L"\\";
+		StarfieldData::starfieldDataFolder = StarfieldData::starfieldPrefix + L"DATA";
+		StarfieldData::starfieldDataPrefix = StarfieldData::starfieldDataFolder + L"\\";
+		StarfieldData::starfieldBackupPrefix = StarfieldData::starfieldDataPrefix + L"BACKUP\\";
 		fileSystemWatcher->Path = starfieldFolderTextBox->Text;
 		fileSystemWatcher->IncludeSubdirectories = true;
-		findPluginDialog->InitialDirectory = starfieldDataFolder;
+		findPluginDialog->InitialDirectory = StarfieldData::starfieldDataFolder;
 		importAchlistDialog->InitialDirectory = starfieldFolderTextBox->Text;
-		addFileToAuditDialog->InitialDirectory = starfieldDataFolder;
+		addFileToAuditDialog->InitialDirectory = StarfieldData::starfieldDataFolder;
 		xboxWEMButton->Enabled = true;
-		if (!FileResidesWithinStarfieldFolder(xboxRootFolderTextBox->Text)) {
+		localizationButton->Enabled = true;
+		if (!StarfieldData::FileResidesWithinStarfieldFolder(localizationFolderTextBox->Text)) {
+			localizationFolderTextBox->Text = L"";
+		}
+		if (!StarfieldData::FileResidesWithinStarfieldFolder(xboxRootFolderTextBox->Text)) {
 			xboxRootFolderTextBox->Text = L"";
 		}
 		else {
@@ -1019,11 +1069,12 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 				importButton->Enabled = true;
 				addAuditFileButton->Enabled = true;
 				generateButton->Enabled = true;
+				packButton->Enabled = true;
 			}
 		}
 	}
 	private: System::Void xboxRootFolderTextBox_TextChanged(System::Object^ sender, System::EventArgs^ e) {
-		WriteSetting(registryNameXBoxWEMFolder, xboxRootFolderTextBox->Text);
+		Util::WriteSetting(registryKey, registryNameXBoxWEMFolder, xboxRootFolderTextBox->Text);
 		if (0 == xboxRootFolderTextBox->Text->Length) {
 			pluginComboBox->Enabled = false;
 			newPluginButton->Enabled = false;
@@ -1031,12 +1082,13 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			importButton->Enabled = false;
 			addAuditFileButton->Enabled = false;
 			generateButton->Enabled = false;
+			packButton->Enabled = false;
 		}
 		else {
-			starfieldXBoxDataFolder = xboxRootFolderTextBox->Text + L"\\DATA";
-			starfieldXBoxRelativePrefix = L"Data\\.." + xboxRootFolderTextBox->Text->Substring(starfieldFolderTextBox->Text->Length) + L"\\";
-			starfieldXBoxDataPrefix = starfieldXBoxDataFolder + L"\\";
-			starfieldXBoxRelativeVoicePrefix = starfieldXBoxRelativePrefix + L"Data\\Sound\\Voice\\";
+			StarfieldData::starfieldXBoxDataFolder = xboxRootFolderTextBox->Text + L"\\DATA";
+			StarfieldData::starfieldXBoxRelativePrefix = L"Data\\.." + xboxRootFolderTextBox->Text->Substring(starfieldFolderTextBox->Text->Length) + L"\\";
+			StarfieldData::starfieldXBoxDataPrefix = StarfieldData::starfieldXBoxDataFolder + L"\\";
+			StarfieldData::starfieldXBoxRelativeVoicePrefix = StarfieldData::starfieldXBoxRelativePrefix + L"Data\\Sound\\Voice\\";
 			pluginComboBox->Enabled = true;
 			newPluginButton->Enabled = true;
 			startButton->Enabled = true;
@@ -1044,8 +1096,12 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 				importButton->Enabled = true;
 				addAuditFileButton->Enabled = true;
 				generateButton->Enabled = true;
+				packButton->Enabled = true;
 			}
 		}
+	}
+	private: System::Void localizationFolderTextBox_TextChanged(System::Object^ sender, System::EventArgs^ e) {
+		Util::WriteSetting(registryKey, registryLocalizationFolder, localizationFolderTextBox->Text);
 	}
 	private: System::Void pluginComboBox_TextChanged(System::Object^ sender, System::EventArgs^ e) {
 		// If the current value in the control is an empty string, this is
@@ -1068,14 +1124,14 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			// Deactivate the other audit control buttons
 			importButton->Enabled = false;
 			generateButton->Enabled = false;
+			packButton->Enabled = false;
 			addAuditFileButton->Enabled = false;
-			generateButton->Enabled = false;
 			replicationCheckBox->Enabled = false;
 			replicationCheckBox->Checked = false;
 
 			// Clear the ESP and ESM directory names
-			espDirName = nullptr;
-			esmDirName = nullptr;
+			StarfieldData::espDirName = nullptr;
+			StarfieldData::esmDirName = nullptr;
 		}
 		else {
 			// Activate the other audit control buttons
@@ -1083,12 +1139,14 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			importButton->Enabled = true;
 			addAuditFileButton->Enabled = true;
 			generateButton->Enabled = true;
-			replicationCheckBox->Checked = running && ReadBooleanSetting(registryNameContinuousReplication, false);
+			packButton->Enabled = true;
+			replicationCheckBox->Checked = running &&
+				Util::ReadBooleanSetting(registryKey, registryNameContinuousReplication, false);
 			replicationCheckBox->Enabled = running;
 
 			// Generate the names for the MyMod.ESP and MyMod.ESM directories
-			espDirName = L"\\" + newPlugin + L".esp\\";
-			esmDirName = L"\\" + newPlugin + L".esm\\";
+			StarfieldData::espDirName = L"\\" + newPlugin + L".esp\\";
+			StarfieldData::esmDirName = L"\\" + newPlugin + L".esm\\";
 
 			// Load/Update the current manifest for this plugin
 			LoadManifest(newPlugin);
@@ -1110,7 +1168,8 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 		this->Close();
 	}
 	private: System::Void auditProcessAndFilteringToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) {
-		MessageBox::Show(L"This tool works by using the native Windows APIs to receive notifications " +
+		MessageBox::Show(this,
+			L"This tool works by using the native Windows APIs to receive notifications " +
 			L"anytime that a file is created, altered, renamed or deleted anywhere in the Starfield " +
 			L"directory tree.  The tool uses these notifications to keep an audit log of all changes " +
 			L"made by the Creation Kit as part of working on one's plugin.  This audit log is then " +
@@ -1134,7 +1193,8 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			MessageBoxIcon::Information);
 	}
 	private: System::Void continuousReplicationToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) {
-		MessageBox::Show(L"Every time that one generates or regenerates the ACHLIST packing files " +
+		MessageBox::Show(this,
+			L"Every time that one generates or regenerates the ACHLIST packing files " +
 			L"for a plugin, the tool will also replicate all files found in the plugin's ESP " +
 			L"directories to the corresponding ESM directories.  However this synchronization of files " +
 			L"only occurs when one clicks on the 'Generate' button.  If one has made changes to " +
@@ -1150,7 +1210,8 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			MessageBoxIcon::Information);
 	}
 	private: System::Void wWiseConfigurationToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) {
-		MessageBox::Show(L"In order to generate platform-specific ACHLIST files, one must configure " +
+		MessageBox::Show(this,
+			L"In order to generate platform-specific ACHLIST files, one must configure " +
 			L"WWise in the CreationKitCustom.ini file to generate *both* PC and XBox WEM files " +
 			L"simultaneously, placing the XBox WEM files in an alternate directory structure.\n\n"
 			L"One can provide a suitable configuration for WWise by ensuring that the [Audio] " +
@@ -1168,7 +1229,8 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			MessageBoxIcon::Information);
 	}
 	private: System::Void localizationToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) {
-		MessageBox::Show(L"The Creation Kit Audit Tool will generate addition ACHLIST packing files to assist " +
+		MessageBox::Show(this,
+			L"The Creation Kit Audit Tool will generate addition ACHLIST packing files to assist " +
 			L"in the creation of Localized Plugins.  Plugins that have been localized have two special " +
 			L"characteristics: String Translation Files and Localized Voice Files\n\n" +
 			L"The String Translation Files are generated using the CreationKit.exe tool and are " +
@@ -1197,13 +1259,13 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 		proc->Start(githubUrl);
 	}
 	private: System::Void aboutToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) {
-		MessageBox::Show(
+		MessageBox::Show( this,
 			L"Monitors file activity within the Starfield Installation Tree to automated the generation of ACHLIST packing files.\n\n" +
 			L"Provides automatic replication of files from *.ESP folders to *.ESM folders during ACHLIST generation.\n\n" +
 			L"Generates platform-specific ACHLIST files for packaging PC and XBox WEM files.\n\n" +
 			L"Generated ACHLIST files are stored in one's >Documents\\My Games\\Starfield\\CreationKitAuditTool< folder.\n\n" +
 			L"GitHub: " + githubUrl + L"\n\n" +
-			L"Version 1.4.0\n\n" +
+			L"Version 2.0.0\n\n" +
 			L"Copyright 2025, Eric Karlson\n\n" +
 			L"Distrbuted under the terms of the Apache License version 2.0, January 2004",
 			L"Creation Kit Audit Log Help",
@@ -1251,20 +1313,20 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 				// Skip and report any files not within the Starfield or XBox Data folders.
 				// Skip and report any file that resides within a plugin folder
 				// that is not related to the current plugin.
-				if (NORMAL_FILE != ClassifyFile(filename)) {
+				if (NORMAL_FILE != Util::ClassifyFile(filename)) {
 					// Silent ignore
 				}
-				else if (!FileResidesWithinEitherDataFolder(filename)) {
+				else if (!StarfieldData::FileResidesWithinEitherDataFolder(filename)) {
 					skippedFiles = skippedFiles + separator + filename;
 					separator = L"\n";
 				}
-				else if (!FileRelatedToPlugIn(filename, pluginComboBox->Text)) {
+				else if (!StarfieldData::FileRelatedToPlugIn(filename, pluginComboBox->Text)) {
 					skippedFiles = skippedFiles + separator + filename;
 					separator = L"\n";
 				}
 				else {
 					// Add the new file to the audit log if it is not already present.
-					String^ rname = GetRelativeName(filename);
+					String^ rname = StarfieldData::GetRelativeName(filename);
 					if (!AuditFileAlreadyPresent(rname)) {
 						auditListView->Items->Add(gcnew ListViewItem(rname));
 						lastFilename = filename;
@@ -1282,7 +1344,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 
 			// Report any skipped files
 			if (skippedFiles->Length > 0) {
-				MessageBox::Show(
+				MessageBox::Show( this,
 					L"The following files were not added to the audit log because they do not reside within either the Starfield Data or Starfield XBox Data folders or they are not related to the current plugin:\n" +
 					skippedFiles,
 					L"Invalid File Selections",
@@ -1297,7 +1359,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 	//
 	private: System::Void fileSystemWatcher_Changed(System::Object^ sender, System::IO::FileSystemEventArgs^ e) {
 		if (running) {
-			FileType ft = ClassifyFile(e->FullPath);
+			FileType ft = Util::ClassifyFile(e->FullPath);
 			if (NORMAL_FILE == ft) {
 				HandleFileCreation(e->FullPath);
 			}
@@ -1319,7 +1381,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 	}
 	private: System::Void fileSystemWatcher_Created(System::Object^ sender, System::IO::FileSystemEventArgs^ e) {
 		if (running) {
-			FileType ft = ClassifyFile(e->FullPath);
+			FileType ft = Util::ClassifyFile(e->FullPath);
 			if (NORMAL_FILE == ft) {
 				HandleFileCreation(e->FullPath);
 			}
@@ -1330,7 +1392,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 	}
 	private: System::Void fileSystemWatcher_Renamed(System::Object^ sender, System::IO::RenamedEventArgs^ e) {
 		if (running) {
-			FileType ft = ClassifyFile(e->FullPath);
+			FileType ft = Util::ClassifyFile(e->FullPath);
 			if (NORMAL_FILE == ft) {
 				HandleRenamedFile(e->OldFullPath, e->FullPath);
 			}
@@ -1371,8 +1433,8 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 	}
 	private: System::Void AutoBindPlugin(String^ fullname) {
 		// Extract the base plugin name
-		String^ plugin = fullname->Substring(starfieldDataPrefix->Length,
-			fullname->Length - starfieldDataPrefix->Length - 4);
+		String^ plugin = fullname->Substring(StarfieldData::starfieldDataPrefix->Length,
+			fullname->Length - StarfieldData::starfieldDataPrefix->Length - 4);
 
 		// Register and switch to the autodetected plugin
 		if (RegisterPlugInIfNeeded(plugin)) {
@@ -1383,134 +1445,40 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 	private: bool IsAutodetectMode() {
 		return autodetectPluginName->Equals(pluginComboBox->Text);
 	}
-	private: bool HasPrefix(String^ filename, String^ prefix) {
-		return filename->StartsWith(prefix, StringComparison::InvariantCultureIgnoreCase);
-	}
-	private: bool HasSuffix(String^ filename, String^ suffix) {
-		return filename->EndsWith(suffix, StringComparison::InvariantCultureIgnoreCase);
-	}
-	private: bool IsESPFile(String^ fullname) {
-		return HasSuffix(fullname, L".ESP") && HasPrefix(fullname, starfieldDataPrefix);
-	}
-	private: System::Void WriteArrayToJsonFile(System::Array^ strings, String^ filename) {
-		DataContractJsonSerializer^ deser = gcnew DataContractJsonSerializer(filename->GetType());
-		try {
-			// Since the standard .NET Json DeSer has no format controls, in order
-			// to write the ACHLIST file in the easily-readable form generated by
-			// CK, we have to manually emit the open/close braces and then serialize
-			// each string sequentially.
-			System::IO::FileStream^ fh = nullptr;
-			StreamWriter^ sw = nullptr;
-			try {
-				fh = File::Create(filename);
-				StreamWriter^ sw = gcnew StreamWriter(fh);
-				sw->Write(L"[");
-				sw->Flush();
-				String^ prefix = L"\n\t";
-				IEnumerator^ iter = strings->GetEnumerator();
-				while (iter->MoveNext()) {
-					sw->Write(prefix);
-					sw->Flush();
-					deser->WriteObject(fh, cli::safe_cast<String^>(iter->Current));
-					prefix = L",\n\t";
-				}
-				sw->Write(L"\n]");
-				sw->Flush();
-			}
-			finally {
-				if (nullptr != sw) {
-					sw->Close();
-				}
-				else if (nullptr != fh) {
-					fh->Close();
-				}
-			}
-		}
-		catch (Exception^ e) {
-			MessageBox::Show(L"Error creating " + filename + L": " + e->Message,
-				L"File Creation Error",
-				MessageBoxButtons::OK,
-				MessageBoxIcon::Error);
-		}
-	}
-	private: System::Array^ ReadArrayFromJsonFile(String^ filename) {
-		// Some contortions to force the type data needed for the JSON Serializer
-		ArrayList^ typedArray = gcnew ArrayList(0);
-		System::Array^ strings = typedArray->ToArray(filename->GetType());
-
-		// Construct the serializer and read the data
-		DataContractJsonSerializer^ deser = gcnew DataContractJsonSerializer(strings->GetType());
-		try {
-			System::IO::FileStream^ fh = nullptr;
-			try {
-				fh = File::OpenRead(filename);
-				strings = cli::safe_cast<System::Array^>(deser->ReadObject(fh));
-			}
-			finally {
-				if (nullptr != fh) {
-					fh->Close();
-				}
-			}
-		}
-		catch (Exception^ e) {
-			MessageBox::Show(L"Error creating " + filename + L": " + e->Message,
-				L"File Creation Error",
-				MessageBoxButtons::OK,
-				MessageBoxIcon::Error);
-		}
-		return strings;
-	}
-	private: FileType ClassifyFile(String^ fullname) {
-		FileAttributes attr;
-		try {
-			attr = File::GetAttributes(fullname);
-		}
-		catch (FileNotFoundException^) {
-			return DELETED;
-		}
-		catch(DirectoryNotFoundException^) {
-			return DELETED;
-		}
-		catch (System::Exception^) {
-			// Unknown problem getting the file's attributes
-			return UNKNOWN;
-		}
-		if (attr.HasFlag(FileAttributes::Directory)) {
-			return DIRECTORY;
-		}
-		if (attr.HasFlag(FileAttributes::System)) {
-			return SYSTEM_FILE;
-		}
-		if (attr.HasFlag(FileAttributes::Hidden)) {
-			return HIDDEN_FILE;
-		}
-		if (attr.HasFlag(FileAttributes::Temporary)) {
-			return TEMPORARY_FILE;
-		}
-		return NORMAL_FILE;
-	}
 	private: System::Void HandleFileCreation(String^ fullname) {
-		if (replicationCheckBox->Checked) {
-			MaybeReplicateFile(fullname, true);
+		bool shouldLog = ShouldLog(fullname);
+		if (shouldLog && replicationCheckBox->Checked) {
+			Replication::MaybeReplicateFile(fullname, true, this);
 		}
-		if (IsESPFile(fullname) && IsAutodetectMode()) {
+		if (StarfieldData::IsESPFile(fullname) && IsAutodetectMode()) {
 			AutoBindPlugin(fullname);
 		}
 		else if (ShouldLog(fullname)) {
-			String^ rpath = GetRelativeName(fullname);
+			String^ rpath = StarfieldData::GetRelativeName(fullname);
 			if (nullptr == FindListViewItem(auditListView, rpath, false)) {
 				auditListView->Items->Add(gcnew ListViewItem(rpath));
 				WriteManifest(pluginComboBox->Text);
 			}
 		}
 	}
+	private: System::Void RediscoverFolderContents(String^ fullname) {
+		// Emulate a CREATE operation on all files that reside within this
+		// directory tree.  In cases where one has moved a folder there are
+		// no notifications about the items that move with the folder, so
+		// we have to walk the tree to discover them.
+		Generic::IEnumerator<String^>^ iter =
+			Directory::EnumerateFiles(fullname, L"*.*", SearchOption::AllDirectories)->GetEnumerator();
+		while (iter->MoveNext()) {
+			HandleFileCreation(iter->Current);
+		}
+	}
 	private: System::Void HandleFolderCreation(String^ fullname) {
 		if (replicationCheckBox->Checked) {
-			MaybeReplicateFolderContents(fullname);
+			RediscoverFolderContents(fullname);
 		}
 	}
 	private: System::Void HandleFolderDeletion(String^ fullname) {
-		String^ relativeName = GetRelativeName(fullname);
+		String^ relativeName = StarfieldData::GetRelativeName(fullname);
 		if (nullptr == relativeName) {
 			// Folder is not in one of the Data folders - ignore
 			return;
@@ -1518,7 +1486,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 
 		// Replicate the folder deletion, if needed
 		if (replicationCheckBox->Checked) {
-			MaybeDeleteReplicaFolder(fullname);
+			Replication::MaybeDeleteReplicaFolder(fullname, this);
 		}
 
 		// Now remove all audit logs whose directory matches the one being deleted
@@ -1535,13 +1503,13 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 		}
 	}
 	private: System::Void HandleFileDeletion(String^ fullname) {
-		String^ relativeName = GetRelativeName(fullname);
+		String^ relativeName = StarfieldData::GetRelativeName(fullname);
 		if (nullptr == relativeName) {
 			// File does not reside in one of the Data folders - ignore
 			return;
 		}
 		if (replicationCheckBox->Checked) {
-			MaybeDeleteReplicaFile(fullname);
+			Replication::MaybeDeleteReplicaFile(fullname, this);
 		}
 		ListViewItem^ item = FindListViewItem(auditListView, relativeName, false);
 		if (nullptr != item) {
@@ -1550,7 +1518,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 		}
 	}
 	private: System::Void HandleRenamedFile(String^ oldFullName, String^ newFullName) {
-		String^ relativeName = GetRelativeName(oldFullName);
+		String^ relativeName = StarfieldData::GetRelativeName(oldFullName);
 		if (nullptr == relativeName) {
 			// File does not reside in one of the Data folders - ignore
 			return;
@@ -1558,7 +1526,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 
 		// Replicate the rename, if needed
 		if (replicationCheckBox->Checked) {
-			MaybeRenameReplicaFiles(oldFullName, newFullName);
+			Replication::MaybeRenameReplicaFiles(oldFullName, newFullName, this);
 		}
 
 		// Remove audit logs for the old filename
@@ -1571,7 +1539,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 
 		// Add audit logs for the new filename
 		if (ShouldLog(newFullName)) {
-			relativeName = GetRelativeName(newFullName);
+			relativeName = StarfieldData::GetRelativeName(newFullName);
 			if (nullptr == FindListViewItem(auditListView, relativeName, false)) {
 				auditListView->Items->Add(gcnew ListViewItem(relativeName));
 				manifestAltered = true;
@@ -1583,7 +1551,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 		}
 	}
 	private: System::Void HandleRenamedFolder(String^ oldFullName, String^ newFullName) {
-		String^ oldRelativeName = GetRelativeName(oldFullName);
+		String^ oldRelativeName = StarfieldData::GetRelativeName(oldFullName);
 		if (nullptr == oldRelativeName) {
 			// Folder does not reside in one of the Data folders - ignore
 			return;
@@ -1591,7 +1559,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 
 		// Replicate the rename, if needed
 		if (replicationCheckBox->Checked) {
-			MaybeRenameReplicasFolders(oldFullName, newFullName);
+			Replication::MaybeRenameReplicasFolders(oldFullName, newFullName, this);
 		}
 		
 		// Find and remove all audit logs for files that reside in the oldFullName.
@@ -1606,58 +1574,37 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 
 		// Now add all the audit logs back, but replacing the old folder
 		// name with the new one.
-		String^ newRelativeName = GetRelativeName(newFullName);
+		String^ newRelativeName = StarfieldData::GetRelativeName(newFullName);
 		Generic::IEnumerator<String^>^ iter = oldNames->GetEnumerator();
 		while (iter->MoveNext()) {
 			String^ newAuditName = newRelativeName + iter->Current->Substring(oldRelativeName->Length);
 			auditListView->Items->Add(gcnew ListViewItem(newAuditName));
 		}
 	}
-	private: bool FileRelatedToPlugIn(String^ fullname, String^ plugin) {
-		// Force the filename to upper case as there is no case-insensitive version
-		// of String::Contains()
-		String^ upperName = fullname->ToUpper();
-
-		// If there is a directory that ends with '.ESM' then the file
-		// cannot be related to a plugin ESP file.
-		if (upperName->Contains(L".ESM\\")) {
-			return false;
-		}
-
-		// If there is a directory that ends with '.ESP' that does not
-		// correspond to this plugin, then it is related to some other plugin.
-		if (upperName->Contains(L".ESP\\") &&
-			!upperName->Contains(L"\\" + plugin->ToUpper() + L".ESP\\")) {
-			return false;
-		}
-
-		// Otherwise this file is related specifically to this plug,
-		// or it is not specific to any given plugin
-		return true;
-	}
 	private: bool ShouldLog(String^ fullName) {
-		if (NORMAL_FILE != ClassifyFile(fullName)) {
+		if (NORMAL_FILE != Util::ClassifyFile(fullName)) {
 			return false;
 		}
 
 		// Ignore any file not under the Starfield Data or Starfield XBox folders
-		if (!FileResidesWithinEitherDataFolder(fullName)) {
+		if (!StarfieldData::FileResidesWithinEitherDataFolder(fullName)) {
 			return false;
 		}
 
 		// Ignore files whose extensions are in the configured audit filter list
 		ListView::ListViewItemCollection^ filters = auditFilterDialog->GetAuditFilters();
 		for (int i = 0; i < filters->Count; i++) {
-			if (HasSuffix(fullName, filters[i]->Text)) {
+			if (Util::HasSuffix(fullName, filters[i]->Text)) {
 				return false;
 			}
 		}
 
 		// Also the WISE.DAT & TEMP.WEM files that are generated by WWise.
 		// And anything inside of Starfield's Data\Backup folder.
-		if (HasSuffix(fullName, L"\\TEMP.WEM") ||
-			HasSuffix(fullName, L"\\WWISE.DAT") ||
-			HasPrefix(fullName, starfieldBackupPrefix)) {
+		if (Util::HasSuffix(fullName, L"\\TEMP.WEM") ||
+			Util::HasSuffix(fullName, L"\\WWISE.DAT") ||
+			Util::HasSuffix(fullName, L"\\MOTDIMAGE.PNG") ||
+			Util::HasPrefix(fullName, StarfieldData::starfieldBackupPrefix)) {
 			return false;
 		}
 
@@ -1665,36 +1612,7 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 		// irrespective of whether they are part of the current plugin or not.  Filter out
 		// any files that appear to reside in a plugin-specific directory other than the
 		// one currently selected.
-		return FileRelatedToPlugIn(fullName, pluginComboBox->Text);
-	}
-	private: String^ GetRelativeName(String^ fullname) {
-		// If the file resides in the Starfield XBox Alternate Data folder, we have to construct
-		// the special relative path that will resolve properly when the Creation Kit processes
-		// the ARCHLIST file.
-		if (FileResidesWithinXBoxDataFolder(fullname)) {
-			return L"Data\\..\\" + fullname->Substring(starfieldFolderTextBox->Text->Length + 1);
-		}
-
-		// For a normal Starfield Data file, just compute a simple relative path
-		if (FileResidesWithinStarfieldDataFolder(fullname)) {
-			return fullname->Substring(starfieldFolderTextBox->Text->Length + 1);
-		}
-
-		// Anything else is not within one of our Data folders, so there is no relative name
-		return nullptr;
-	}
-	private: bool FileResidesWithinStarfieldFolder(String^ fullFilename) {
-		return HasPrefix(fullFilename, starfieldPrefix);
-	}
-	private: bool FileResidesWithinEitherDataFolder(String^ fullFilename) {
-		return FileResidesWithinStarfieldDataFolder(fullFilename) ||
-			   FileResidesWithinXBoxDataFolder(fullFilename);
-	}
-	private: bool FileResidesWithinStarfieldDataFolder(String^ fullFilename) {
-		return HasPrefix(fullFilename, starfieldDataPrefix);
-	}
-	private: bool FileResidesWithinXBoxDataFolder(String^ fullFilename) {
-		return HasPrefix(fullFilename, starfieldXBoxDataPrefix);
+		return StarfieldData::FileRelatedToPlugIn(fullName, pluginComboBox->Text);
 	}
 	private: bool AuditFileAlreadyPresent(String^ relativeFilename) {
 		IEnumerator^ iter = auditListView->Items->GetEnumerator();
@@ -1708,58 +1626,6 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 	private: System::Void MoveControl(Control^ control, int deltaX, int deltaY) {
 		control->Left += deltaX;
 		control->Top += deltaY;
-	}
-	private: System::Void WriteSetting(String^ name, String^ value) {
-		try {
-			RegistryKey^ key = Registry::CurrentUser->CreateSubKey(registryKey);
-			key->SetValue(name, value);
-			key->Close();
-		}
-		catch (Exception^) {
-			// Ignore
-		}
-	}
-	private: System::Void WriteSetting(String^ name, bool value) {
-		try {
-			RegistryKey^ key = Registry::CurrentUser->CreateSubKey(registryKey);
-			key->SetValue(name, value ? 1 : 0, RegistryValueKind::DWord);
-			key->Close();
-		}
-		catch (Exception^) {
-			// Ignore
-		}
-	}
-	private: String^ ReadStringSetting(String^ name) {
-	   Object^ value = nullptr;
-	   try {
-		   RegistryKey^ key = Registry::CurrentUser->OpenSubKey(registryKey);
-		   if (nullptr != key) {
-			   value = key->GetValue(name);
-			   key->Close();
-		   }
-	   }
-	   catch (Exception^) {
-		   // Ignore
-	   }
-	   return (value == nullptr) ? nullptr : cli::safe_cast<String^>(value);
-    }
-	private: bool ReadBooleanSetting(String^ name, bool defaultValue) {
-		Object^ value = nullptr;
-		try {
-			RegistryKey^ key = Registry::CurrentUser->OpenSubKey(registryKey);
-			if (nullptr != key) {
-				value = key->GetValue(name);
-				key->Close();
-			}
-		}
-		catch (Exception^) {
-			// Ignore
-		}
-		if (nullptr == value) {
-			return defaultValue;
-		}
-		Int32 zeroValue = 0;
-		return (value == nullptr) ? defaultValue : !value->Equals(zeroValue);
 	}
 	private: bool RegisterPlugInIfNeeded(String^ plugin) {
 		String^ manifestFile = userGameFolder + L"\\" + plugin + manifestFileExt;
@@ -1775,7 +1641,8 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 			}
 		}
 		catch (Exception^ e) {
-			MessageBox::Show(L"Unable to create manifest file " + manifestFile + L": " + e->Message,
+			MessageBox::Show(this,
+				L"Unable to create manifest file " + manifestFile + L": " + e->Message,
 				L"Manifest File Creation Error",
 				MessageBoxButtons::OK,
 				MessageBoxIcon::Error);
@@ -1826,309 +1693,6 @@ private: System::Windows::Forms::ToolStripMenuItem^ localizationToolStripMenuIte
 					MessageBoxIcon::Error);
 			}
 		}
-	}
-	private: String^ EspToEsmNameTransform(String^ relativeName) {
-		if (espDirName == nullptr) {
-			return nullptr;
-		}
-		int pos = relativeName->IndexOf(espDirName, StringComparison::InvariantCultureIgnoreCase);
-		if (pos < 0) {
-			return nullptr;
-		}
-		return relativeName->Substring(0, pos) + esmDirName + relativeName->Substring(pos + espDirName->Length);
-	}
-    private: String^ PCToXBoxNameTransform(String^ fullname) {
-		if (!HasPrefix( fullname, starfieldDataPrefix)) {
-			return nullptr;
-		}
-		return starfieldXBoxDataPrefix + fullname->Substring(starfieldDataPrefix->Length);
-	}
-	private: System::Void MaybeReplicateFile(String^ fullname, bool ignoreIOException) {
-		if (ShouldLog(fullname)) {
-			EspToEsmReplication(GetRelativeName(fullname), ignoreIOException);
-		}
-	}
-    private: System::Void MaybeReplicateFolderContents(String^ fullname) {
-		// Emulate a CREATE operation on all files that reside within this
-		// directory tree.  In cases where one has moved a folder there are
-		// no notifications about the items that move with the folder, so
-		// we have to walk the tree to discover them.
-		Generic::IEnumerator<String^>^ iter = Directory::EnumerateFiles(fullname, L"*.*", SearchOption::AllDirectories)->GetEnumerator();
-		while (iter->MoveNext()) {
-			HandleFileCreation(iter->Current);
-		}
-	}
-	private: System::Void MaybeRenameReplicaFiles(String^ oldFullName, String^ newFullName) {
-		// Renames should not change the folder name - verify that
-		if (!Path::GetDirectoryName(oldFullName)->Equals(Path::GetDirectoryName(newFullName))) {
-			MessageBox::Show(L"File rename crosses directories, which should not be possible.  "
-				L"Replication of rename skipped.",
-				L"Rename Replication Assertion Failure",
-				MessageBoxButtons::OK,
-				MessageBoxIcon::Warning);
-			return;
-		}
-
-		// Get the relative names for the old and new files
-		String^ oldRelativeName = GetRelativeName(oldFullName);
-		String^ newRelativeName = GetRelativeName(newFullName);
-		if (nullptr == oldRelativeName || nullptr == newRelativeName) {
-			return;
-		}
-
-		// If the folders lie within an ESP directory, rename
-		// the corresponding folder in the corresponding ESM directory.
-		String^ oldEsmRelativeName = EspToEsmNameTransform(oldRelativeName);
-		String^ newEsmRelativeName = EspToEsmNameTransform(newRelativeName);
-		if (nullptr != oldEsmRelativeName && nullptr != newEsmRelativeName) {
-			String^ oldEsmFullName = starfieldPrefix + oldEsmRelativeName;
-			String^ newEsmFullName = starfieldPrefix + newEsmRelativeName;
-			try {
-				if (File::Exists(oldEsmFullName)) {
-					File::Move(oldEsmFullName, newEsmFullName);
-				}
-			}
-			catch (Exception^ e) {
-				MessageBox::Show(this,
-					L"Error while renaming ESM replica folders: " +
-					e->Message,
-					L"ESM Replica Rename Failure",
-					MessageBoxButtons::OK,
-					MessageBoxIcon::Error);
-			}
-		}
-
-		// If the renamed folder lies within the standard Starfield Data tree
-		// rename its corresponding XBox replica, if there is one.
-		String^ oldXboxFullname = PCToXBoxNameTransform(oldFullName);
-		String^ newXBoxFullName = PCToXBoxNameTransform(newFullName);
-		if (nullptr != oldXboxFullname && nullptr != newXBoxFullName) {
-			try {
-				if (File::Exists(oldXboxFullname)) {
-					File::Move(oldXboxFullname, newXBoxFullName);
-				}
-			}
-			catch (Exception^ e) {
-				MessageBox::Show(this,
-					L"Error while renaming XBox replica folders: " +
-					e->Message,
-					L"XBox Replica Deletion Failure",
-					MessageBoxButtons::OK,
-					MessageBoxIcon::Error);
-			}
-		}
-	}
-	private: System::Void MaybeRenameReplicasFolders(String^ oldFullName, String^ newFullName) {
-		// Get the relative names for the old and new files
-		String^ oldRelativeName = GetRelativeName(oldFullName);
-		String^ newRelativeName = GetRelativeName(newFullName);
-		if (nullptr == oldRelativeName || nullptr == newRelativeName) {
-			return;
-		}
-
-		// If the files lie within an ESP directory, rename
-		// the corresponding file in the corresponding ESM directory.
-		String^ oldEsmRelativeName = EspToEsmNameTransform(oldRelativeName);
-		String^ newEsmRelativeName = EspToEsmNameTransform(newRelativeName);
-		if (nullptr != oldEsmRelativeName && nullptr != newEsmRelativeName) {
-			String^ oldEsmFullName = starfieldPrefix + oldEsmRelativeName;
-			String^ newEsmFullName = starfieldPrefix + newEsmRelativeName;
-			try {
-				if (Directory::Exists(oldEsmFullName)) {
-					Directory::Move(oldEsmFullName, newEsmFullName);
-				}
-			}
-			catch (Exception^ e) {
-				MessageBox::Show(this,
-					L"Error while renaming ESM replica files: " +
-					e->Message,
-					L"ESM Replica Rename Failure",
-					MessageBoxButtons::OK,
-					MessageBoxIcon::Error);
-			}
-		}
-
-		// If the renamed file lies within the standard Starfield Data tree
-		// rename its corresponding XBox replica, if there is one.
-		String^ oldXboxFullname = PCToXBoxNameTransform(oldFullName);
-		String^ newXBoxFullName = PCToXBoxNameTransform(newFullName);
-		if (nullptr != oldXboxFullname && nullptr != newXBoxFullName) {
-			try {
-				if (Directory::Exists(oldXboxFullname)) {
-					Directory::Move(oldXboxFullname, newXBoxFullName);
-				}
-			}
-			catch (Exception^ e) {
-				MessageBox::Show(this,
-					L"Error while renaming XBox replica files: " +
-					e->Message,
-					L"XBox Replica Deletion Failure",
-					MessageBoxButtons::OK,
-					MessageBoxIcon::Error);
-			}
-		}
-	}
-	private: System::Void MaybeDeleteReplicaFile(String^ fullname) {
-		// Ensure that the deleted file resides within one of our Data folders.
-		String^ relativeName = GetRelativeName(fullname);
-		if (nullptr == relativeName) {
-			return;
-		}
-
-		// If the deleted files lies within an ESP directory, delete
-		// the corresponding file in the corresponding ESM directory.
-		String^ esmRelativeName = EspToEsmNameTransform(relativeName);
-		if (nullptr != esmRelativeName) {
-			String^ esmFullName = starfieldPrefix + esmRelativeName;
-			try {
-				if (File::Exists(esmFullName)) {
-					File::Delete(esmFullName);
-				}
-			}
-			catch (Exception^ e) {
-				MessageBox::Show(this,
-					L"Error while deleting ESM replica file " +
-					esmFullName +
-					L": " +
-					e->Message,
-					L"ESM Replica Deletion Failure",
-					MessageBoxButtons::OK,
-					MessageBoxIcon::Error);
-			}
-		}
-
-		// If the deleted file lies within the standard Starfield Data tree
-		// delete its corresponding XBox replica, if there is one.
-		String^ xboxFullname = PCToXBoxNameTransform(fullname);
-		if (nullptr != xboxFullname) {
-			try {
-				if (File::Exists(xboxFullname)) {
-					File::Delete(xboxFullname);
-				}
-			}
-			catch (Exception^ e) {
-				MessageBox::Show(this,
-					L"Error while deleting XBox replica file " +
-					xboxFullname +
-					L": " +
-					e->Message,
-					L"XBox Replica Deletion Failure",
-					MessageBoxButtons::OK,
-					MessageBoxIcon::Error);
-			}
-		}
-	}
-	private: System::Void MaybeDeleteReplicaFolder(String^ fullname) {
-		// Ensure that the deleted folder resides within one of our Data folders
-		String^ relativeName = GetRelativeName(fullname);
-		if (nullptr == relativeName) {
-			return;
-		}
-
-		// If the deleted folder lies within an ESP folder, delete the
-		// corresponding folder under the corresponding ESM folder.
-		String^ esmRelativeName = EspToEsmNameTransform(relativeName);
-		if (nullptr != esmRelativeName) {
-			DeleteFolder(starfieldPrefix + esmRelativeName);
-		}
-
-		// If the deleted folder has been replicated into the XBox tree,
-		// also delete the XBox replica folder.
-		String^ xboxFullname = PCToXBoxNameTransform(fullname);
-		if (nullptr != xboxFullname) {
-			DeleteFolder(xboxFullname);
-		}
-	}
-	private: System::Void DeleteFolder(String^ fullname) {
-		// Nothing to do if the directory does not exist
-		if (!Directory::Exists(fullname)) {
-			return;
-		}
-
-		// First try to move the folder directly into the Recycling Bin
-		try {
-			String^ recycleFolder = Path::GetPathRoot(fullname) + recycleBin;
-			if (Directory::Exists(recycleFolder)) {
-				String^ target = recycleFolder + L"\\" + Path::GetFileName(fullname);
-				Directory::Move(fullname, target);
-				return;
-			}
-		}
-		catch (Exception^) {
-			// Ignore
-		}
-
-		// Something didn't work - fallback to a brute force recursive delete
-		RecursiveDeleteFolder(fullname);
-	}
-   private: System::Void RecursiveDeleteFolder(String^ fullname) {
-	   // Nothing to do if the directory does not exist
-	   if (!Directory::Exists(fullname)) {
-		   return;
-	   }
-	   
-	   try {
-			// Recursive brute-force deletion of everything in the directory and
-			// then the directory itself.  Has a potential race-condition if other
-			// processes are creating files into the same directory tree.
-			Generic::IEnumerator<String^>^ iter = Directory::EnumerateDirectories(fullname)->GetEnumerator();
-			while (iter->MoveNext()) {
-				RecursiveDeleteFolder(iter->Current);
-			}
-			iter = Directory::EnumerateFiles(fullname)->GetEnumerator();
-			while (iter->MoveNext()) {
-				File::Delete(iter->Current);
-			}
-			Directory::Delete(fullname);
-		}
-		catch (Exception^ e) {
-			MessageBox::Show(this,
-				L"Error during recursive delete of folder " +
-				fullname +
-				L": " +
-				e->Message,
-				L"Recursive Folder Deletion Failure",
-				MessageBoxButtons::OK,
-				MessageBoxIcon::Error);
-		}
-	}
-	private: String^ EspToEsmReplication(String^ espRelativeName, bool ignoreIOException) {
-		String^ esmRelativeName = EspToEsmNameTransform(espRelativeName);
-		if (nullptr == esmRelativeName) {
-			return espRelativeName;
-		}
-		String^ esmDirectory = starfieldPrefix + esmRelativeName->Substring(0, esmRelativeName->LastIndexOf(L"\\"));
-		try {
-			Directory::CreateDirectory(esmDirectory);
-			File::Copy(starfieldPrefix + espRelativeName, starfieldPrefix + esmRelativeName, true);
-		}
-		catch (IOException^ e) {
-			if (!ignoreIOException) {
-				MessageBox::Show(this,
-					L"Error while replicating " +
-					starfieldPrefix + espRelativeName +
-					L" to " +
-					starfieldPrefix + esmRelativeName +
-					L": " +
-					e->Message,
-					L"ESP to ESM Replication Failure",
-					MessageBoxButtons::OK,
-					MessageBoxIcon::Error);
-			}
-		}
-		catch (Exception^ e) {
-			MessageBox::Show(this,
-				L"Error while replicating " +
-				starfieldPrefix + espRelativeName +
-				L" to " +
-				starfieldPrefix + esmRelativeName +
-				L": " +
-				e->Message,
-				L"ESP to ESM Replication Failure",
-				MessageBoxButtons::OK,
-				MessageBoxIcon::Error);
-		}
-		return esmRelativeName;
 	}
 	private: System::Void PopluatePlugInChoices() {
 		// Remember the current setting of the PlugIn Control
