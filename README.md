@@ -219,6 +219,19 @@ of whether one has enabled the Continuous Replication feature.
 Note that Continuous Replication only takes place while the audit process is running.  If one pauses the audit
 process, Continuous Replication will also be paused until the audit process is resumed.
 
+## Texture Files and AssetWatcher
+In addition to `WEM` files being platform-specific, `DDS` texture files are also platform-specific.  Fortunately,
+the Creation Kit ships with a tool called *AssetWatcher* which can be configured to automatically convert
+`DDS` files from a PC format to the corresponding XBox format and then drop the XBox files into a parallel
+directory tree.  The mechanism works in much the same way as the recommended WWise configuration for creating
+parallel XBox versions of `WEM` files from `WAV` files.
+
+The following screen shot shows the recommended configuration of the *AssetWatcher* tool to drop XBox `DDS`
+texture files into the same directory tree that used by the recommended WWise configuration.  When both tools
+are configured in this manner, the Creation Kit Audit Tool can pack plugins for both platforms in a single
+pass.
+<img width="1402" height="1052" alt="AssetWatcher" src="https://github.com/user-attachments/assets/351a248d-cf24-4863-b967-8130f268523e" />
+
 ## %USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool
 This folder is created by the Creation Kit Audit Tool and is used to store persistent data used or generated
 by the tool:
