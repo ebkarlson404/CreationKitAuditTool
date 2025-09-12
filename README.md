@@ -5,7 +5,9 @@ three of the most problematic aspects of Starfield's Creation Kit design/impleme
 2. Automatically handles replicating files from the *MyMod.ESP* directories created by Creation Kit into corresponding *MyMod.ESM* directories for distribution with one's ESM-based plugin.
 3. Works with a suitably configured WWise deployment to create platform-specific ACHLIST packing lists in a single pass.
 
-In addition, as of version 1.4.0, support has been added to assist in the packaging of *Localized Plugins*.
+In addition, as of version 2.0.0, support has been added for:
+* Assistance in the packaging of *Localized Plugins* that have localized voice assets
+* Packing of BA2 archive files directly from the Audit Tool - no need to go back to the Creation Kit to pack one's archive files
 ## Reliable File Detection
 One known issue with Starfield's Creation Kit is that the *Archive* tool does not reliably detect all the files that have been added/altered as part
 of a given plugin.  The Creation Kit Audit Tool solves this problem by using the native Windows API's to watch for any file changes
@@ -65,6 +67,57 @@ the XBox versions of one's texture files in the same way that it tracks the XBox
 appropriate ACHLIST packing lists for both XBox and PC.  The PC ACHLIST file will draw the WEM and DDS files from the standard
 `Starfield\Data` folder while the XBox ACHLIST file will draw the WEM and DDS files from the alternate `Starfield\XBox\Data`
 folder.
+## Direct Packing of BA2 Archive Files
+With the 2.2.0 version of the Creation Kit Audit Tool one can now pack a plugin's BA2 archive files directly from the Audit Tool.
+The `Localize and Pack` button on the app's main form will directly create the BA2 archive files for a plugin directly from
+the audit log.  This feature handles packing BA2 archives for:
+* Localized and Non-Localized Plugins
+* Plugins with or without Texture Files
+* PC and XBox Platforms
+The BA2 archive files will follow Bethesda's naming scheme and be placed into the `Starfield\Data` folder.
+
+Asides from the time savings of not creating ACHLIST files and then switching to Creation Kit to pack the BA2 archive files,
+this also provides a greatly streamlined workflow for creating the required archive files for a localized plugin that
+includes localized voice assets.
+
+## Localized Plugins
+The vast majority of plugins that are published by independent modders are English-only.  However, as of version 1.15.222 of the Starfield Creation Kit, the basic tools for
+creating *Localized* plugins now exists.  This allows one to publish plugins that support multiple languages instead of just English.  Starfield itself supports textual localization
+for nine languages, and voice localization for five languages.  Please see Bethesda's official page for their list of supported languages: [What languages does Starfield support?](https://help.bethesda.net/#en/answer/60444)
+
+There are two components to localizing a plugin: *String Translations* and *Alternate Voice Files*.  A localized plugin can have one or the other or both of these elements, though
+not localizing strings would be an odd ommission.
+### Localized Strings
+One can provide *string translation* files that will translate any textual information presented to the player into the langauge of choice.  These translation files take
+the form of a set of three files for each language that are stored in the `Starfield\Data\Strings` folder.  When one packs the BA2 file for one's plugin, simply include
+these translation files along with any other files that are part of one's plugin.
+
+The specifics of how these translation files are created can be found in Bethesda's Verified Creators Wiki.
+### Localized Voices
+If one's plugin has voice audio files (found in `Starfield\Data\Sound\Voice\<modname>.esp`), one can package language-specific alternatives for those voice files.
+While this process is not documented and not supported as of version 1.15.222 of the Starfield Creation Kit, one can manage and pack these
+alternate voice files directly from the Creation Kit Audit Tool.
+
+In order to provide localized voice assets for a plugin one should first create the plugin in a non-localized form using a *native language* for all
+voice assets.  Once one has done so, one can find all the voice files under the `Starfield\Data\Source\Voice\<mod>.esp` folder.  For each such voice
+file, one must create an alternative file that is recorded in an alternate language.  Alternate voice filse are denoated by having the same base name
+as the *native language* file, with a `_<lang>` suffix added to the name.
+
+For example, suppose that after creating the *native language* voice assets for a plugin, one finds that there is a file name `004F3327.wem` in
+one's `<mod>.esp` folder.  To create a French alternative for that file, one would name it `004F3327_fr.wem`.
+
+In most cases, the easiest approach to create these new `WEM` files is to create `WAV` files for all the alternate voice files, and then allow
+the WWise tool to process all loose `WAV` files to create suitable platform-specific `WEM` files.
+
+Once one has created a full set of these alternate language voice files, one simply goes into the Creation Kit Audit Tool and clicks on the
+`Localize and Pack` button on the app's main form.  This will take you to a new form that allows one to indicate the *native language* for your
+plugin (if you have not already done so) and then indicate the alternate languages for which you have alternate voice assets.  Once one has indicate
+which languages have localized voice assets, click on the `Pack` button to create the required BA2 archive files for distribution.
+<img width="991" height="868" alt="LocalizeButton" src="https://github.com/user-attachments/assets/e5921793-8f93-4d54-8100-809c9a1b0c03" />
+<img width="552" height="856" alt="LocalizationForm" src="https://github.com/user-attachments/assets/2bb14d95-0de9-4d87-8186-5c63f48d951f" />
+### Caveats
+Plugins with localized voice assets can be distributed via Nexus.  However, as of version 1.15.222 of the Creation Kit,
+there are no provisions for uploading the BA2 archive files that contain the localized voice assets with a localized plugin.
 # Quick Start Instructions
 1. Ensure that you have a properly deployed Starfield Creation Kit
 2. If you will be generating WEM files as part of your plugin work, ensure that you have setup the `Audio` configuration block as detailed above
@@ -75,37 +128,6 @@ folder.
 7. Go back to your Creation Kit and work on your plugin
 8. When you are ready to package the plugin, go back to the Creation Kit Audit Tool and click on the `Generate` button to create the two platform-specific ACHLIST files.  They will be created in your `%USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool` directory.
 9. Go back to Creation Kit and use the `Archive` tool to pack your `BA2` files by importing the ACHLIST files that were stored in your `%USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool` directory.
-
-# Localized Plugins
-The vast majority of plugins that are published by independent modders are English-only.  However, as of version 1.15.222 of the Starfield Creation Kit, the basic tools for
-creating *Localized* plugins now exists.  This allows one to publish plugins that support multiple languages instead of just English.  Starfield itself supports textual localization
-for nine languages, and voice localization for five languages.  Please see Bethesda's official page for their list of supported languages: [What languages does Starfield support?](https://help.bethesda.net/#en/answer/60444)
-
-There are two components to localizing a plugin: *String Translations* and *Alternate Voice Files*.  A localized plugin can have one or the other or both of these elements, though
-not localizing strings would be an odd ommission.
-## Localized Strings
-One can provide *string translation* files that will translate any textual information presented to the player into the langauge of choice.  These translation files take
-the form of a set of three files for each language that are stored in the `Starfield\Data\Strings` folder.  When one packs the BA2 file for one's plugin, simply include
-these translation files along with any other files that are part of one's plugin.
-
-The specifics of how these translation files are created can be found in Bethesda's Verified Creators Wiki.
-## Localized Voices
-If one's plugin has voice audio files (found in `Starfield\Data\Sound\Voice\<modname>`), one can package language-specific alternatives for those voice files.
-While this process is not documented and not supported as of version 1.15.222 of the Starfield Creation Kit, one can manually create and pack these
-alternate voice files.  The Creation Kit Audit Tool facilitates this manual packing by generating alternate ACHLIST files suitable for packing plugins that
-have localized voice files.
-
-The process to manually package the localized voice files is as follows:
-
-1. Create your plugin as normal, using the Creation Kit Audit Tool to generate a manifest for the plugin
-2. Use the `Generate` button to create the ACHLIST packing lists
-3. Assuming that your plugin was originally created for the English language you will need to create two BA2 archive files using the alternate ACHLIST packing files (see below for details)
-4. Go back to your `Starfield\Data\Sound\Voice\<modname>` folder and replace the **WEM** files with new files recorded in the language of choice
-5. Use the alternate voice-specific ACHLIST packing file to create your next language-specific BA2 archive file
-6. Repeat steps 4 & 5 for each additional language that you wish to support
-
-7. 
-
 # Tips, Tricks and Notes
 ## Background Operation in the System Tray
 Since the Creation Kit Audit Tool is meant to run in the background while one uses the Creation Kit, closing or minimizing the application
@@ -196,6 +218,19 @@ of whether one has enabled the Continuous Replication feature.
 
 Note that Continuous Replication only takes place while the audit process is running.  If one pauses the audit
 process, Continuous Replication will also be paused until the audit process is resumed.
+
+## Texture Files and AssetWatcher
+In addition to `WEM` files being platform-specific, `DDS` texture files are also platform-specific.  Fortunately,
+the Creation Kit ships with a tool called *AssetWatcher* which can be configured to automatically convert
+`DDS` files from a PC format to the corresponding XBox format and then drop the XBox files into a parallel
+directory tree.  The mechanism works in much the same way as the recommended WWise configuration for creating
+parallel XBox versions of `WEM` files from `WAV` files.
+
+The following screen shot shows the recommended configuration of the *AssetWatcher* tool to drop XBox `DDS`
+texture files into the same directory tree that used by the recommended WWise configuration.  When both tools
+are configured in this manner, the Creation Kit Audit Tool can pack plugins for both platforms in a single
+pass.
+<img width="1402" height="1052" alt="AssetWatcher" src="https://github.com/user-attachments/assets/351a248d-cf24-4863-b967-8130f268523e" />
 
 ## %USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool
 This folder is created by the Creation Kit Audit Tool and is used to store persistent data used or generated
