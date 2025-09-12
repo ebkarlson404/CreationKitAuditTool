@@ -14,6 +14,8 @@ namespace CreationKitAuditTool {
 	{
 	private: static String^ recycleBin;
 
+	public: static Int32 zero = Int32(0);
+
 	public: static System::Void Initialize() {
 		// Compute name of the Windows recycle bin
 		// Ideally we should use something like GetFolderPath to find this path, except that
@@ -70,8 +72,7 @@ namespace CreationKitAuditTool {
 		if (nullptr == value) {
 			return defaultValue;
 		}
-		Int32 zeroValue = 0;
-		return (value == nullptr) ? defaultValue : !value->Equals(zeroValue);
+		return (value == nullptr) ? defaultValue : !value->Equals(Util::zero);
 	}
 	public: static bool HasPrefix(String^ filename, String^ prefix) {
 		return filename->StartsWith(prefix, StringComparison::InvariantCultureIgnoreCase);
@@ -108,6 +109,15 @@ namespace CreationKitAuditTool {
 		}
 		return NORMAL_FILE;
 	}
+	/**
+	* Deletes an entire directory tree.  If possible, the folder will simply
+	* be moved into the recycle bin.  If that is not possible, then a full,
+	* recursive tree delete is performed.
+	* @param fullname - The full name of the folder to delete
+	* @param caller - The window to use for displaying MessageBoxes, or
+	* nullptr if errors should be silently swallowed.
+	* @returns true if the folder was deleted, false otherwise
+	*/
 	public: static bool DeleteFolder(String^ fullname, IWin32Window^ caller) {
 		// Nothing to do if the directory does not exist
 		if (!Directory::Exists(fullname)) {
@@ -124,12 +134,19 @@ namespace CreationKitAuditTool {
 			}
 		}
 		catch (Exception^) {
-			// Ignore
+			// Ignore as there may be some reason that the folder cannot be
+			// moved directory into the recycle bin.
 		}
 
 		// Something didn't work - fallback to a brute force recursive delete
 		return Util::RecursiveDeleteFolder(fullname, caller);
 	}
+	/**
+	* Performs a recursive delete on an entire directory tree.
+	* @param fullname - The full name of the folder to delete
+	* @param caller - The window to use for showing MessageBoxes, or nullptr
+	* to silently swallow any errors
+	*/
 	private: static bool RecursiveDeleteFolder(String^ fullname, IWin32Window^ caller) {
 		// Nothing to do if the directory does not exist
 		if (!Directory::Exists(fullname)) {

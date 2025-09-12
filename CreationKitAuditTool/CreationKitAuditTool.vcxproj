@@ -126,13 +126,26 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ArchiveDialog.cpp" />
+    <ClCompile Include="ArchiveErrorDialog.cpp" />
     <ClCompile Include="AuditFilterDialog.cpp" />
+    <ClCompile Include="LanguageDialog.cpp" />
     <ClCompile Include="MainForm.cpp" />
     <ClCompile Include="PackDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbortException.h" />
     <ClInclude Include="AchList.h" />
+    <ClInclude Include="ArchiveDialog.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="ArchiveErrorDialog.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="AuditFilterDialog.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="LanguageDialog.h">
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="PackingTask.h" />
@@ -149,8 +162,17 @@
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="ArchiveDialog.resx">
+      <DependentUpon>ArchiveDialog.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ArchiveErrorDialog.resx">
+      <DependentUpon>ArchiveErrorDialog.h</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="AuditFilterDialog.resx">
       <DependentUpon>AuditFilterDialog.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LanguageDialog.resx">
+      <DependentUpon>LanguageDialog.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.h</DependentUpon>

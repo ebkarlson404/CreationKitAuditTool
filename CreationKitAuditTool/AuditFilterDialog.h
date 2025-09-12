@@ -83,6 +83,7 @@ namespace CreationKitAuditTool {
 			System::Windows::Forms::ListViewItem^ listViewItem6 = (gcnew System::Windows::Forms::ListViewItem(L".psc"));
 			System::Windows::Forms::ListViewItem^ listViewItem7 = (gcnew System::Windows::Forms::ListViewItem(L".tmp"));
 			System::Windows::Forms::ListViewItem^ listViewItem8 = (gcnew System::Windows::Forms::ListViewItem(L".wav"));
+			System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(AuditFilterDialog::typeid));
 			this->auditFilterContextMenuStrip = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
 			this->toolStripRemoveMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->okButton = (gcnew System::Windows::Forms::Button());
@@ -187,7 +188,7 @@ namespace CreationKitAuditTool {
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(11, 24);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(336, 686);
+			this->ClientSize = System::Drawing::Size(336, 646);
 			this->ContextMenuStrip = this->auditFilterContextMenuStrip;
 			this->ControlBox = false;
 			this->Controls->Add(this->newFilterTextBox);
@@ -197,6 +198,7 @@ namespace CreationKitAuditTool {
 			this->Controls->Add(this->addFilterButton);
 			this->Controls->Add(this->okButton);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
+			this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 			this->MaximizeBox = false;
 			this->MinimizeBox = false;
 			this->MinimumSize = System::Drawing::Size(360, 710);
@@ -274,7 +276,7 @@ namespace CreationKitAuditTool {
 		newFilterTextBox->Text = L"";
 	}
 	private: bool AuditFilterAlreadyPresent(String^ filter) {
-		IEnumerator^ iter = auditFiltersListView->Items->GetEnumerator();
+		Collections::IEnumerator^ iter = auditFiltersListView->Items->GetEnumerator();
 		while (iter->MoveNext()) {
 			if (0 == String::Compare(filter, (cli::safe_cast<ListViewItem^>(iter->Current))->Text, true)) {
 				return true;
@@ -299,7 +301,7 @@ namespace CreationKitAuditTool {
 			StreamWriter^ fh = nullptr;
 			try {
 				fh = File::CreateText(customFiltersFilename);
-				IEnumerator^ iter = auditFiltersListView->Items->GetEnumerator();
+				Collections::IEnumerator^ iter = auditFiltersListView->Items->GetEnumerator();
 				while (iter->MoveNext()) {
 					fh->WriteLine((cli::safe_cast<ListViewItem^>(iter->Current))->Text);
 				}

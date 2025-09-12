@@ -147,6 +147,8 @@ namespace CreationKitAuditTool {
 	protected: static String^ githubUrl = L"https://github.com/ebkarlson404/CreationKitAuditTool";
 	protected: ListViewItem^ selectedAuditItem;
 	protected: AuditFilterDialog^ auditFilterDialog = gcnew AuditFilterDialog();
+private: System::Windows::Forms::Button^ clipboardButton;
+protected:
 	protected: PackDialog^ packDialog = gcnew PackDialog();
 	protected:
 
@@ -198,6 +200,7 @@ namespace CreationKitAuditTool {
 			this->addAuditFileButton = (gcnew System::Windows::Forms::Button());
 			this->generateButton = (gcnew System::Windows::Forms::Button());
 			this->localizationButton = (gcnew System::Windows::Forms::Button());
+			this->clipboardButton = (gcnew System::Windows::Forms::Button());
 			this->findPluginDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->importAchlistDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->addFileToAuditDialog = (gcnew System::Windows::Forms::OpenFileDialog());
@@ -219,7 +222,7 @@ namespace CreationKitAuditTool {
 			// 
 			// fileSystemWatcher
 			// 
-			this->fileSystemWatcher->EnableRaisingEvents = false;
+			this->fileSystemWatcher->EnableRaisingEvents = true;
 			this->fileSystemWatcher->SynchronizingObject = this;
 			this->fileSystemWatcher->Changed += gcnew System::IO::FileSystemEventHandler(this, &MainForm::fileSystemWatcher_Changed);
 			this->fileSystemWatcher->Created += gcnew System::IO::FileSystemEventHandler(this, &MainForm::fileSystemWatcher_Created);
@@ -303,6 +306,7 @@ namespace CreationKitAuditTool {
 			// 
 			this->auditListView->BackColor = System::Drawing::SystemColors::Window;
 			this->auditListView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(1) { this->columnHeader1 });
+			this->auditListView->HeaderStyle = System::Windows::Forms::ColumnHeaderStyle::None;
 			this->auditListView->HideSelection = false;
 			this->auditListView->Location = System::Drawing::Point(45, 221);
 			this->auditListView->MultiSelect = false;
@@ -414,10 +418,10 @@ namespace CreationKitAuditTool {
 			// packButton
 			// 
 			this->packButton->Enabled = false;
-			this->packButton->Location = System::Drawing::Point(710, 699);
+			this->packButton->Location = System::Drawing::Point(710, 720);
 			this->packButton->Name = L"packButton";
 			this->packButton->Size = System::Drawing::Size(222, 48);
-			this->packButton->TabIndex = 13;
+			this->packButton->TabIndex = 14;
 			this->packButton->Text = L"Localize and &Pack";
 			this->toolTip->SetToolTip(this->packButton, L"Pack files from the Audit Log into BA2 Archive Files");
 			this->packButton->UseVisualStyleBackColor = true;
@@ -445,7 +449,7 @@ namespace CreationKitAuditTool {
 			});
 			this->mainMenuStrip->Location = System::Drawing::Point(0, 0);
 			this->mainMenuStrip->Name = L"mainMenuStrip";
-			this->mainMenuStrip->Size = System::Drawing::Size(1026, 38);
+			this->mainMenuStrip->Size = System::Drawing::Size(1026, 42);
 			this->mainMenuStrip->TabIndex = 12;
 			this->mainMenuStrip->Text = L"menuStrip1";
 			// 
@@ -456,7 +460,7 @@ namespace CreationKitAuditTool {
 					this->exitToolStripMenuItem
 			});
 			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
-			this->fileToolStripMenuItem->Size = System::Drawing::Size(62, 34);
+			this->fileToolStripMenuItem->Size = System::Drawing::Size(62, 38);
 			this->fileToolStripMenuItem->Text = L"&File";
 			// 
 			// auditFiltersToolStripMenuItem
@@ -484,7 +488,7 @@ namespace CreationKitAuditTool {
 					this->gitHubToolStripMenuItem, this->aboutToolStripMenuItem
 			});
 			this->helpToolStripMenuItem->Name = L"helpToolStripMenuItem";
-			this->helpToolStripMenuItem->Size = System::Drawing::Size(74, 34);
+			this->helpToolStripMenuItem->Size = System::Drawing::Size(74, 38);
 			this->helpToolStripMenuItem->Text = L"&Help";
 			// 
 			// auditProcessAndFilteringToolStripMenuItem
@@ -571,10 +575,10 @@ namespace CreationKitAuditTool {
 			// generateButton
 			// 
 			this->generateButton->Enabled = false;
-			this->generateButton->Location = System::Drawing::Point(710, 775);
+			this->generateButton->Location = System::Drawing::Point(710, 791);
 			this->generateButton->Name = L"generateButton";
 			this->generateButton->Size = System::Drawing::Size(222, 48);
-			this->generateButton->TabIndex = 14;
+			this->generateButton->TabIndex = 15;
 			this->generateButton->Text = L"&Generate ACHLIST";
 			this->toolTip->SetToolTip(this->generateButton, L"Replicates files from *.ESP folders to *.ESM folders and then generate the PC and"
 				L" XBox ACHLIST files from the current audit log");
@@ -589,9 +593,20 @@ namespace CreationKitAuditTool {
 			this->localizationButton->Size = System::Drawing::Size(47, 39);
 			this->localizationButton->TabIndex = 7;
 			this->localizationButton->Text = L"...";
-			this->toolTip->SetToolTip(this->localizationButton, L"Set the root of the Localization Folder");
+			this->toolTip->SetToolTip(this->localizationButton, L"The root of the Localization Staging Folder");
 			this->localizationButton->UseVisualStyleBackColor = true;
 			this->localizationButton->Click += gcnew System::EventHandler(this, &MainForm::localizationButton_Click);
+			// 
+			// clipboardButton
+			// 
+			this->clipboardButton->Location = System::Drawing::Point(710, 649);
+			this->clipboardButton->Name = L"clipboardButton";
+			this->clipboardButton->Size = System::Drawing::Size(222, 48);
+			this->clipboardButton->TabIndex = 13;
+			this->clipboardButton->Text = L"Copy to Clip&board";
+			this->toolTip->SetToolTip(this->clipboardButton, L"Pack files from the Audit Log into BA2 Archive Files");
+			this->clipboardButton->UseVisualStyleBackColor = true;
+			this->clipboardButton->Click += gcnew System::EventHandler(this, &MainForm::clipboardButton_Click);
 			// 
 			// findPluginDialog
 			// 
@@ -686,6 +701,7 @@ namespace CreationKitAuditTool {
 			this->AutoScaleDimensions = System::Drawing::SizeF(11, 24);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(1026, 856);
+			this->Controls->Add(this->clipboardButton);
 			this->Controls->Add(this->localizationButton);
 			this->Controls->Add(this->localizationFolderTextBox);
 			this->Controls->Add(this->label4);
@@ -849,6 +865,21 @@ namespace CreationKitAuditTool {
 			startButton_Click(sender, e);
 		}
     }
+	private: System::Void clipboardButton_Click(System::Object^ sender, System::EventArgs^ e) {
+		StringBuilder^ builder = gcnew StringBuilder;
+		Collections::IEnumerator^ iter = auditListView->Items->GetEnumerator();
+		while (iter->MoveNext()) {
+			ListViewItem^ item = cli::safe_cast<ListViewItem^>(iter->Current);
+			builder->AppendLine(item->Text);
+		}
+		Clipboard::SetText(builder->ToString());
+		MessageBox::Show(
+			this,
+			L"Audit Log copied to the system clipboard.",
+			L"Action Confirmation",
+			MessageBoxButtons::OK,
+			MessageBoxIcon::Information);
+	}
 	private: System::Void generateButton_Click(System::Object^ sender, System::EventArgs^ e) {
 		List<String^>^ xbFullList = gcnew List<String^>;
 		List<String^>^ xbVoiceList = gcnew List<String^>;
@@ -864,7 +895,7 @@ namespace CreationKitAuditTool {
 		while (iter->MoveNext()) {
 			// Replicate the file to the ESM directory if required
 			ListViewItem^ item = cli::safe_cast<ListViewItem^>(iter->Current);
-			String^ relativeName = Replication::EspToEsmReplication(item->Text, false, this);
+			String^ relativeName = Replication::EspToEsmReplication(item->Text, this);
 			if (nullptr == relativeName) {
 				return;
 			}
@@ -910,27 +941,28 @@ namespace CreationKitAuditTool {
 		AchList::WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-XB.achlist", this);
 
 		// Write the arrays out to the VOICE ACHLIST files
-		pcFiles = pcVoiceList->ToArray();
-		xbFiles = xbVoiceList->ToArray();
-		AchList::WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-VOICE-PC.achlist", this);
-		AchList::WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-VOICE-XB.achlist", this);
+		//pcFiles = pcVoiceList->ToArray();
+		//xbFiles = xbVoiceList->ToArray();
+		//AchList::WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-VOICE-PC.achlist", this);
+		//AchList::WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-VOICE-XB.achlist", this);
 
 		// Write the arrays out to the NONVOICE ACHLIST files
-		pcFiles = pcNonVoiceList->ToArray();
-		xbFiles = xbNonVoiceList->ToArray();
-		AchList::WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-NONVOICE-PC.achlist", this);
-		AchList::WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-NONVOICE-XB.achlist", this);
+		//pcFiles = pcNonVoiceList->ToArray();
+		//xbFiles = xbNonVoiceList->ToArray();
+		//AchList::WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-NONVOICE-PC.achlist", this);
+		//AchList::WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-NONVOICE-XB.achlist", this);
 
 		// Tell the user what was done
 		MessageBox::Show(this,
 			L"Generated the following ACLIST files in " +
 			userGameFolder + L"\n\n * " +
 			pluginComboBox->Text + L"-PC.achlist\n * " + 
-			pluginComboBox->Text + L"-VOICE-PC.achlist\n * " +
-			pluginComboBox->Text + L"-NONVOICE-PC.achlist\n * " +
-			pluginComboBox->Text + L"-XB.achlist\n * " +
-			pluginComboBox->Text + L"-VOICE-XB.achlist\n * " +
-			pluginComboBox->Text + L"-NONVOICE-XB.achlist",
+			//pluginComboBox->Text + L"-VOICE-PC.achlist\n * " +
+			//pluginComboBox->Text + L"-NONVOICE-PC.achlist\n * " +
+			pluginComboBox->Text + L"-XB.achlist",
+			//pluginComboBox->Text + L"-XB.achlist\n * " +
+			//pluginComboBox->Text + L"-VOICE-XB.achlist\n * " +
+			//pluginComboBox->Text + L"-NONVOICE-XB.achlist"
 			L"ACHLIST Generation Complete",
 			MessageBoxButtons::OK,
 			MessageBoxIcon::Information);
@@ -938,11 +970,21 @@ namespace CreationKitAuditTool {
 	}
 	private: String^ PCEspToXBoxEsmReplication(String^ pcEspRelativePath) {
 		String^ xBoxEspRelativeName = StarfieldData::starfieldXBoxRelativePrefix + pcEspRelativePath;
-		return Replication::EspToEsmReplication(xBoxEspRelativeName, false, this);
+		return Replication::EspToEsmReplication(xBoxEspRelativeName, this);
 	}
 	private: System::Void packButton_Click(System::Object^ sender, System::EventArgs^ e) {
-		packDialog->Initialize(pluginComboBox->Text, auditListView);
-		packDialog->ShowDialog(this);
+		try {
+			packDialog->Initialize(pluginComboBox->Text, auditListView);
+			packDialog->ShowDialog(this);
+		}
+		catch (Exception^ e) {
+			MessageBox::Show(
+				this,
+				L"Pack operation failed: " + e->Message,
+				L"Pack Operation Failure",
+				MessageBoxButtons::OK,
+				MessageBoxIcon::Error);
+		}
 	}
 	private: System::Void replicationCheckBox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
 		if (replicationCheckBox->Enabled) {
@@ -968,6 +1010,9 @@ namespace CreationKitAuditTool {
 
 			// Read the ACHLIST file and add all files to the audit log
 			array<String^>^ files = AchList::ReadArrayFromJsonFile(importFile, this);
+			if (nullptr == files) {
+				return;
+			}
 			for (int i = 0; i < files->Length; i++) {
 				String^ filename = files[i];
 				
@@ -984,6 +1029,7 @@ namespace CreationKitAuditTool {
 				if (!Util::HasPrefix(filename, StarfieldData::starfieldXBoxRelativePrefix) &&
 					!AuditFileAlreadyPresent(filename)) {
 					auditListView->Items->Add(gcnew ListViewItem(filename));
+					auditListView->AutoResizeColumns(ColumnHeaderAutoResizeStyle::ColumnContent);
 				}
 			}
 			WriteManifest(pluginComboBox->Text);
@@ -1017,6 +1063,7 @@ namespace CreationKitAuditTool {
 			// Move the various buttons to track the change-of-size
 			MoveControl(auditGroupBox, 0, deltaHeight);
 			MoveControl(newPluginButton, deltaWidth, 0);
+			MoveControl(clipboardButton, deltaWidth, deltaHeight);
 			MoveControl(generateButton, deltaWidth, deltaHeight);
 			MoveControl(packButton, deltaWidth, deltaHeight);
 			MoveControl(starfieldFolderButton, deltaWidth, 0);
@@ -1046,9 +1093,11 @@ namespace CreationKitAuditTool {
 	}
 	private: System::Void starfieldFolderTextBox_TextChanged(System::Object^ sender, System::EventArgs^ e) {
 		Util::WriteSetting(registryKey, registryNameStarfieldFolder, starfieldFolderTextBox->Text);
-		StarfieldData::starfieldPrefix = starfieldFolderTextBox->Text + L"\\";
+		StarfieldData::starfieldFolder = starfieldFolderTextBox->Text;
+		StarfieldData::starfieldPrefix = StarfieldData::starfieldFolder + L"\\";
 		StarfieldData::starfieldDataFolder = StarfieldData::starfieldPrefix + L"DATA";
 		StarfieldData::starfieldDataPrefix = StarfieldData::starfieldDataFolder + L"\\";
+		StarfieldData::starfieldVoicePrefix = StarfieldData::starfieldDataPrefix + L"Sound\\Voice\\";
 		StarfieldData::starfieldBackupPrefix = StarfieldData::starfieldDataPrefix + L"BACKUP\\";
 		fileSystemWatcher->Path = StarfieldData::starfieldDataFolder;
 		fileSystemWatcher->IncludeSubdirectories = true;
@@ -1321,7 +1370,7 @@ namespace CreationKitAuditTool {
 				if (NORMAL_FILE != Util::ClassifyFile(filename)) {
 					// Silent ignore
 				}
-				else if (!StarfieldData::FileResidesWithinEitherDataFolder(filename)) {
+				else if (!StarfieldData::FileResidesWithinAnyDataFolder(filename)) {
 					skippedFiles = skippedFiles + separator + filename;
 					separator = L"\n";
 				}
@@ -1334,6 +1383,7 @@ namespace CreationKitAuditTool {
 					String^ rname = StarfieldData::GetRelativeName(filename);
 					if (!AuditFileAlreadyPresent(rname)) {
 						auditListView->Items->Add(gcnew ListViewItem(rname));
+						auditListView->AutoResizeColumns(ColumnHeaderAutoResizeStyle::ColumnContent);
 						lastFilename = filename;
 					}
 				}
@@ -1417,18 +1467,6 @@ namespace CreationKitAuditTool {
 	// Utility functions
 	//
     private: System::Void UpdateNotifyIcon() {
-		// Had to remove this logic as the text for a NotifyIcon is limited to 64 characters
-		/*
-		String^ line1 = "Creation Kit Audit Tool";
-		String^ line2 = "[" + pluginComboBox->Text + "]";
-		String^ line3 = running ? "<running>" : "<paused>";
-		int maxLength = System::Math::Max(line1->Length, System::Math::Max(line2->Length, line3->Length));
-		notifyIcon->Text = line1->PadLeft(line1->Length + (maxLength - line1->Length) / 2) +
-			"\n" +
-			line2->PadLeft(line2->Length + (maxLength - line2->Length) / 2) +
-			"\n" +
-			line3->PadLeft(line3->Length + (maxLength - line3->Length) / 2);
-		*/
 		notifyIcon->Text = "Creation Kit Audit Tool - " + (running ? "running" : "paused");
     }
 	private: ListViewItem^ FindListViewItem(ListView^ listview, String^ text, bool prefixSearch) {
@@ -1451,21 +1489,31 @@ namespace CreationKitAuditTool {
 		return autodetectPluginName->Equals(pluginComboBox->Text);
 	}
 	private: System::Void HandleFileCreation(String^ fullname) {
-		bool shouldLog = ShouldLog(fullname);
-		if (shouldLog && replicationCheckBox->Checked) {
-			Replication::MaybeReplicateFile(fullname, true, this);
+		if (replicationCheckBox->Checked && ShouldReplicate(fullname)) {
+			Replication::MaybeReplicateFile(fullname);
 		}
 		if (StarfieldData::IsESPFile(fullname) && IsAutodetectMode()) {
 			AutoBindPlugin(fullname);
 		}
-		else if (ShouldLog(fullname)) {
+		if (ShouldLog(fullname)) {
 			String^ rpath = StarfieldData::GetRelativeName(fullname);
 			if (nullptr == FindListViewItem(auditListView, rpath, false)) {
 				auditListView->Items->Add(gcnew ListViewItem(rpath));
+				auditListView->AutoResizeColumns(ColumnHeaderAutoResizeStyle::ColumnContent);
 				WriteManifest(pluginComboBox->Text);
 			}
 		}
 	}
+	/**
+	* Walk the directory tree of a given folder and report any files as
+	* being "created" for the purposes of continuous replication and
+	* audit logging.
+	* This is necessary because when a folder is moved, nothing is reported
+	* to the FileSystemWatcher about contents of the moved folder coming
+	* along for the ride, so we have to rediscover anything contained
+	* within the moved folder.
+	* @param fullname - The full name of the folder to "rediscover"
+	*/
 	private: System::Void RediscoverFolderContents(String^ fullname) {
 		// Emulate a CREATE operation on all files that reside within this
 		// directory tree.  In cases where one has moved a folder there are
@@ -1491,16 +1539,17 @@ namespace CreationKitAuditTool {
 
 		// Replicate the folder deletion, if needed
 		if (replicationCheckBox->Checked) {
-			Replication::MaybeDeleteReplicaFolder(fullname, this);
+			Replication::MaybeDeleteReplicaFolder(fullname);
 		}
 
 		// Now remove all audit logs whose directory matches the one being deleted
 		bool manifestAltered = false;
-		ListViewItem^ item = FindListViewItem(auditListView, relativeName, true);
+		String^ relativePrefix = relativeName + L"\\";
+		ListViewItem^ item = FindListViewItem(auditListView, relativePrefix, true);
 		while (nullptr != item) {
 			auditListView->Items->Remove(item);
 			manifestAltered = true;
-			item = FindListViewItem(auditListView, relativeName, true);
+			item = FindListViewItem(auditListView, relativePrefix, true);
 		}
 
 		if (manifestAltered) {
@@ -1513,8 +1562,8 @@ namespace CreationKitAuditTool {
 			// File does not reside in one of the Data folders - ignore
 			return;
 		}
-		if (replicationCheckBox->Checked) {
-			Replication::MaybeDeleteReplicaFile(fullname, this);
+		if (replicationCheckBox->Checked && ShouldReplicate(fullname)) {
+			Replication::MaybeDeleteReplicaFile(fullname);
 		}
 		ListViewItem^ item = FindListViewItem(auditListView, relativeName, false);
 		if (nullptr != item) {
@@ -1530,8 +1579,8 @@ namespace CreationKitAuditTool {
 		}
 
 		// Replicate the rename, if needed
-		if (replicationCheckBox->Checked) {
-			Replication::MaybeRenameReplicaFiles(oldFullName, newFullName, this);
+		if (replicationCheckBox->Checked && ShouldReplicate(oldFullName)) {
+			Replication::MaybeRenameReplicaFiles(oldFullName, newFullName);
 		}
 
 		// Remove audit logs for the old filename
@@ -1547,6 +1596,7 @@ namespace CreationKitAuditTool {
 			relativeName = StarfieldData::GetRelativeName(newFullName);
 			if (nullptr == FindListViewItem(auditListView, relativeName, false)) {
 				auditListView->Items->Add(gcnew ListViewItem(relativeName));
+				auditListView->AutoResizeColumns(ColumnHeaderAutoResizeStyle::ColumnContent);
 				manifestAltered = true;
 			}
 		}
@@ -1564,7 +1614,7 @@ namespace CreationKitAuditTool {
 
 		// Replicate the rename, if needed
 		if (replicationCheckBox->Checked) {
-			Replication::MaybeRenameReplicasFolders(oldFullName, newFullName, this);
+			Replication::MaybeRenameReplicasFolders(oldFullName, newFullName);
 		}
 		
 		// Find and remove all audit logs for files that reside in the oldFullName.
@@ -1584,32 +1634,88 @@ namespace CreationKitAuditTool {
 		while (iter->MoveNext()) {
 			String^ newAuditName = newRelativeName + iter->Current->Substring(oldRelativeName->Length);
 			auditListView->Items->Add(gcnew ListViewItem(newAuditName));
+			auditListView->AutoResizeColumns(ColumnHeaderAutoResizeStyle::ColumnContent);
 		}
 	}
-	private: bool ShouldLog(String^ fullName) {
-		if (NORMAL_FILE != Util::ClassifyFile(fullName)) {
+	/**
+	* Checks to see whether a given file is a candidate for ESP->ESM replication.
+	* @param fullname - The full name of the file to check
+	* @return true if the file is an ESP->ESM replication candidate, false otherwise
+	*/
+	private: bool ShouldReplicate(String^ fullname) {
+		if (NORMAL_FILE != Util::ClassifyFile(fullname)) {
 			return false;
 		}
 
-		// Ignore any file not under the Starfield Data or Starfield XBox folders
-		if (!StarfieldData::FileResidesWithinEitherDataFolder(fullName)) {
+		// Ignore any file not under the Starfield Data or Starfield XBox folders,
+		// excluding the Data\Backup folder
+		if (!StarfieldData::FileResidesWithinAnyDataFolder(fullname) ||
+			Util::HasPrefix(fullname, StarfieldData::starfieldBackupPrefix)) {
 			return false;
 		}
 
 		// Ignore files whose extensions are in the configured audit filter list
 		ListView::ListViewItemCollection^ filters = auditFilterDialog->GetAuditFilters();
 		for (int i = 0; i < filters->Count; i++) {
-			if (Util::HasSuffix(fullName, filters[i]->Text)) {
+			if (Util::HasSuffix(fullname, filters[i]->Text)) {
 				return false;
 			}
 		}
 
 		// Also the WISE.DAT & TEMP.WEM files that are generated by WWise.
+		// Ignore the MOTDImage as it could have been changed by something else.
 		// And anything inside of Starfield's Data\Backup folder.
-		if (Util::HasSuffix(fullName, L"\\TEMP.WEM") ||
-			Util::HasSuffix(fullName, L"\\WWISE.DAT") ||
-			Util::HasSuffix(fullName, L"\\MOTDIMAGE.PNG") ||
-			Util::HasPrefix(fullName, StarfieldData::starfieldBackupPrefix)) {
+		if (Util::HasSuffix(fullname, L"\\TEMP.WEM") ||
+			Util::HasSuffix(fullname, L"\\WWISE.DAT") ||
+			Util::HasSuffix(fullname, L"\\MOTDIMAGE.PNG")) {
+			return false;
+		}
+
+		// Ignore any metadata files related to voice localization
+		if (PackDialog::isLocalizationMetadata(fullname)) {
+			return false;
+		}
+
+		// Filter out any files that appear to reside in a plugin-specific directory
+		// other than the one currently selected.
+		return StarfieldData::FileRelatedToPlugIn(fullname, pluginComboBox->Text);
+	}
+	/**
+	* Determines whether a given file should be added to the audit log.
+	* @param fullname - The full name of the file in question
+	* @return true if the file should be added to the audit log, false otherwise
+	*/
+	private: bool ShouldLog(String^ fullname) {
+		if (NORMAL_FILE != Util::ClassifyFile(fullname)) {
+			return false;
+		}
+
+		// Ignore any file not under the Starfield Data or Starfield XBox folders
+		if (!StarfieldData::FileResidesWithinAnyDataFolder(fullname)) {
+			return false;
+		}
+
+		// Ignore files whose extensions are in the configured audit filter list
+		ListView::ListViewItemCollection^ filters = auditFilterDialog->GetAuditFilters();
+		for (int i = 0; i < filters->Count; i++) {
+			if (Util::HasSuffix(fullname, filters[i]->Text)) {
+				return false;
+			}
+		}
+
+		// Also the WISE.DAT & TEMP.WEM files that are generated by WWise.
+		// Ignore the MOTDImage as it could have been changed by something else.
+		// And anything inside of Starfield's Data\Backup folder.
+		if (Util::HasSuffix(fullname, L"\\TEMP.WEM") ||
+			Util::HasSuffix(fullname, L"\\WWISE.DAT") ||
+			Util::HasSuffix(fullname, L"\\MOTDIMAGE.PNG") ||
+			Util::HasPrefix(fullname, StarfieldData::starfieldBackupPrefix)) {
+			return false;
+		}
+
+		// Ignore any files related to voice localization - only the
+		// 'native-language' files are recorded in the audit log
+		if (PackDialog::isLocalizationFile(fullname)) {
 			return false;
 		}
 
@@ -1617,21 +1723,38 @@ namespace CreationKitAuditTool {
 		// irrespective of whether they are part of the current plugin or not.  Filter out
 		// any files that appear to reside in a plugin-specific directory other than the
 		// one currently selected.
-		return StarfieldData::FileRelatedToPlugIn(fullName, pluginComboBox->Text);
+		return StarfieldData::FileRelatedToPlugIn(fullname, pluginComboBox->Text);
 	}
-	private: bool AuditFileAlreadyPresent(String^ relativeFilename) {
+	/**
+	* Checks to see if a given relative file name is already in the audit log
+	* @param relativeName - The relative name of the file to check
+	* @return true if the file is already in the audit log, false otherwise
+	*/
+	private: bool AuditFileAlreadyPresent(String^ relativeName) {
 		Collections::IEnumerator^ iter = auditListView->Items->GetEnumerator();
 		while (iter->MoveNext()) {
-			if (0 == String::Compare(relativeFilename, (cli::safe_cast<ListViewItem^>(iter->Current))->Text, true)) {
+			if (0 == String::Compare(relativeName, (cli::safe_cast<ListViewItem^>(iter->Current))->Text, true)) {
 				return true;
 			}
 		}
 		return false;
 	}
+	/**
+	* Moves a control in its parent window
+	* @param control - The control to move
+	* @param deltaX - The amount to move left-right
+	* @param deltaY - The amount to move up-down
+	*/
 	private: System::Void MoveControl(Control^ control, int deltaX, int deltaY) {
 		control->Left += deltaX;
 		control->Top += deltaY;
 	}
+	/**
+	* Creates an empty manifest file for the indicated plugin, if it does not
+	* already have a manifest file.
+	* @param plugin - The plugin to register
+	* @return true if everything worked, false otherwise
+	*/
 	private: bool RegisterPlugInIfNeeded(String^ plugin) {
 		String^ manifestFile = userGameFolder + L"\\" + plugin + manifestFileExt;
 		try {
@@ -1655,6 +1778,11 @@ namespace CreationKitAuditTool {
 		}
 		return true;
 	}
+	/**
+	* Reads the manifest file for a given plugin and uses it to repopulate
+	* the audit log.
+	* @param plugin - The plugin whose manifest should be read
+	*/
     private: System::Void LoadManifest(String^ plugin) {
 		String^ manifestFile = userGameFolder + L"\\" + plugin + manifestFileExt;
 		try {
@@ -1669,6 +1797,7 @@ namespace CreationKitAuditTool {
 					auditListView->Items->Add(gcnew ListViewItem(lines[i]));
 				}
 			}
+			auditListView->AutoResizeColumns(ColumnHeaderAutoResizeStyle::ColumnContent);
 		} catch (Exception^ e) {
 			MessageBox::Show(this,
 				L"Error while reading " + manifestFile + L": " + e->Message,
@@ -1677,6 +1806,10 @@ namespace CreationKitAuditTool {
 				MessageBoxIcon::Error);
 		}
     }
+	/**
+	* Writes the current audit log to the manifest file for the indicated plugin.
+	* @param plugin - The plugin whose manifest file should written
+	*/
 	private: System::Void WriteManifest(String^ plugin) {
 		// If we are not bound to a specific plugin, do not write a manifest
 		if (!plugin->Equals(autodetectPluginName)) {
@@ -1706,30 +1839,48 @@ namespace CreationKitAuditTool {
 			}
 		}
 	}
+	/**
+	* Generate a list of all plugins that have manifest files in the
+	* Documents\My Games\Starfield\CreationKitAuditTool folder and
+	* use it to repopulate the pluginComboBox.
+	*/
 	private: System::Void PopluatePlugInChoices() {
-		// Remember the current setting of the PlugIn Control
-		String^ currentPlugIn = pluginComboBox->Text;
-		bool restoreOriginalChoice = false;
+		try {
+			// Remember the current setting of the PlugIn Control
+			String^ currentPlugIn = pluginComboBox->Text;
+			bool restoreOriginalChoice = false;
 
-		// Reset the list of choices
-		pluginComboBox->Items->Clear();
+			// Reset the list of choices
+			pluginComboBox->Items->Clear();
 
-		// Add the invariant <none> choice
-		pluginComboBox->Items->Add(autodetectPluginName);
+			// Add the invariant <none> choice
+			pluginComboBox->Items->Add(autodetectPluginName);
 
-		Generic::IEnumerable<String^>^ enumeration = Directory::EnumerateFiles(userGameFolder, L"*" + manifestFileExt);
-		Generic::IEnumerator<String^>^ iter = enumeration->GetEnumerator();
-		while (iter->MoveNext()) {
-			String^ filename = iter->Current->Substring(userGameFolder->Length + 1);
-			String^ plugin = filename->Substring(0, filename->Length - manifestFileExt->Length);
-			if (currentPlugIn->Equals(plugin)) {
-				restoreOriginalChoice = true;
+			Generic::IEnumerable<String^>^ enumeration = Directory::EnumerateFiles(userGameFolder, L"*" + manifestFileExt);
+			Generic::IEnumerator<String^>^ iter = enumeration->GetEnumerator();
+			while (iter->MoveNext()) {
+				String^ filename = iter->Current->Substring(userGameFolder->Length + 1);
+				String^ plugin = filename->Substring(0, filename->Length - manifestFileExt->Length);
+				if (currentPlugIn->Equals(plugin)) {
+					restoreOriginalChoice = true;
+				}
+				pluginComboBox->Items->Add(plugin);
 			}
-			pluginComboBox->Items->Add(plugin);
-		}
 
-		// Initialize/restore the selected item
-		pluginComboBox->Text = restoreOriginalChoice ? currentPlugIn : autodetectPluginName;
+			// Initialize/restore the selected item
+			pluginComboBox->Text = restoreOriginalChoice ? currentPlugIn : autodetectPluginName;
+		}
+		catch (Exception^ e) {
+			MessageBox::Show(
+				this,
+				L"Failed to retrieve plugin manifest from the " +
+				userGameFolder +
+				L" folder: " +
+				e->Message,
+				L"Plugin Manifest Failure",
+				MessageBoxButtons::OK,
+				MessageBoxIcon::Error);
+		}
 	}
 };
 }
