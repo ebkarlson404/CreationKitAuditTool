@@ -100,6 +100,10 @@ these translation files along with any other files that are part of one's plugin
 
 The specifics of how these translation files are created can be found in Bethesda's Verified Creators Wiki.
 
+Note that as of Starfield version 1.15.222 if one localizes one's plugin one must supply string translation files for *all languages supported by Starfield*.  If one
+ships one's plugin with no translation files for a particular language, players who run Starfield in that language will get "string not found" messages where there
+should have been translated text.  Starfield will not fall back to a default language for localized strings when the string translation file is missing.
+
 ### Localized Voices
 If one's plugin has voice audio files (found in `Starfield\Data\Sound\Voice\<modname>.esp`), one can package language-specific alternatives for those voice files.
 While this process is not documented and not supported as of version 1.15.222 of the Starfield Creation Kit, one can manage and pack these
