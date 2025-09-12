@@ -74,7 +74,7 @@ The recommended configuration for the *AssetWatcher* tool would look like this:
 <img width="1402" height="1052" alt="AssetWatcher" src="https://github.com/user-attachments/assets/351a248d-cf24-4863-b967-8130f268523e" />
 
 ## Direct Packing of BA2 Archive Files
-With the 2.2.0 version of the Creation Kit Audit Tool one can now pack a plugin's BA2 archive files directly from the Audit Tool.
+With the 2.0.0 version of the Creation Kit Audit Tool one can now pack a plugin's BA2 archive files directly from the Audit Tool.
 The `Localize and Pack` button on the app's main form will directly create the BA2 archive files for a plugin directly from
 the audit log.  This feature handles packing BA2 archives for:
 * Localized and Non-Localized Plugins
