@@ -109,7 +109,7 @@ namespace CreationKitAuditTool {
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(11, 24);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(591, 216);
+			this->ClientSize = System::Drawing::Size(609, 274);
 			this->ControlBox = false;
 			this->Controls->Add(this->okButton);
 			this->Controls->Add(this->cancelButton);
@@ -120,6 +120,7 @@ namespace CreationKitAuditTool {
 			this->MinimumSize = System::Drawing::Size(615, 280);
 			this->Name = L"LanguageDialog";
 			this->ShowInTaskbar = false;
+			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
 			this->Text = L"Select a Language";
 			this->ResumeLayout(false);
 			this->PerformLayout();

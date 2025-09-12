@@ -241,7 +241,7 @@ namespace CreationKitAuditTool {
 			this->packButton->Size = System::Drawing::Size(153, 59);
 			this->packButton->TabIndex = 2;
 			this->packButton->Text = L"&Pack";
-			this->toolTip->SetToolTip(this->packButton, L"lktasfn");
+			this->toolTip->SetToolTip(this->packButton, L"Stage all Localized WEM Files and then pack all required BA2 archive files");
 			this->packButton->UseVisualStyleBackColor = true;
 			this->packButton->Click += gcnew System::EventHandler(this, &PackDialog::packButton_Click);
 			// 
@@ -334,7 +334,7 @@ namespace CreationKitAuditTool {
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(11, 24);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(566, 876);
+			this->ClientSize = System::Drawing::Size(584, 934);
 			this->ControlBox = false;
 			this->Controls->Add(this->voiceLocalizationGroupBox);
 			this->Controls->Add(this->packButton);
