@@ -60,6 +60,7 @@ will detect both files and add them to the audit log for the plugin.  When one u
 the ACHLIST packing lists for the plugin, it will create two such lists - one for the PC platform that packs the PC WEM
 files, and one for the XBox platform that packs the XBox WEM files.  One can pull these ACHLIST files into Creation Kit
 to generate the two, platform-specific, `BA2` archive files to distributed your plugin to both platforms.
+
 ## Dovetails with AssetWatcher for multi-platform Texture Files
 If one configures the *AssetWatcher* tool that comes with Creation Kit to place the XBox versions of one's texture files into the
 same `Starfield\XBox\Data` folder used by the WWise configuration above, then the Creation Kit Audit Tool will also track
@@ -67,8 +68,13 @@ the XBox versions of one's texture files in the same way that it tracks the XBox
 appropriate ACHLIST packing lists for both XBox and PC.  The PC ACHLIST file will draw the WEM and DDS files from the standard
 `Starfield\Data` folder while the XBox ACHLIST file will draw the WEM and DDS files from the alternate `Starfield\XBox\Data`
 folder.
+
+The recommended configuration for the *AssetWatcher* tool would look like this:
+
+<img width="1402" height="1052" alt="AssetWatcher" src="https://github.com/user-attachments/assets/351a248d-cf24-4863-b967-8130f268523e" />
+
 ## Direct Packing of BA2 Archive Files
-With the 2.2.0 version of the Creation Kit Audit Tool one can now pack a plugin's BA2 archive files directly from the Audit Tool.
+With the 2.0.0 version of the Creation Kit Audit Tool one can now pack a plugin's BA2 archive files directly from the Audit Tool.
 The `Localize and Pack` button on the app's main form will directly create the BA2 archive files for a plugin directly from
 the audit log.  This feature handles packing BA2 archives for:
 * Localized and Non-Localized Plugins
@@ -93,6 +99,11 @@ the form of a set of three files for each language that are stored in the `Starf
 these translation files along with any other files that are part of one's plugin.
 
 The specifics of how these translation files are created can be found in Bethesda's Verified Creators Wiki.
+
+Note that as of Starfield version 1.15.222 if one localizes one's plugin one must supply string translation files for *all languages supported by Starfield*.  If one
+ships one's plugin with no translation files for a particular language, players who run Starfield in that language will get "string not found" messages where there
+should have been translated text.  Starfield will not fall back to a default language for localized strings when the string translation file is missing.
+
 ### Localized Voices
 If one's plugin has voice audio files (found in `Starfield\Data\Sound\Voice\<modname>.esp`), one can package language-specific alternatives for those voice files.
 While this process is not documented and not supported as of version 1.15.222 of the Starfield Creation Kit, one can manage and pack these
@@ -113,11 +124,14 @@ Once one has created a full set of these alternate language voice files, one sim
 `Localize and Pack` button on the app's main form.  This will take you to a new form that allows one to indicate the *native language* for your
 plugin (if you have not already done so) and then indicate the alternate languages for which you have alternate voice assets.  Once one has indicate
 which languages have localized voice assets, click on the `Pack` button to create the required BA2 archive files for distribution.
+
 <img width="991" height="868" alt="LocalizeButton" src="https://github.com/user-attachments/assets/e5921793-8f93-4d54-8100-809c9a1b0c03" />
 <img width="552" height="856" alt="LocalizationForm" src="https://github.com/user-attachments/assets/2bb14d95-0de9-4d87-8186-5c63f48d951f" />
+
 ### Caveats
 Plugins with localized voice assets can be distributed via Nexus.  However, as of version 1.15.222 of the Creation Kit,
 there are no provisions for uploading the BA2 archive files that contain the localized voice assets with a localized plugin.
+
 # Quick Start Instructions
 1. Ensure that you have a properly deployed Starfield Creation Kit
 2. If you will be generating WEM files as part of your plugin work, ensure that you have setup the `Audio` configuration block as detailed above
@@ -128,6 +142,7 @@ there are no provisions for uploading the BA2 archive files that contain the loc
 7. Go back to your Creation Kit and work on your plugin
 8. When you are ready to package the plugin, go back to the Creation Kit Audit Tool and click on the `Generate` button to create the two platform-specific ACHLIST files.  They will be created in your `%USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool` directory.
 9. Go back to Creation Kit and use the `Archive` tool to pack your `BA2` files by importing the ACHLIST files that were stored in your `%USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool` directory.
+
 # Tips, Tricks and Notes
 ## Background Operation in the System Tray
 Since the Creation Kit Audit Tool is meant to run in the background while one uses the Creation Kit, closing or minimizing the application
@@ -218,19 +233,6 @@ of whether one has enabled the Continuous Replication feature.
 
 Note that Continuous Replication only takes place while the audit process is running.  If one pauses the audit
 process, Continuous Replication will also be paused until the audit process is resumed.
-
-## Texture Files and AssetWatcher
-In addition to `WEM` files being platform-specific, `DDS` texture files are also platform-specific.  Fortunately,
-the Creation Kit ships with a tool called *AssetWatcher* which can be configured to automatically convert
-`DDS` files from a PC format to the corresponding XBox format and then drop the XBox files into a parallel
-directory tree.  The mechanism works in much the same way as the recommended WWise configuration for creating
-parallel XBox versions of `WEM` files from `WAV` files.
-
-The following screen shot shows the recommended configuration of the *AssetWatcher* tool to drop XBox `DDS`
-texture files into the same directory tree that used by the recommended WWise configuration.  When both tools
-are configured in this manner, the Creation Kit Audit Tool can pack plugins for both platforms in a single
-pass.
-<img width="1402" height="1052" alt="AssetWatcher" src="https://github.com/user-attachments/assets/351a248d-cf24-4863-b967-8130f268523e" />
 
 ## %USERPROFILE%\Documents\My Games\Starfield\CreationKitAuditTool
 This folder is created by the Creation Kit Audit Tool and is used to store persistent data used or generated
