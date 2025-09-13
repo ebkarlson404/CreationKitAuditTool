@@ -97,14 +97,15 @@ namespace CreationKitAuditTool {
 		return starfieldXBoxDataPrefix + fullname->Substring(starfieldDataPrefix->Length);
 	}
 	/**
-	* Checks to see if a file resides within some ESP folder related to a given plugin.
+	* Checks to see if a file resides within some ESP folder related to some other plugin.
 	* @param fullname - The name of the file to check
 	* @param plugin - The base name of the plugin
-	* @return true if the file resides within a ESP folder related to the plugin,
+	* @return true if the file does not reside within a foreign plugin's ESP folder,
 	* false otherwise
 	*/
 	public: static bool FileRelatedToPlugIn(String^ fullname, String^ plugin) {
-		return fullname->ToUpper()->Contains(L"\\" + plugin->ToUpper() + L".ESP\\");
+		return (0 <= fullname->IndexOf(L"\\" + plugin + L".esp\\", StringComparison::InvariantCultureIgnoreCase)) ||
+			(0 > fullname->IndexOf(L".esp\\"));
 	}
 
 	};

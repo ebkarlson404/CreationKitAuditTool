@@ -223,6 +223,7 @@ protected:
 			// fileSystemWatcher
 			// 
 			this->fileSystemWatcher->EnableRaisingEvents = true;
+			this->fileSystemWatcher->IncludeSubdirectories = true;
 			this->fileSystemWatcher->SynchronizingObject = this;
 			this->fileSystemWatcher->Changed += gcnew System::IO::FileSystemEventHandler(this, &MainForm::fileSystemWatcher_Changed);
 			this->fileSystemWatcher->Created += gcnew System::IO::FileSystemEventHandler(this, &MainForm::fileSystemWatcher_Created);
@@ -449,7 +450,7 @@ protected:
 			});
 			this->mainMenuStrip->Location = System::Drawing::Point(0, 0);
 			this->mainMenuStrip->Name = L"mainMenuStrip";
-			this->mainMenuStrip->Size = System::Drawing::Size(1026, 42);
+			this->mainMenuStrip->Size = System::Drawing::Size(1026, 38);
 			this->mainMenuStrip->TabIndex = 12;
 			this->mainMenuStrip->Text = L"menuStrip1";
 			// 
@@ -460,7 +461,7 @@ protected:
 					this->exitToolStripMenuItem
 			});
 			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
-			this->fileToolStripMenuItem->Size = System::Drawing::Size(62, 38);
+			this->fileToolStripMenuItem->Size = System::Drawing::Size(62, 34);
 			this->fileToolStripMenuItem->Text = L"&File";
 			// 
 			// auditFiltersToolStripMenuItem
@@ -488,7 +489,7 @@ protected:
 					this->gitHubToolStripMenuItem, this->aboutToolStripMenuItem
 			});
 			this->helpToolStripMenuItem->Name = L"helpToolStripMenuItem";
-			this->helpToolStripMenuItem->Size = System::Drawing::Size(74, 38);
+			this->helpToolStripMenuItem->Size = System::Drawing::Size(74, 34);
 			this->helpToolStripMenuItem->Text = L"&Help";
 			// 
 			// auditProcessAndFilteringToolStripMenuItem
@@ -1099,9 +1100,9 @@ protected:
 		StarfieldData::starfieldDataPrefix = StarfieldData::starfieldDataFolder + L"\\";
 		StarfieldData::starfieldVoicePrefix = StarfieldData::starfieldDataPrefix + L"Sound\\Voice\\";
 		StarfieldData::starfieldBackupPrefix = StarfieldData::starfieldDataPrefix + L"BACKUP\\";
+		fileSystemWatcher->BeginInit();
 		fileSystemWatcher->Path = StarfieldData::starfieldFolder;
-		fileSystemWatcher->IncludeSubdirectories = true;
-		fileSystemWatcher->EnableRaisingEvents = true;
+		fileSystemWatcher->EndInit();
 		findPluginDialog->InitialDirectory = StarfieldData::starfieldDataFolder;
 		importAchlistDialog->InitialDirectory = starfieldFolderTextBox->Text;
 		addFileToAuditDialog->InitialDirectory = StarfieldData::starfieldDataFolder;
