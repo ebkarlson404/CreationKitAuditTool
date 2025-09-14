@@ -132,6 +132,8 @@
     <ClCompile Include="LanguageDialog.cpp" />
     <ClCompile Include="MainForm.cpp" />
     <ClCompile Include="PackDialog.cpp" />
+    <ClCompile Include="Replication.cpp" />
+    <ClCompile Include="ReplicationLogDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbortException.h" />
@@ -150,6 +152,10 @@
     </ClInclude>
     <ClInclude Include="PackingTask.h" />
     <ClInclude Include="Replication.h" />
+    <ClInclude Include="ReplicationEvent.h" />
+    <ClInclude Include="ReplicationLogDialog.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="StarfieldData.h" />
     <ClInclude Include="FileType.h" />
     <ClInclude Include="MainForm.h">
@@ -179,6 +185,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PackDialog.resx">
       <DependentUpon>PackDialog.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReplicationLogDialog.resx">
+      <DependentUpon>ReplicationLogDialog.h</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

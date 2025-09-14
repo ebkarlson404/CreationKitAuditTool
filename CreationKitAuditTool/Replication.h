@@ -1,87 +1,40 @@
 #pragma once
 
-#include "AbortException.h"
-#include "StarfieldData.h"
+#include "ReplicationEvent.h"
+
+using namespace System::Collections;
+using namespace Windows::Forms;
 
 namespace CreationKitAuditTool {
 
-	class Replication
+	ref class Replication
 	{
+	public: static ReplicationEvent^ currentEvent = gcnew ReplicationEvent;
+	private: static int replicationLogSize = 1000;
+	public: static Generic::List<ReplicationEvent^>^ replicationLog = gcnew Generic::List<ReplicationEvent^>;
+
+	private: static System::Void AppendReplicationLog(String^ target);
 	/**
 	* Used by the background continuous replication logic to replicate
 	* a newly discovered file if it should be replicated.
 	* @param fullname - The full name of the file to process
+	* @param plugin - The name of the current plugin
 	*/
-	public: static System::Void MaybeReplicateFile(String^ fullname) {
-		try {
-			String^ relativeName = StarfieldData::GetRelativeName(fullname);
-			if (nullptr != relativeName) {
-				EspToEsmReplication(relativeName, nullptr);
-			}
-		}
-		catch (Exception^) {
-			// Swallow any exceptions
-		}
-	}
+	public: static bool MaybeReplicateFile(String^ fullname, String^ plugin);
 	/**
 	* Given the name of a deleted file, check to see if there are any
 	* ESP->ESM replicas of the deleted file.  If so, delete the
 	* replicas.
 	* @param fullname - The full name of the deleted file
+	* @param plugin - The name of the current plugin
 	*/
-	public: static System::Void MaybeDeleteReplicaFile(String^ fullname) {
-		// Ensure that the deleted file resides within one of our Data folders.
-		String^ relativeName = StarfieldData::GetRelativeName(fullname);
-		if (nullptr == relativeName) {
-			return;
-		}
-
-		// If the deleted files lies within an ESP directory, delete
-		// the corresponding file in the corresponding ESM directory.
-		String^ esmRelativeName = StarfieldData::EspToEsmNameTransform(relativeName);
-		if (nullptr != esmRelativeName) {
-			String^ esmFullName = StarfieldData::starfieldPrefix + esmRelativeName;
-			try {
-				File::Delete(esmFullName);
-			}
-			catch (Exception^) {
-				// Swallow any exceptions and continue
-			}
-		}
-
-		// If the deleted file lies within the standard Starfield Data tree
-		// delete its corresponding XBox transform, if there is one.
-		String^ xboxFullname = StarfieldData::PCToXBoxNameTransform(fullname);
-		if (nullptr != xboxFullname) {
-			try {
-				File::Delete(xboxFullname);
-			}
-			catch (Exception^) {
-				// Swallow any exceptions and continue
-			}
-		}
-	}
-	public: static System::Void MaybeDeleteReplicaFolder(String^ fullname) {
-		// Ensure that the deleted folder resides within one of our Data folders
-		String^ relativeName = StarfieldData::GetRelativeName(fullname);
-		if (nullptr == relativeName) {
-			return;
-		}
-
-		// If the deleted folder lies within an ESP folder, delete the
-		// corresponding folder under the corresponding ESM folder.
-		String^ esmRelativeName = StarfieldData::EspToEsmNameTransform(relativeName);
-		if (nullptr != esmRelativeName) {
-			Util::DeleteFolder(StarfieldData::starfieldPrefix + esmRelativeName, nullptr);
-		}
-
-		// If the deleted folder has been replicated into the XBox tree,
-		// also delete the XBox replica folder.
-		String^ xboxFullname = StarfieldData::PCToXBoxNameTransform(fullname);
-		if (nullptr != xboxFullname) {
-			Util::DeleteFolder(xboxFullname, nullptr);
-		}
-	}
+	public: static System::Void MaybeDeleteReplicaFile(String^ fullname, String^ plugin);
+	/**
+	* Given the name of a delete folder, check to see if there are any
+	* ESP->ESM replicas of the deleted folder.  If so, delete the replcas.
+	* @param fullname - The full name of the deleted folder
+	*/
+	public: static System::Void MaybeDeleteReplicaFolder(String^ fullname);
     /**
 	* Replicates the file from ESP to ESM folders, if applicable, and returns the
 	* name of the file that should be used for archive packing.
@@ -93,144 +46,29 @@ namespace CreationKitAuditTool {
 	* fails
 	* @throws AbortException - User requested abort action
 	*/
-	public: static String^ EspToEsmReplication(String^ espRelativeName, IWin32Window^ caller) {
-		String^ esmRelativeName = StarfieldData::EspToEsmNameTransform(espRelativeName);
-		if (nullptr == esmRelativeName) {
-			return espRelativeName;
-		}
-		String^ esmDirectory = StarfieldData::starfieldPrefix + esmRelativeName->Substring(0, esmRelativeName->LastIndexOf(L"\\"));
-		DialogResult status = DialogResult::Retry;
-		while (status == DialogResult::Retry) {
-			try {
-				Directory::CreateDirectory(esmDirectory);
-				File::Copy(StarfieldData::starfieldPrefix + espRelativeName, StarfieldData::starfieldPrefix + esmRelativeName, true);
-				status = DialogResult::OK;
-			}
-			catch (Exception^ e) {
-				if (nullptr != caller) {
-					status = MessageBox::Show(
-						caller,
-						L"Error while replicating " +
-						StarfieldData::starfieldPrefix + espRelativeName +
-						L" to " +
-						StarfieldData::starfieldPrefix + esmRelativeName +
-						L": " +
-						e->Message,
-						L"ESP to ESM Replication Failure",
-						MessageBoxButtons::AbortRetryIgnore,
-						MessageBoxIcon::Error);
-				}
-				else {
-					status = DialogResult::Ignore;
-				}
-				if (status == DialogResult::Abort) {
-					throw gcnew AbortException(L"User requested abort", e);
-				}
-			}
-		}
-		return (status == DialogResult::OK) ? esmRelativeName : nullptr;
-	}
+	public: static String^ EspToEsmReplication(String^ espRelativeName, IWin32Window^ caller);
 	/**
 	* Replicate the rename of a source file onto any replicas of the file.
 	* If the ESM replica of the file does not exist, this is a noop.
 	* @param oldFullName - The original name of the object
 	* @param newFullName - The new name of the object
-	* @returns true if the operation worked, false if not
+	* @param plugin - The name of the current plugin
+	* @returns true if the operation did something, false if not
 	*/
-	public: static bool MaybeRenameReplicaFiles(String^ oldFullName, String^ newFullName) {
-		// Renames should not change the folder name - verify that
-		if (!Path::GetDirectoryName(oldFullName)->Equals(Path::GetDirectoryName(newFullName))) {
-			return false;
-		}
-
-		// Get the relative names for the old and new files.
-		// Both must reside within one of the Data directory trees.
-		String^ oldRelativeName = StarfieldData::GetRelativeName(oldFullName);
-		String^ newRelativeName = StarfieldData::GetRelativeName(newFullName);
-		if (nullptr == oldRelativeName || nullptr == newRelativeName) {
-			return true;
-		}
-
-		// If the folders lie within an ESP directory, rename
-		// the corresponding folder in the corresponding ESM directory.
-		String^ oldEsmRelativeName = StarfieldData::EspToEsmNameTransform(oldRelativeName);
-		String^ newEsmRelativeName = StarfieldData::EspToEsmNameTransform(newRelativeName);
-		if (nullptr != oldEsmRelativeName && nullptr != newEsmRelativeName) {
-			String^ oldEsmFullName = StarfieldData::starfieldPrefix + oldEsmRelativeName;
-			String^ newEsmFullName = StarfieldData::starfieldPrefix + newEsmRelativeName;
-			try {
-				if (File::Exists(oldEsmFullName)) {
-					File::Move(oldEsmFullName, newEsmFullName);
-				}
-			}
-			catch (Exception^) {
-				return false;
-			}
-		}
-
-		// If the renamed folder lies within the standard Starfield Data tree
-		// rename its corresponding XBox replica, if there is one.
-		String^ oldXboxFullname = StarfieldData::PCToXBoxNameTransform(oldFullName);
-		String^ newXBoxFullName = StarfieldData::PCToXBoxNameTransform(newFullName);
-		if (nullptr != oldXboxFullname && nullptr != newXBoxFullName) {
-			try {
-				if (File::Exists(oldXboxFullname)) {
-					File::Move(oldXboxFullname, newXBoxFullName);
-				}
-			}
-			catch (Exception^) {
-				return false;
-			}
-		}
-		return true;
-	}
-	/**
+	public: static bool MaybeRenameReplicaFiles(String^ oldFullName, String^ newFullName, String^ plugin);	/**
 	* Given a renamed folder, apply the same renaming to any replicas of the folder.
 	* @param oldFullName - The original full name of the folder
 	* @param newFullName - The new full name of the folder
-	* @returns true if all replicas were renamed, false otherwise
+	* @returns true if all something was done, false otherwise
 	*/
-	public: static bool MaybeRenameReplicasFolders(String^ oldFullName, String^ newFullName) {
-		// Get the relative names for the old and new files
-		String^ oldRelativeName = StarfieldData::GetRelativeName(oldFullName);
-		String^ newRelativeName = StarfieldData::GetRelativeName(newFullName);
-		if (nullptr == oldRelativeName || nullptr == newRelativeName) {
-			return true;
-		}
-
-		// If the files lie within an ESP directory, rename
-		// the corresponding file in the corresponding ESM directory.
-		String^ oldEsmRelativeName = StarfieldData::EspToEsmNameTransform(oldRelativeName);
-		String^ newEsmRelativeName = StarfieldData::EspToEsmNameTransform(newRelativeName);
-		if (nullptr != oldEsmRelativeName && nullptr != newEsmRelativeName) {
-			String^ oldEsmFullName = StarfieldData::starfieldPrefix + oldEsmRelativeName;
-			String^ newEsmFullName = StarfieldData::starfieldPrefix + newEsmRelativeName;
-			try {
-				if (Directory::Exists(oldEsmFullName)) {
-					Directory::Move(oldEsmFullName, newEsmFullName);
-				}
-			}
-			catch (Exception^) {
-				return false;
-			}
-		}
-
-		// If the renamed file lies within the standard Starfield Data tree
-		// rename its corresponding XBox replica, if there is one.
-		String^ oldXboxFullname = StarfieldData::PCToXBoxNameTransform(oldFullName);
-		String^ newXBoxFullName = StarfieldData::PCToXBoxNameTransform(newFullName);
-		if (nullptr != oldXboxFullname && nullptr != newXBoxFullName) {
-			try {
-				if (Directory::Exists(oldXboxFullname)) {
-					Directory::Move(oldXboxFullname, newXBoxFullName);
-				}
-			}
-			catch (Exception^) {
-				return false;
-			}
-		}
-		return true;
-	}
+	public: static bool MaybeRenameReplicasFolders(String^ oldFullName, String^ newFullName);
+	/**
+	* Checks to see whether a given file is a candidate for ESP->ESM replication.
+	* @param fullname - The full name of the file to check
+	* @param plugin - The name of the current plugin
+	* @return true if the file is an ESP->ESM replication candidate, false otherwise
+	*/
+	public: static bool ShouldReplicate(String^ fullname, String^ plugin);
 	};
 
 }

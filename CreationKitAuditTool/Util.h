@@ -80,6 +80,9 @@ namespace CreationKitAuditTool {
 	public: static bool HasSuffix(String^ filename, String^ suffix) {
 		return filename->EndsWith(suffix, StringComparison::InvariantCultureIgnoreCase);
 	}
+	public: static bool HasSubstring(String^ filename, String^ substring) {
+		return 0 <= filename->IndexOf(substring, StringComparison::InvariantCultureIgnoreCase);
+	}
 	public: static FileType ClassifyFile(String^ fullname) {
 		FileAttributes attr;
 		try {
@@ -116,12 +119,13 @@ namespace CreationKitAuditTool {
 	* @param fullname - The full name of the folder to delete
 	* @param caller - The window to use for displaying MessageBoxes, or
 	* nullptr if errors should be silently swallowed.
-	* @returns true if the folder was deleted, false otherwise
+	* @returns true if the folder was deleted, false the operation failed,
+	* the folder does not exist or the name does not refer to a folder
 	*/
 	public: static bool DeleteFolder(String^ fullname, IWin32Window^ caller) {
 		// Nothing to do if the directory does not exist
 		if (!Directory::Exists(fullname)) {
-			return true;
+			return false;
 		}
 
 		// First try to move the folder directly into the Recycling Bin
@@ -146,11 +150,13 @@ namespace CreationKitAuditTool {
 	* @param fullname - The full name of the folder to delete
 	* @param caller - The window to use for showing MessageBoxes, or nullptr
 	* to silently swallow any errors
+	* @returns true if the folder was deleted, false if the operation failed, the
+	* folder doesn't exist or the name does not refer to a folder
 	*/
 	private: static bool RecursiveDeleteFolder(String^ fullname, IWin32Window^ caller) {
 		// Nothing to do if the directory does not exist
 		if (!Directory::Exists(fullname)) {
-			return true;
+			return false;
 		}
 
 		try {

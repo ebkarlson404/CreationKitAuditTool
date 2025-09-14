@@ -109,7 +109,7 @@ namespace CreationKitAuditTool {
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(11, 24);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(609, 274);
+			this->ClientSize = System::Drawing::Size(591, 216);
 			this->ControlBox = false;
 			this->Controls->Add(this->okButton);
 			this->Controls->Add(this->cancelButton);

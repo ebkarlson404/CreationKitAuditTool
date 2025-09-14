@@ -104,8 +104,11 @@ namespace CreationKitAuditTool {
 	* false otherwise
 	*/
 	public: static bool FileRelatedToPlugIn(String^ fullname, String^ plugin) {
-		return (0 <= fullname->IndexOf(L"\\" + plugin + L".esp\\", StringComparison::InvariantCultureIgnoreCase)) ||
-			(0 > fullname->IndexOf(L".esp\\"));
+		if (Util::HasSubstring(fullname, L"\\" + plugin + L".esp\\")) {
+			return true;
+		}
+		return !Util::HasSubstring(fullname, L".esp\\") &&
+			!Util::HasSubstring(fullname, L".esm\\");
 	}
 
 	};

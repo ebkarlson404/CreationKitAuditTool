@@ -158,13 +158,25 @@ namespace CreationKitAuditTool {
 		}
 #pragma endregion
 	private: System::Void clipboardButton_Click(System::Object^ sender, System::EventArgs^ e) {
-		StringBuilder^ builder = gcnew StringBuilder;
+		StringBuilder builder;
 		Collections::IEnumerator^ iter = outputListView->Items->GetEnumerator();
 		while (iter->MoveNext()) {
 			ListViewItem^ item = cli::safe_cast<ListViewItem^>(iter->Current);
-			builder->AppendLine(item->Text);
+			builder.AppendLine(item->Text);
 		}
-		Clipboard::SetText(builder->ToString());
+		String^ str = builder.ToString();
+		if (nullptr == str || System::String::Empty == str) {
+			Clipboard::Clear();
+		}
+		else {
+			Clipboard::SetText(str);
+		}
+		MessageBox::Show(
+			this,
+			L"Archive Log copied to the system clipboard.",
+			L"Action Confirmation",
+			MessageBoxButtons::OK,
+			MessageBoxIcon::Information);
 	}
 	private: System::Void keepButton_Click(System::Object^ sender, System::EventArgs^ e) {
 		this->Close();

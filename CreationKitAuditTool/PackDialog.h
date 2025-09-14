@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AbortException.h"
 #include "ArchiveDialog.h"
 #include "LanguageDialog.h"
 #include "PackingTask.h"
@@ -454,11 +455,8 @@ namespace CreationKitAuditTool {
 
 		// Does this plugin have a voice localization marker?
 		// Search for a <lang>.plang marker file
-		iter = Directory::EnumerateFiles(espPluginFolder, L"*" + primaryLanguageMarker)->GetEnumerator();
-		hasVoiceLocalization = iter->MoveNext();
-		if (hasVoiceLocalization) {
-			primaryLanguage = Path::GetFileNameWithoutExtension(iter->Current);
-		}
+		primaryLanguage = GetPrimaryLanguage(espPluginFolder);
+		hasVoiceLocalization = (nullptr != primaryLanguage);
 
 		// Set the proper radio button
 		InitializePluginRadioButtons();
@@ -469,6 +467,20 @@ namespace CreationKitAuditTool {
 
 		// Set the active language
 		InitializeLanguageList();
+	}
+	/**
+	* Searches a plugin's ESP folder for a "primary language" marker
+	* @param espFullFolderName - The full name of the plugin's ESP folder
+	* @returns The language code for this plugin's "primary language" or
+	* nullptr if the plugin is not marked for voice localization
+	*/
+	private: static String^ GetPrimaryLanguage(String^ espFullFolderName) {
+		Generic::IEnumerator<String^>^ iter =
+			Directory::EnumerateFiles(espFullFolderName, L"*" + primaryLanguageMarker)->GetEnumerator();
+		if (!iter->MoveNext()) {
+			return nullptr;
+		}
+		return Path::GetFileNameWithoutExtension(iter->Current);
 	}
 	private: System::Void InitializePluginRadioButtons() {
 		if (hasVoiceLocalization) {
@@ -569,47 +581,207 @@ namespace CreationKitAuditTool {
 				String^ localizedName = LocalizeWEMFilename(item->Text, lang, isPrimaryLang);
 
 				// Stage the PC version of the WEM file
-				StageLocalizedWEMFile(localizedName, lang, false);
+				StageLocalizedWEMFile(localizedName, plugin, lang, false, this);
 
 				// Stage the XBox version of the WEM file
 				StageLocalizedWEMFile(
-					StarfieldData::starfieldXBoxRelativePrefix + localizedName, lang, true);
+					StarfieldData::starfieldXBoxRelativePrefix + localizedName,
+					plugin, lang, true, this);
 			}
 		}
+	}
+	/**
+	* Called by the continuous replication logic to replicate WEM files that
+	* might be a localized variant of a 'natual language' WEM file.
+	* @param fullname - The full name of the WEM file
+	* @param plugin - The name of the current plugin
+	* @returns the relative name of the staged file if it was staged, nullptr
+	* otherwise
+	*/
+	public: static String^ MaybeStageLocalizedWEMFile(String^ fullname, String^ plugin) {
+		// Must be a WEM file in the plugin's ESP folder
+		if (!Util::HasSuffix(fullname, L".WEM") ||
+			!Util::HasSubstring(fullname, L"\\" + plugin + L".esp\\")) {
+			return nullptr;
+		}
+
+		// The plugin must be configured for localized voice support
+		String^ pluginEspFolder = StarfieldData::starfieldDataPrefix +
+			L"Sound\\Voice\\" +
+			plugin +
+			L".esp";
+		String^ primeLang = GetPrimaryLanguage(pluginEspFolder);
+		if (nullptr == primeLang) {
+			return nullptr;
+		}
+
+		// Determine the language for the WEM file
+		String^ filename = Path::GetFileNameWithoutExtension(fullname);
+		int pos = filename->IndexOf(L"_");
+		String^ lang = (0 > pos) ? primeLang : filename->Substring(pos + 1);
+
+		// Stage the file
+		return StageLocalizedWEMFile(
+				StarfieldData::GetRelativeName(fullname),
+				plugin,
+				lang,
+				Util::HasPrefix(fullname, StarfieldData::starfieldXBoxDataPrefix),
+				nullptr)->Substring(StarfieldData::starfieldPrefix->Length);
+	}
+	/**
+	* Called by the continuous replication logic to replicate the deletion of
+	* WEM files that might be a localized variant of a 'natual language' WEM file.
+	* @param fullname - The full name of the deleted WEM file
+	* @param plugin - The name of the current plugin
+	* @returns the relative name of the staged file that was deleted, nullptr
+	* otherwise
+	*/
+	public: static String^ MaybeDeleteStagesLocalizedWEMFile(String^ fullname, String^ plugin) {
+		// Must be a WEM file in the plugin's ESP folder
+		if (!Util::HasSuffix(fullname, L".WEM") ||
+			!Util::HasSubstring(fullname, L"\\" + plugin + L".esp\\")) {
+			return nullptr;
+		}
+
+		// The plugin must be configured for localized voice support
+		String^ pluginEspFolder = StarfieldData::starfieldDataPrefix +
+			L"Sound\\Voice\\" +
+			plugin +
+			L".esp";
+		String^ primeLang = GetPrimaryLanguage(pluginEspFolder);
+		if (nullptr == primeLang) {
+			return nullptr;
+		}
+
+		// Determine the language for the WEM file
+		String^ filename = Path::GetFileNameWithoutExtension(fullname);
+		int pos = filename->IndexOf(L"_");
+		String^ lang = (0 > pos) ? primeLang : filename->Substring(pos + 1);
+
+		// Compute the full name of the staged copy
+		String^ stagedFullName = espToLocalEsmNameTransform(
+			StarfieldData::GetRelativeName(fullname), plugin, lang,
+			Util::HasPrefix(fullname, StarfieldData::starfieldXBoxDataPrefix));
+
+		// Delete the staged file if it exists
+		if (!File::Exists(stagedFullName)) {
+			return nullptr;
+		}
+		try {
+			File::Delete(stagedFullName);
+		}
+		catch (Exception^) {
+			return nullptr;
+		}
+
+		// Stage the file
+		return stagedFullName->Substring(StarfieldData::starfieldPrefix->Length);
+	}
+	public: static array<String^>^ MaybeRenamedStagedLocalizedWEMFile(
+			  String^ oldFullName, String^ newFullName, String^ plugin) {
+		// Must be a WEM file in the plugin's ESP folder
+		if (!Util::HasSuffix(oldFullName, L".WEM") ||
+			!Util::HasSubstring(oldFullName, L"\\" + plugin + L".esp\\")) {
+			return nullptr;
+		}
+
+		// The plugin must be configured for localized voice support
+		String^ pluginEspFolder = StarfieldData::starfieldDataPrefix +
+			L"Sound\\Voice\\" +
+			plugin +
+			L".esp";
+		String^ primeLang = GetPrimaryLanguage(pluginEspFolder);
+		if (nullptr == primeLang) {
+			return nullptr;
+		}
+
+		// Are we working on XBox files or PC files?
+		bool isXBox = Util::HasPrefix(oldFullName, StarfieldData::starfieldXBoxDataPrefix);
+
+		// Extract the base filename and the language tag for both the old and new names
+		String^ oldBaseName = Path::GetFileNameWithoutExtension(oldFullName);
+		int pos = oldBaseName->IndexOf(L"_");
+		String^ oldLang = (0 > pos) ? primeLang : oldBaseName->Substring(pos + 1);
+		String^ newBaseName = Path::GetFileNameWithoutExtension(newFullName);
+		pos = newBaseName->IndexOf(L"_");
+		String^ newLang = (0 > pos) ? primeLang : newBaseName->Substring(pos + 1);
+
+		// Compute the old and new names for the staged file
+		String^ oldTargetName = espToLocalEsmNameTransform(
+			StarfieldData::GetRelativeName(oldFullName), plugin, oldLang, isXBox);
+		String^ newTargetName = espToLocalEsmNameTransform(
+			StarfieldData::GetRelativeName(newFullName), plugin, newLang, isXBox);
+
+		// If the language tag changed, we have to ensure that the staging folder
+		// for the new language exists.
+		if (!oldLang->Equals(newLang)) {
+			try {
+				Directory::CreateDirectory(Path::GetDirectoryName(newTargetName));
+			}
+			catch (Exception^) {
+				return nullptr;
+			}
+		}
+
+		// Now move the old file to the new file
+		try {
+			File::Move(oldTargetName, newTargetName);
+		}
+		catch (Exception^) {
+			return nullptr;
+		}
+
+		// We return just the old staged name if this was a simple rename,
+		// otherwise we have to return both the old and new staged names
+		// because the caller will have to model this as a DELETE followed
+		// by a CREATE.
+		return oldLang->Equals(newLang) ?
+			gcnew array<String^>(1) { oldTargetName } :
+			gcnew array<String^>(2) { oldTargetName, newTargetName };
 	}
 	/**
 	* Stages a localized file in the plugin's ESP folder to the language-appropriate
 	* location in the Localized Staging directory tree.
 	* @param espRelativeName - The relative name of the file in the ESP folder
+	* @param plugin - The name of the current plugin
 	* @param lang - The language to use for staging
 	* @param isXBox - Indicates that the file is for the XBox platform
+	* @param caller - The window to use for MessageBoxes, or nullptr to not show MessageBoxes
+	* @returns The full name of the staged file, or nullptr if the operation failed
 	* @throw AbortException if something goes wrong and the user chooses to
 	* abort the operation
 	*/
-	private: System::Void StageLocalizedWEMFile(String^ espRelativeName, String^ lang, bool isXBox) {
+	private: static String^ StageLocalizedWEMFile(
+		String^ espRelativeName, String^ plugin, String^ lang, bool isXBox, IWin32Window^ caller) {
 		Forms::DialogResult status = Forms::DialogResult::Retry;
+		String^ targetName = espToLocalEsmNameTransform(espRelativeName, plugin, lang, isXBox);
 		while (status == Forms::DialogResult::Retry) {
-			String^ targetName = espToLocalEsmNameTransform(espRelativeName, lang, isXBox);
 			try {
 				Directory::CreateDirectory(Path::GetDirectoryName(targetName));
 				File::Copy(StarfieldData::starfieldPrefix + espRelativeName, targetName, true);
 				status = Forms::DialogResult::OK;
 			}
 			catch (Exception^ e) {
-				status = MessageBox::Show(
-					this,
-					L"Unable to stage localized WEM file " + espRelativeName +	L" to " +
-					lang + L" staging area : " + e->Message,
-					L"Staging Failure",
-					MessageBoxButtons::AbortRetryIgnore,
-					MessageBoxIcon::Error);
+				if (nullptr == caller) {
+					status = Forms::DialogResult::Ignore;
+				}
+				else {
+					status = MessageBox::Show(
+						caller,
+						L"Unable to stage localized WEM file " + espRelativeName + L" to " +
+						lang + L" staging area : " + e->Message,
+						L"Staging Failure",
+						MessageBoxButtons::AbortRetryIgnore,
+						MessageBoxIcon::Error);
+				}
 				if (status == Forms::DialogResult::Abort) {
 					throw gcnew AbortException(L"User aborted staging operation", e);
 				}
 			}
 		}
+		return (status == Forms::DialogResult::OK) ? targetName : nullptr;
 	}
-	private: String^ DelocalizeWEMFilename(String^ basename) {
+	private: static String^ DelocalizeWEMFilename(String^ basename) {
 		int pos = basename->IndexOf(L"_");
 		return (0 > pos) ?
 			basename :
@@ -625,11 +797,13 @@ namespace CreationKitAuditTool {
 	* Converts relative name of a file that resides within this plugin's ESP folder
 	* to its corresponding Localization Staged name.
 	* @param espRelativeName - The name of the file to be transformed
+	* @param plugin - The name of the current plugin
 	* @param lang - The language to use for staging
 	* @param isXBox - Indicates if this should be staged to the XBox tree
 	* @return The full name to use for staging the file to the localization tree
 	*/
-	private: String^ espToLocalEsmNameTransform(String^ relativeName, String^ lang, bool isXBox) {
+	private: static String^ espToLocalEsmNameTransform(
+		String^ relativeName, String^ plugin, String^ lang, bool isXBox) {
 		String^ filename =
 			DelocalizeWEMFilename(Path::GetFileNameWithoutExtension(relativeName)) +
 			Path::GetExtension(relativeName);
@@ -699,40 +873,29 @@ namespace CreationKitAuditTool {
 		return status == Forms::DialogResult::OK;
 	}
 	/**
-	* Checks to see if the file is part of the localization metadata that is
-	* used to track plugin localization.
-	* @param relativeName - The relative name of the file to check
-	* @return true if the file is part of the localization metadata, false otherwise
-	*/
-	public: static bool isLocalizationMetadata(String^ relativeName) {
-		// Check for the language markers
-		return Util::HasSuffix(relativeName, L".PLANG") || Util::HasSuffix(relativeName, L".SLANG");
-	}
-	/**
 	* Checks to see if a file is part of the localization system.  Primarilly
 	* used by the audit log to exclude localized files from the manifest.
-	* @param espRelativeName - The data-relative name of the file to check
+	* @param fullname - The full name of the file to check
 	* @returns true if it is part of the localization system, false otherwise
 	*/
-	public: static bool isLocalizationFile(String^ relativeName) {
+	public: static bool isLocalizationFile(String^ fullname) {
 		// Check for localization metadata files
 		// Check to see if the file resides within some ESP/ESM folder
 		// and has a known "_<lang>" annotation on the filename
-		if (isLocalizationMetadata(relativeName)) {
+		if (Util::HasSuffix(fullname, L".PLANG") ||
+			Util::HasSuffix(fullname, L".SLANG") ||
+			Util::HasPrefix(fullname, StarfieldData::localizationPrefix)) {
 			return true;
 		}
-		if (!Util::HasSuffix(relativeName, L".WEM")) {
+		if (!Util::HasSuffix(fullname, L".WEM")) {
 			return false;
 		}
-		if (0 > relativeName->IndexOf(L".ESP\\", StringComparison::InvariantCultureIgnoreCase)) {
-			return false;
-		}
-		if (0 > relativeName->IndexOf(L".ESM\\", StringComparison::InvariantCultureIgnoreCase)) {
+		if (!Util::HasSubstring(fullname, L".esp\\")) {
 			return false;
 		}
 		Dictionary<String^,String^>::Enumerator iter = LanguageMap->GetEnumerator();
 		while (iter.MoveNext()) {
-			if (Util::HasSuffix(relativeName, L"_" + iter.Current.Key + L".WEM")) {
+			if (Util::HasSuffix(fullname, L"_" + iter.Current.Key + L".WEM")) {
 				return true;
 			}
 		}
@@ -885,7 +1048,7 @@ namespace CreationKitAuditTool {
 		PackingTask^ task = voiceTasks[lang];
 
 		// Map the name to the staged copy of the localized file
-		String^ stagedName = espToLocalEsmNameTransform(espRelativeName, lang, isXBox);
+		String^ stagedName = espToLocalEsmNameTransform(espRelativeName, plugin, lang, isXBox);
 
 		// Generate a data-relative name for the staged file and append the PackingTask
 		String^ localRelativeName =

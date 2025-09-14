@@ -4,6 +4,7 @@
 #include "FileType.h"
 #include "PackDialog.h"
 #include "Replication.h"
+#include "ReplicationLogDialog.h"
 #include "StarfieldData.h"
 
 namespace CreationKitAuditTool {
@@ -146,8 +147,10 @@ namespace CreationKitAuditTool {
 	protected: static String^ manifestFileExt = L".manifest";
 	protected: static String^ githubUrl = L"https://github.com/ebkarlson404/CreationKitAuditTool";
 	protected: ListViewItem^ selectedAuditItem;
-	protected: AuditFilterDialog^ auditFilterDialog = gcnew AuditFilterDialog();
-private: System::Windows::Forms::Button^ clipboardButton;
+	protected: ReplicationLogDialog^ replicationLogDialog = gcnew ReplicationLogDialog();
+	private: System::Windows::Forms::Button^ clipboardButton;
+	private: System::Windows::Forms::Button^ viewLogButton;
+
 protected:
 	protected: PackDialog^ packDialog = gcnew PackDialog();
 	protected:
@@ -212,6 +215,7 @@ protected:
 			this->notifyToolStripExitItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->label4 = (gcnew System::Windows::Forms::Label());
 			this->localizationFolderTextBox = (gcnew System::Windows::Forms::TextBox());
+			this->viewLogButton = (gcnew System::Windows::Forms::Button());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pluginEnumerator))->BeginInit();
 			this->auditGroupBox->SuspendLayout();
@@ -329,6 +333,7 @@ protected:
 			// auditGroupBox
 			// 
 			this->auditGroupBox->BackColor = System::Drawing::SystemColors::Control;
+			this->auditGroupBox->Controls->Add(this->viewLogButton);
 			this->auditGroupBox->Controls->Add(this->replicationCheckBox);
 			this->auditGroupBox->Controls->Add(this->statusButton);
 			this->auditGroupBox->Controls->Add(this->clearButton);
@@ -338,7 +343,7 @@ protected:
 			this->auditGroupBox->ForeColor = System::Drawing::SystemColors::ControlText;
 			this->auditGroupBox->Location = System::Drawing::Point(45, 671);
 			this->auditGroupBox->Name = L"auditGroupBox";
-			this->auditGroupBox->Size = System::Drawing::Size(612, 168);
+			this->auditGroupBox->Size = System::Drawing::Size(612, 212);
 			this->auditGroupBox->TabIndex = 12;
 			this->auditGroupBox->TabStop = false;
 			this->auditGroupBox->Text = L"Audit Control";
@@ -347,10 +352,10 @@ protected:
 			// 
 			this->replicationCheckBox->AutoSize = true;
 			this->replicationCheckBox->Enabled = false;
-			this->replicationCheckBox->Location = System::Drawing::Point(22, 115);
+			this->replicationCheckBox->Location = System::Drawing::Point(22, 163);
 			this->replicationCheckBox->Name = L"replicationCheckBox";
 			this->replicationCheckBox->Size = System::Drawing::Size(238, 29);
-			this->replicationCheckBox->TabIndex = 3;
+			this->replicationCheckBox->TabIndex = 5;
 			this->replicationCheckBox->Text = L"Continuous Replication";
 			this->toolTip->SetToolTip(this->replicationCheckBox, L"Immediately replicate files from ESP to ESM folders as changes are discovered");
 			this->replicationCheckBox->UseVisualStyleBackColor = true;
@@ -371,10 +376,10 @@ protected:
 			// 
 			// clearButton
 			// 
-			this->clearButton->Location = System::Drawing::Point(434, 104);
+			this->clearButton->Location = System::Drawing::Point(434, 91);
 			this->clearButton->Name = L"clearButton";
 			this->clearButton->Size = System::Drawing::Size(157, 48);
-			this->clearButton->TabIndex = 5;
+			this->clearButton->TabIndex = 4;
 			this->clearButton->Text = L"C&lear";
 			this->toolTip->SetToolTip(this->clearButton, L"Merge the contents of an existing ACHLIST file into this PlugIn\'s audit log");
 			this->clearButton->UseVisualStyleBackColor = true;
@@ -395,10 +400,10 @@ protected:
 			// importButton
 			// 
 			this->importButton->Enabled = false;
-			this->importButton->Location = System::Drawing::Point(271, 104);
+			this->importButton->Location = System::Drawing::Point(271, 91);
 			this->importButton->Name = L"importButton";
 			this->importButton->Size = System::Drawing::Size(157, 48);
-			this->importButton->TabIndex = 4;
+			this->importButton->TabIndex = 3;
 			this->importButton->Text = L"&Import";
 			this->toolTip->SetToolTip(this->importButton, L"Merge the contents of an existing ACHLIST file into this PlugIn\'s audit log");
 			this->importButton->UseVisualStyleBackColor = true;
@@ -419,7 +424,7 @@ protected:
 			// packButton
 			// 
 			this->packButton->Enabled = false;
-			this->packButton->Location = System::Drawing::Point(710, 720);
+			this->packButton->Location = System::Drawing::Point(710, 762);
 			this->packButton->Name = L"packButton";
 			this->packButton->Size = System::Drawing::Size(222, 48);
 			this->packButton->TabIndex = 14;
@@ -576,7 +581,7 @@ protected:
 			// generateButton
 			// 
 			this->generateButton->Enabled = false;
-			this->generateButton->Location = System::Drawing::Point(710, 791);
+			this->generateButton->Location = System::Drawing::Point(710, 823);
 			this->generateButton->Name = L"generateButton";
 			this->generateButton->Size = System::Drawing::Size(222, 48);
 			this->generateButton->TabIndex = 15;
@@ -697,11 +702,22 @@ protected:
 			this->localizationFolderTextBox->TabStop = false;
 			this->localizationFolderTextBox->TextChanged += gcnew System::EventHandler(this, &MainForm::localizationFolderTextBox_TextChanged);
 			// 
+			// viewLogButton
+			// 
+			this->viewLogButton->Location = System::Drawing::Point(271, 152);
+			this->viewLogButton->Name = L"viewLogButton";
+			this->viewLogButton->Size = System::Drawing::Size(157, 48);
+			this->viewLogButton->TabIndex = 6;
+			this->viewLogButton->Text = L"&View Log";
+			this->toolTip->SetToolTip(this->viewLogButton, L"Merge the contents of an existing ACHLIST file into this PlugIn\'s audit log");
+			this->viewLogButton->UseVisualStyleBackColor = true;
+			this->viewLogButton->Click += gcnew System::EventHandler(this, &MainForm::viewLogButton_Click);
+			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(11, 24);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(1026, 856);
+			this->ClientSize = System::Drawing::Size(1026, 901);
 			this->Controls->Add(this->clipboardButton);
 			this->Controls->Add(this->localizationButton);
 			this->Controls->Add(this->localizationFolderTextBox);
@@ -723,7 +739,7 @@ protected:
 			this->Controls->Add(this->mainMenuStrip);
 			this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 			this->MainMenuStrip = this->mainMenuStrip;
-			this->MinimumSize = System::Drawing::Size(1050, 920);
+			this->MinimumSize = System::Drawing::Size(1050, 965);
 			this->Name = L"MainForm";
 			this->Text = L"Starfield Creation Kit Audit Tool";
 			this->FormClosing += gcnew System::Windows::Forms::FormClosingEventHandler(this, &MainForm::MainForm_FormClosing);
@@ -867,13 +883,19 @@ protected:
 		}
     }
 	private: System::Void clipboardButton_Click(System::Object^ sender, System::EventArgs^ e) {
-		StringBuilder^ builder = gcnew StringBuilder;
+		StringBuilder builder;
 		Collections::IEnumerator^ iter = auditListView->Items->GetEnumerator();
 		while (iter->MoveNext()) {
 			ListViewItem^ item = cli::safe_cast<ListViewItem^>(iter->Current);
-			builder->AppendLine(item->Text);
+			builder.AppendLine(item->Text);
 		}
-		Clipboard::SetText(builder->ToString());
+		String^ str = builder.ToString();
+		if (nullptr == str || System::String::Empty == str) {
+			Clipboard::Clear();
+		}
+		else {
+			Clipboard::SetText(str);
+		}
 		MessageBox::Show(
 			this,
 			L"Audit Log copied to the system clipboard.",
@@ -1035,6 +1057,9 @@ protected:
 			}
 			WriteManifest(pluginComboBox->Text);
 		}
+	}
+	private: System::Void viewLogButton_Click(System::Object^ sender, System::EventArgs^ e) {
+		replicationLogDialog->Run(Replication::replicationLog, this);
 	}
 	private: System::Void MainForm_Resize(System::Object^ sender, System::EventArgs^ e) {
 		if (this->WindowState == FormWindowState::Minimized) {
@@ -1217,7 +1242,7 @@ protected:
 		previousPlugInName = newPlugin;
 	}
 	private: System::Void auditFiltersToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) {
-		auditFilterDialog->ShowDialog(this);
+		AuditFilterDialog::singleton->ShowDialog(this);
     }
 	private: System::Void exitToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) {
 		this->Close();
@@ -1285,26 +1310,28 @@ protected:
 	}
 	private: System::Void localizationToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) {
 		MessageBox::Show(this,
-			L"The Creation Kit Audit Tool will generate addition ACHLIST packing files to assist " +
-			L"in the creation of Localized Plugins.  Plugins that have been localized have two special " +
+			L"Plugins that have been localized have two special " +
 			L"characteristics: String Translation Files and Localized Voice Files\n\n" +
 			L"The String Translation Files are generated using the CreationKit.exe tool and are " +
 			L"packaged as a collection of language-specific files stored in the Data\\Strings folder. " +
 			L"Please refer to Bethesda's Verified Creators Wiki for specifics of the process.\n\n" +
-			L"If one's localized plugin has localized voice files, one has to pack the BA2 archives " +
-			L"slightly differently then one does for non-localized plugins.  One must pack all " +
-			L"non-voice files into the standard '<mod> - Main.ba2' and '<mod> - Textures.ba2' files.  " +
-			L"The voice files need to be packed into files named '<mod> - Voices_<lang>.ba2' where " +
-			L"<lang> is one of the ISO 639 language codes - e.g. 'en', 'it', 'fr', 'de'.  One then " +
-			L"distributes the non-voice BA2 file and all of the language-specific voice BA2 files with the " +
-			L"plugin.\n\nNote that the Starfield Creation Kit version 1.15.222 does not provide a " +
-			L"mechanism for shipping the language-specific voice BA2 files with a plugin.  Users would have " +
+			L"If one's localized plugin has localized voice files, one needs a place to persist " +
+			L"the WEM files that were recorded in alternate languages and these language-specific " +
+			L"WEM files must be packed in BA2 archives that use the following naming scheme: " +
+			L"'<mod> - Voices_<lang>.ba2' where " +
+			L"<lang> is one of the ISO 639 language codes - e.g. 'en', 'it', 'fr', 'de'.\n\n" +
+			L"The localized WEM files should be stored in the same folder where the 'native' " +
+			L"WEM files reside.  They should have the same numeric name, but have a '_<lang>' " +
+			L"suffix to indicate the language for the file.  For example, if there was a 'native' " +
+			L"WEM file named '123456.wem' then the French version of that file would be named " +
+			L"'123456_fr.wem'.  Once the localized WEM files are stored on disk, the Creation Kit " +
+			L"Audit Tool provides a mechanism to pack them into the properly named 'Voices_<lang>' BA2 " +
+			L"archive files.\n\nNote that as of version 1.15.222 of the Starfield Creation Kit " +
+			L"the Starfield Creation Kit does not provide a mechanism for shipping the " +
+			L"language - specific voice BA2 files with a plugin.  Users would have " +
 			L"acquire the localized voice files from some other source and then drop them into their " +
 			L"Starfield\\Data folder manually.  One can publish plugins with localized voice resources " +
-			L"on Nexus.\n\n" +
-			L"The Creation Kit Audit Tool assists with this alternate packing scheme by generating " +
-			L"three variations of the ACHLIST files.  One that packs everything, one that packs the " +
-			L"non-voice files and one that packs just the voice files.",
+			L"on Nexus.",
 			L"Localization Support",
 			MessageBoxButtons::OK,
 			MessageBoxIcon::Information);
@@ -1320,7 +1347,7 @@ protected:
 			L"Generates platform-specific ACHLIST files for packaging PC and XBox WEM files.\n\n" +
 			L"Generated ACHLIST files are stored in one's >Documents\\My Games\\Starfield\\CreationKitAuditTool< folder.\n\n" +
 			L"GitHub: " + githubUrl + L"\n\n" +
-			L"Version 2.0.3\n\n" +
+			L"Version 2.1.0\n\n" +
 			L"Copyright 2025, Eric Karlson\n\n" +
 			L"Distrbuted under the terms of the Apache License version 2.0, January 2004",
 			L"Creation Kit Audit Log Help",
@@ -1417,50 +1444,68 @@ protected:
 		if (running) {
 			FileType ft = Util::ClassifyFile(e->FullPath);
 			if (NORMAL_FILE == ft) {
-				HandleFileCreation(e->FullPath);
+				String^ relativeName = StarfieldData::GetRelativeName(e->FullPath);
+				if (nullptr != relativeName) {
+					Replication::currentEvent->Stamp(L"CHANGED", relativeName);
+					HandleFileCreation(e->FullPath);
+				}
 			}
 		}
 	}
 	private: System::Void fileSystemWatcher_Deleted(System::Object^ sender, System::IO::FileSystemEventArgs^ e) {
 		if (running) {
-			// Since we cannot tell at this point whether the deleted object was a file
-			// or a directory, we try both possibilities for deleting potential replicas
-			// of the orginal object.
-			// Both of these routines perform checking to see whether the replicated
-			// object is a directory or file, so we can call both of them without
-			// knowing ahead of time which one is correct.
-			// Both of these functions will also handle removing the object from
-			// the audit log.
-			HandleFileDeletion(e->FullPath);
-			HandleFolderDeletion(e->FullPath);
+			String^ relativeName = StarfieldData::GetRelativeName(e->FullPath);
+			if (nullptr != relativeName) {
+				Replication::currentEvent->Stamp(L"DELETE", relativeName);
+
+				// Since we cannot tell at this point whether the deleted object was a file
+				// or a directory, we try both possibilities for deleting potential replicas
+				// of the orginal object.
+				// Both of these routines perform checking to see whether the replicated
+				// object is a directory or file, so we can call both of them without
+				// knowing ahead of time which one is correct.
+				// Both of these functions will also handle removing the object from
+				// the audit log.
+				HandleFileDeletion(e->FullPath);
+				HandleFolderDeletion(e->FullPath);
+			}
 		}
 	}
 	private: System::Void fileSystemWatcher_Created(System::Object^ sender, System::IO::FileSystemEventArgs^ e) {
 		if (running) {
-			FileType ft = Util::ClassifyFile(e->FullPath);
-			if (NORMAL_FILE == ft) {
-				HandleFileCreation(e->FullPath);
-			}
-			else if (DIRECTORY == ft) {
-				HandleFolderCreation(e->FullPath);
+			String^ relativeName = StarfieldData::GetRelativeName(e->FullPath);
+			if (nullptr != relativeName) {
+				Replication::currentEvent->Stamp(L"CREATED", relativeName);
+				FileType ft = Util::ClassifyFile(e->FullPath);
+				if (NORMAL_FILE == ft) {
+					HandleFileCreation(e->FullPath);
+				}
+				else if (DIRECTORY == ft) {
+					HandleFolderCreation(e->FullPath);
+				}
 			}
 		}
 	}
 	private: System::Void fileSystemWatcher_Renamed(System::Object^ sender, System::IO::RenamedEventArgs^ e) {
 		if (running) {
-			FileType ft = Util::ClassifyFile(e->FullPath);
-			if (NORMAL_FILE == ft) {
-				HandleRenamedFile(e->OldFullPath, e->FullPath);
-			}
-			else if (DIRECTORY == ft) {
-				HandleRenamedFolder(e->OldFullPath, e->FullPath);
-			}
-			else {
-				// The renamed object is gone or unknown, so all we know is that the
-				// original object is gone.  Treat this as a DELETE action on the
-				// original, unknown, object.
-				HandleFileDeletion(e->OldFullPath);
-				HandleFolderDeletion(e->OldFullPath);
+			String^ oldRelativeName = StarfieldData::GetRelativeName(e->OldFullPath);
+			String^ newRelativeName = StarfieldData::GetRelativeName(e->FullPath);
+			if (nullptr != oldRelativeName && nullptr != newRelativeName) {
+				Replication::currentEvent->Stamp(L"RENAME", oldRelativeName, newRelativeName);
+				FileType ft = Util::ClassifyFile(e->FullPath);
+				if (NORMAL_FILE == ft) {
+					HandleRenamedFile(e->OldFullPath, e->FullPath);
+				}
+				else if (DIRECTORY == ft) {
+					HandleRenamedFolder(e->OldFullPath, e->FullPath);
+				}
+				else {
+					// The renamed object is gone or unknown, so all we know is that the
+					// original object is gone.  Treat this as a DELETE action on the
+					// original, unknown, object.
+					HandleFileDeletion(e->OldFullPath);
+					HandleFolderDeletion(e->OldFullPath);
+				}
 			}
 		}
 	}
@@ -1490,8 +1535,8 @@ protected:
 		return autodetectPluginName->Equals(pluginComboBox->Text);
 	}
 	private: System::Void HandleFileCreation(String^ fullname) {
-		if (replicationCheckBox->Checked && ShouldReplicate(fullname)) {
-			Replication::MaybeReplicateFile(fullname);
+		if (replicationCheckBox->Checked) {
+			Replication::MaybeReplicateFile(fullname, pluginComboBox->Text);
 		}
 		if (StarfieldData::IsESPFile(fullname) && IsAutodetectMode()) {
 			AutoBindPlugin(fullname);
@@ -1563,8 +1608,8 @@ protected:
 			// File does not reside in one of the Data folders - ignore
 			return;
 		}
-		if (replicationCheckBox->Checked && ShouldReplicate(fullname)) {
-			Replication::MaybeDeleteReplicaFile(fullname);
+		if (replicationCheckBox->Checked) {
+			Replication::MaybeDeleteReplicaFile(fullname, pluginComboBox->Text);
 		}
 		ListViewItem^ item = FindListViewItem(auditListView, relativeName, false);
 		if (nullptr != item) {
@@ -1580,8 +1625,8 @@ protected:
 		}
 
 		// Replicate the rename, if needed
-		if (replicationCheckBox->Checked && ShouldReplicate(oldFullName)) {
-			Replication::MaybeRenameReplicaFiles(oldFullName, newFullName);
+		if (replicationCheckBox->Checked) {
+			Replication::MaybeRenameReplicaFiles(oldFullName, newFullName, pluginComboBox->Text);
 		}
 
 		// Remove audit logs for the old filename
@@ -1639,49 +1684,6 @@ protected:
 		}
 	}
 	/**
-	* Checks to see whether a given file is a candidate for ESP->ESM replication.
-	* @param fullname - The full name of the file to check
-	* @return true if the file is an ESP->ESM replication candidate, false otherwise
-	*/
-	private: bool ShouldReplicate(String^ fullname) {
-		if (NORMAL_FILE != Util::ClassifyFile(fullname)) {
-			return false;
-		}
-
-		// Ignore any file not under the Starfield Data or Starfield XBox folders,
-		// excluding the Data\Backup folder
-		if (!StarfieldData::FileResidesWithinAnyDataFolder(fullname) ||
-			Util::HasPrefix(fullname, StarfieldData::starfieldBackupPrefix)) {
-			return false;
-		}
-
-		// Ignore files whose extensions are in the configured audit filter list
-		ListView::ListViewItemCollection^ filters = auditFilterDialog->GetAuditFilters();
-		for (int i = 0; i < filters->Count; i++) {
-			if (Util::HasSuffix(fullname, filters[i]->Text)) {
-				return false;
-			}
-		}
-
-		// Also the WISE.DAT & TEMP.WEM files that are generated by WWise.
-		// Ignore the MOTDImage as it could have been changed by something else.
-		// And anything inside of Starfield's Data\Backup folder.
-		if (Util::HasSuffix(fullname, L"\\TEMP.WEM") ||
-			Util::HasSuffix(fullname, L"\\WWISE.DAT") ||
-			Util::HasSuffix(fullname, L"\\MOTDIMAGE.PNG")) {
-			return false;
-		}
-
-		// Ignore any metadata files related to voice localization
-		if (PackDialog::isLocalizationMetadata(fullname)) {
-			return false;
-		}
-
-		// Filter out any files that appear to reside in a plugin-specific directory
-		// other than the one currently selected.
-		return StarfieldData::FileRelatedToPlugIn(fullname, pluginComboBox->Text);
-	}
-	/**
 	* Determines whether a given file should be added to the audit log.
 	* @param fullname - The full name of the file in question
 	* @return true if the file should be added to the audit log, false otherwise
@@ -1697,7 +1699,7 @@ protected:
 		}
 
 		// Ignore files whose extensions are in the configured audit filter list
-		ListView::ListViewItemCollection^ filters = auditFilterDialog->GetAuditFilters();
+		ListView::ListViewItemCollection^ filters = AuditFilterDialog::singleton->GetAuditFilters();
 		for (int i = 0; i < filters->Count; i++) {
 			if (Util::HasSuffix(fullname, filters[i]->Text)) {
 				return false;

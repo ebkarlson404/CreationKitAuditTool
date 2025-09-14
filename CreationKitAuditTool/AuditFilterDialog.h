@@ -42,6 +42,7 @@ namespace CreationKitAuditTool {
 				delete components;
 			}
 		}
+	public: static AuditFilterDialog^ singleton = gcnew AuditFilterDialog();
 	protected: int lastHeight = -1;
 	protected: int lastWidth = -1;
 	protected: ListViewItem^ selectedFilterItem;
@@ -57,6 +58,7 @@ namespace CreationKitAuditTool {
 	private: System::Windows::Forms::Label^ newFilterLabel;
 	private: System::Windows::Forms::TextBox^ newFilterTextBox;
 	private: System::Windows::Forms::ToolStripMenuItem^ toolStripRemoveMenuItem;
+	private: System::Windows::Forms::Button^ cancelButton;
 
 
 	private: System::ComponentModel::IContainer^ components;
@@ -79,10 +81,13 @@ namespace CreationKitAuditTool {
 			System::Windows::Forms::ListViewItem^ listViewItem2 = (gcnew System::Windows::Forms::ListViewItem(L".ba2"));
 			System::Windows::Forms::ListViewItem^ listViewItem3 = (gcnew System::Windows::Forms::ListViewItem(L".esm"));
 			System::Windows::Forms::ListViewItem^ listViewItem4 = (gcnew System::Windows::Forms::ListViewItem(L".esp"));
-			System::Windows::Forms::ListViewItem^ listViewItem5 = (gcnew System::Windows::Forms::ListViewItem(L".pas"));
-			System::Windows::Forms::ListViewItem^ listViewItem6 = (gcnew System::Windows::Forms::ListViewItem(L".psc"));
-			System::Windows::Forms::ListViewItem^ listViewItem7 = (gcnew System::Windows::Forms::ListViewItem(L".tmp"));
-			System::Windows::Forms::ListViewItem^ listViewItem8 = (gcnew System::Windows::Forms::ListViewItem(L".wav"));
+			System::Windows::Forms::ListViewItem^ listViewItem5 = (gcnew System::Windows::Forms::ListViewItem(L".ini"));
+			System::Windows::Forms::ListViewItem^ listViewItem6 = (gcnew System::Windows::Forms::ListViewItem(L".log"));
+			System::Windows::Forms::ListViewItem^ listViewItem7 = (gcnew System::Windows::Forms::ListViewItem(L".pas"));
+			System::Windows::Forms::ListViewItem^ listViewItem8 = (gcnew System::Windows::Forms::ListViewItem(L".psc"));
+			System::Windows::Forms::ListViewItem^ listViewItem9 = (gcnew System::Windows::Forms::ListViewItem(L".tmp"));
+			System::Windows::Forms::ListViewItem^ listViewItem10 = (gcnew System::Windows::Forms::ListViewItem(L".txt"));
+			System::Windows::Forms::ListViewItem^ listViewItem11 = (gcnew System::Windows::Forms::ListViewItem(L".wav"));
 			System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(AuditFilterDialog::typeid));
 			this->auditFilterContextMenuStrip = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
 			this->toolStripRemoveMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
@@ -93,6 +98,7 @@ namespace CreationKitAuditTool {
 			this->filterColumnHeader = (gcnew System::Windows::Forms::ColumnHeader());
 			this->auditFilterToolTip = (gcnew System::Windows::Forms::ToolTip(this->components));
 			this->newFilterTextBox = (gcnew System::Windows::Forms::TextBox());
+			this->cancelButton = (gcnew System::Windows::Forms::Button());
 			this->newFilterLabel = (gcnew System::Windows::Forms::Label());
 			this->auditFilterContextMenuStrip->SuspendLayout();
 			this->SuspendLayout();
@@ -113,12 +119,13 @@ namespace CreationKitAuditTool {
 			// 
 			// okButton
 			// 
-			this->okButton->Location = System::Drawing::Point(156, 586);
+			this->okButton->DialogResult = System::Windows::Forms::DialogResult::OK;
+			this->okButton->Location = System::Drawing::Point(172, 586);
 			this->okButton->Name = L"okButton";
-			this->okButton->Size = System::Drawing::Size(157, 48);
+			this->okButton->Size = System::Drawing::Size(141, 48);
 			this->okButton->TabIndex = 5;
 			this->okButton->Text = L"OK";
-			this->auditFilterToolTip->SetToolTip(this->okButton, L"Close the Audit Filter Dialog");
+			this->auditFilterToolTip->SetToolTip(this->okButton, L"Accepts changes and closes the dialog");
 			this->okButton->UseVisualStyleBackColor = true;
 			this->okButton->Click += gcnew System::EventHandler(this, &AuditFilterDialog::okButton_Click);
 			// 
@@ -145,10 +152,12 @@ namespace CreationKitAuditTool {
 			// auditFiltersListView
 			// 
 			this->auditFiltersListView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(1) { this->filterColumnHeader });
+			this->auditFiltersListView->HeaderStyle = System::Windows::Forms::ColumnHeaderStyle::None;
 			this->auditFiltersListView->HideSelection = false;
-			this->auditFiltersListView->Items->AddRange(gcnew cli::array< System::Windows::Forms::ListViewItem^  >(8) {
+			this->auditFiltersListView->Items->AddRange(gcnew cli::array< System::Windows::Forms::ListViewItem^  >(11) {
 				listViewItem1,
-					listViewItem2, listViewItem3, listViewItem4, listViewItem5, listViewItem6, listViewItem7, listViewItem8
+					listViewItem2, listViewItem3, listViewItem4, listViewItem5, listViewItem6, listViewItem7, listViewItem8, listViewItem9, listViewItem10,
+					listViewItem11
 			});
 			this->auditFiltersListView->Location = System::Drawing::Point(17, 62);
 			this->auditFiltersListView->MultiSelect = false;
@@ -175,6 +184,18 @@ namespace CreationKitAuditTool {
 			this->auditFilterToolTip->SetToolTip(this->newFilterTextBox, L"Enter a new file suffix");
 			this->newFilterTextBox->KeyPress += gcnew System::Windows::Forms::KeyPressEventHandler(this, &AuditFilterDialog::newFilterTextBox_KeyPress);
 			// 
+			// cancelButton
+			// 
+			this->cancelButton->DialogResult = System::Windows::Forms::DialogResult::Cancel;
+			this->cancelButton->Location = System::Drawing::Point(17, 586);
+			this->cancelButton->Name = L"cancelButton";
+			this->cancelButton->Size = System::Drawing::Size(141, 48);
+			this->cancelButton->TabIndex = 6;
+			this->cancelButton->Text = L"&Cancel";
+			this->auditFilterToolTip->SetToolTip(this->cancelButton, L"Discards changes and closes the dialog");
+			this->cancelButton->UseVisualStyleBackColor = true;
+			this->cancelButton->Click += gcnew System::EventHandler(this, &AuditFilterDialog::cancelButton_Click);
+			// 
 			// newFilterLabel
 			// 
 			this->newFilterLabel->AutoSize = true;
@@ -188,9 +209,11 @@ namespace CreationKitAuditTool {
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(11, 24);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(336, 646);
+			this->CancelButton = this->cancelButton;
+			this->ClientSize = System::Drawing::Size(354, 704);
 			this->ContextMenuStrip = this->auditFilterContextMenuStrip;
 			this->ControlBox = false;
+			this->Controls->Add(this->cancelButton);
 			this->Controls->Add(this->newFilterTextBox);
 			this->Controls->Add(this->newFilterLabel);
 			this->Controls->Add(this->auditFiltersListView);
@@ -206,6 +229,7 @@ namespace CreationKitAuditTool {
 			this->ShowInTaskbar = false;
 			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterParent;
 			this->Text = L"Manage Audit Filters";
+			this->Load += gcnew System::EventHandler(this, &AuditFilterDialog::AuditFilterDialog_Load);
 			this->Layout += gcnew System::Windows::Forms::LayoutEventHandler(this, &AuditFilterDialog::AuditFilterDialog_Layout);
 			this->auditFilterContextMenuStrip->ResumeLayout(false);
 			this->ResumeLayout(false);
@@ -213,6 +237,9 @@ namespace CreationKitAuditTool {
 
 		}
 #pragma endregion
+	private: System::Void AuditFilterDialog_Load(System::Object^ sender, System::EventArgs^ e) {
+		auditFiltersListView->AutoResizeColumns(ColumnHeaderAutoResizeStyle::ColumnContent);
+	}
 	private: System::Void AuditFilterDialog_Layout(System::Object^ sender, System::Windows::Forms::LayoutEventArgs^ e) {
 		if (0 > lastHeight || 0 > lastWidth) {
 			return;
@@ -229,6 +256,7 @@ namespace CreationKitAuditTool {
 		MoveControl(newFilterLabel, 0, deltaHeight);
 		newFilterTextBox->Width += deltaWidth;
 		MoveControl(addFilterButton, deltaWidth, deltaHeight);
+		MoveControl(cancelButton, deltaWidth, deltaHeight);
 		MoveControl(okButton, deltaWidth, deltaHeight);
 
 		lastHeight = this->Height;
@@ -250,7 +278,6 @@ namespace CreationKitAuditTool {
 		if (nullptr != selectedFilterItem) {
 			auditFiltersListView->Items->Remove(selectedFilterItem);
 			selectedFilterItem = nullptr;
-			WriteFilterFile();
 		}
 	}
 	private: System::Void newFilterTextBox_KeyPress(System::Object^ sender, System::Windows::Forms::KeyPressEventArgs^ e) {
@@ -261,8 +288,12 @@ namespace CreationKitAuditTool {
 	private: System::Void addFilterButton_Click(System::Object^ sender, System::EventArgs^ e) {
 		AddNewFilter(newFilterTextBox->Text);
 	}
+	private: System::Void cancelButton_Click(System::Object^ sender, System::EventArgs^ e) {
+		this->Close();
+	}
 	private: System::Void okButton_Click(System::Object^ sender, System::EventArgs^ e) {
-		this->Hide();
+		WriteFilterFile();
+		this->Close();
 	}
 	private: System::Void MoveControl(Control^ control, int deltaX, int deltaY) {
 		control->Left += deltaX;
@@ -271,7 +302,7 @@ namespace CreationKitAuditTool {
 	private: System::Void AddNewFilter(String^ newFilter) {
 		if (newFilter->Length != 0 && !AuditFilterAlreadyPresent(newFilter)) {
 			auditFiltersListView->Items->Add(gcnew ListViewItem(newFilter));
-			WriteFilterFile();
+			auditFiltersListView->AutoResizeColumns(ColumnHeaderAutoResizeStyle::ColumnContent);
 		}
 		newFilterTextBox->Text = L"";
 	}
