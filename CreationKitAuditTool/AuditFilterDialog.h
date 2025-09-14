@@ -47,6 +47,7 @@ namespace CreationKitAuditTool {
 	protected: int lastWidth = -1;
 	protected: ListViewItem^ selectedFilterItem;
 	protected: String^ customFiltersFilename;
+	protected: array<String^>^ Filters;
 	private: System::Windows::Forms::ContextMenuStrip^ auditFilterContextMenuStrip;
 	protected:
 	private: System::Windows::Forms::Button^ okButton;
@@ -85,9 +86,10 @@ namespace CreationKitAuditTool {
 			System::Windows::Forms::ListViewItem^ listViewItem6 = (gcnew System::Windows::Forms::ListViewItem(L".log"));
 			System::Windows::Forms::ListViewItem^ listViewItem7 = (gcnew System::Windows::Forms::ListViewItem(L".pas"));
 			System::Windows::Forms::ListViewItem^ listViewItem8 = (gcnew System::Windows::Forms::ListViewItem(L".psc"));
-			System::Windows::Forms::ListViewItem^ listViewItem9 = (gcnew System::Windows::Forms::ListViewItem(L".tmp"));
-			System::Windows::Forms::ListViewItem^ listViewItem10 = (gcnew System::Windows::Forms::ListViewItem(L".txt"));
-			System::Windows::Forms::ListViewItem^ listViewItem11 = (gcnew System::Windows::Forms::ListViewItem(L".wav"));
+			System::Windows::Forms::ListViewItem^ listViewItem9 = (gcnew System::Windows::Forms::ListViewItem(L".refcache"));
+			System::Windows::Forms::ListViewItem^ listViewItem10 = (gcnew System::Windows::Forms::ListViewItem(L".tmp"));
+			System::Windows::Forms::ListViewItem^ listViewItem11 = (gcnew System::Windows::Forms::ListViewItem(L".txt"));
+			System::Windows::Forms::ListViewItem^ listViewItem12 = (gcnew System::Windows::Forms::ListViewItem(L".wav"));
 			System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(AuditFilterDialog::typeid));
 			this->auditFilterContextMenuStrip = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
 			this->toolStripRemoveMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
@@ -154,10 +156,10 @@ namespace CreationKitAuditTool {
 			this->auditFiltersListView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(1) { this->filterColumnHeader });
 			this->auditFiltersListView->HeaderStyle = System::Windows::Forms::ColumnHeaderStyle::None;
 			this->auditFiltersListView->HideSelection = false;
-			this->auditFiltersListView->Items->AddRange(gcnew cli::array< System::Windows::Forms::ListViewItem^  >(11) {
+			this->auditFiltersListView->Items->AddRange(gcnew cli::array< System::Windows::Forms::ListViewItem^  >(12) {
 				listViewItem1,
 					listViewItem2, listViewItem3, listViewItem4, listViewItem5, listViewItem6, listViewItem7, listViewItem8, listViewItem9, listViewItem10,
-					listViewItem11
+					listViewItem11, listViewItem12
 			});
 			this->auditFiltersListView->Location = System::Drawing::Point(17, 62);
 			this->auditFiltersListView->MultiSelect = false;
@@ -289,9 +291,15 @@ namespace CreationKitAuditTool {
 		AddNewFilter(newFilterTextBox->Text);
 	}
 	private: System::Void cancelButton_Click(System::Object^ sender, System::EventArgs^ e) {
+		auditFiltersListView->Items->Clear();
+		Collections::IEnumerator^ iter = Filters->GetEnumerator();
+		while (iter->MoveNext()) {
+			auditFiltersListView->Items->Add(cli::safe_cast<String^>(iter->Current));
+		}
 		this->Close();
 	}
 	private: System::Void okButton_Click(System::Object^ sender, System::EventArgs^ e) {
+		SnapshotFilters();
 		WriteFilterFile();
 		this->Close();
 	}
@@ -317,14 +325,27 @@ namespace CreationKitAuditTool {
 	}
 	private: System::Void InitFilterList() {
 		try {
-			array<String^>^ filters = File::ReadAllLines(customFiltersFilename);
-			auditFiltersListView->Items->Clear();
-			for (int i = 0; i < filters->Length; i++) {
-				auditFiltersListView->Items->Add(gcnew ListViewItem(filters[i]));
+			if (!File::Exists(customFiltersFilename)) {
+				SnapshotFilters();
+			}
+			else {
+				Filters = File::ReadAllLines(customFiltersFilename);
+				auditFiltersListView->Items->Clear();
+				for (int i = 0; i < Filters->Length; i++) {
+					auditFiltersListView->Items->Add(gcnew ListViewItem(Filters[i]));
+				}
 			}
 		}
 		catch (Exception^) {
-			// Assume any exceptions were caused by a missing file - ignore
+			// Could not read the custom filters file, fallback to the
+			// default filters
+			SnapshotFilters();
+		}
+	}
+	private: System::Void SnapshotFilters() {
+		Filters = gcnew array<String^>(auditFiltersListView->Items->Count);
+		for (int i = 0; i < Filters->Length; i++) {
+			Filters[i] = auditFiltersListView->Items[i]->Text;
 		}
 	}
 	private: System::Void WriteFilterFile() {
@@ -351,8 +372,8 @@ namespace CreationKitAuditTool {
 				MessageBoxIcon::Error);
 		}
 	}
-	public: ListView::ListViewItemCollection^ GetAuditFilters() {
-		return auditFiltersListView->Items;
+	public: array<String^>^ GetFilters() {
+		return Filters;
 	}
 };
 }

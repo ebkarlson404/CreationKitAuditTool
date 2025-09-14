@@ -244,12 +244,17 @@ namespace CreationKitAuditTool {
 		if (nullptr == esmRelativeName) {
 			return espRelativeName;
 		}
-		String^ esmDirectory = StarfieldData::starfieldPrefix + esmRelativeName->Substring(0, esmRelativeName->LastIndexOf(L"\\"));
+		String^ esmDirectory =
+			StarfieldData::starfieldPrefix +
+			esmRelativeName->Substring(0, esmRelativeName->LastIndexOf(L"\\"));
 		DialogResult status = DialogResult::Retry;
 		while (status == DialogResult::Retry) {
 			try {
 				Directory::CreateDirectory(esmDirectory);
-				File::Copy(StarfieldData::starfieldPrefix + espRelativeName, StarfieldData::starfieldPrefix + esmRelativeName, true);
+				File::Copy(
+					StarfieldData::starfieldPrefix + espRelativeName,
+					StarfieldData::starfieldPrefix + esmRelativeName,
+					true);
 				status = DialogResult::OK;
 			}
 			catch (Exception^ e) {
@@ -289,9 +294,9 @@ namespace CreationKitAuditTool {
 		}
 
 		// Ignore files whose extensions are in the configured audit filter list
-		ListView::ListViewItemCollection^ filters = AuditFilterDialog::singleton->GetAuditFilters();
-		for (int i = 0; i < filters->Count; i++) {
-			if (Util::HasSuffix(fullname, filters[i]->Text)) {
+		array<String^>^ filters = AuditFilterDialog::singleton->GetFilters();
+		for (int i = 0; i < filters->Length; i++) {
+			if (Util::HasSuffix(fullname, filters[i])) {
 				return false;
 			}
 		}

@@ -52,6 +52,7 @@ namespace CreationKitAuditTool {
 			// use for storing manifests and generated ARCHLIST files
 			String^ docFolder = System::Environment::GetFolderPath(System::Environment::SpecialFolder::MyDocuments);
 			userGameFolder = docFolder + L"\\My Games\\Starfield\\CreationKitAuditTool";
+			userGamePrefix = Util::PathToPrefix(userGameFolder);
 			System::IO::Directory::CreateDirectory(userGameFolder);
 
 			// Populate the PlugIn Control with all known plugins
@@ -144,6 +145,7 @@ namespace CreationKitAuditTool {
 	protected: static String^ autodetectPluginName = L"<autodetect>";
 	protected: String^ previousPlugInName = L"<autodetect>";
 	protected: String^ userGameFolder;
+	protected: String^ userGamePrefix;
 	protected: static String^ manifestFileExt = L".manifest";
 	protected: static String^ githubUrl = L"https://github.com/ebkarlson404/CreationKitAuditTool";
 	protected: ListViewItem^ selectedAuditItem;
@@ -960,20 +962,20 @@ protected:
 		// Write the arrays out to the FULL ACHLIST files
 		array<String^>^ pcFiles = pcFullList->ToArray();
 		array<String^>^ xbFiles = xbFullList->ToArray();
-		AchList::WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-PC.achlist", this);
-		AchList::WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-XB.achlist", this);
+		AchList::WriteArrayToJsonFile(pcFiles, userGamePrefix + pluginComboBox->Text + L"-PC.achlist", this);
+		AchList::WriteArrayToJsonFile(xbFiles, userGamePrefix + pluginComboBox->Text + L"-XB.achlist", this);
 
 		// Write the arrays out to the VOICE ACHLIST files
 		//pcFiles = pcVoiceList->ToArray();
 		//xbFiles = xbVoiceList->ToArray();
-		//AchList::WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-VOICE-PC.achlist", this);
-		//AchList::WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-VOICE-XB.achlist", this);
+		//AchList::WriteArrayToJsonFile(pcFiles, userGamePrefix + pluginComboBox->Text + L"-VOICE-PC.achlist", this);
+		//AchList::WriteArrayToJsonFile(xbFiles, userGamePrefix + pluginComboBox->Text + L"-VOICE-XB.achlist", this);
 
 		// Write the arrays out to the NONVOICE ACHLIST files
 		//pcFiles = pcNonVoiceList->ToArray();
 		//xbFiles = xbNonVoiceList->ToArray();
-		//AchList::WriteArrayToJsonFile(pcFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-NONVOICE-PC.achlist", this);
-		//AchList::WriteArrayToJsonFile(xbFiles, userGameFolder + L"\\" + pluginComboBox->Text + L"-NONVOICE-XB.achlist", this);
+		//AchList::WriteArrayToJsonFile(pcFiles, userGamePrefix + pluginComboBox->Text + L"-NONVOICE-PC.achlist", this);
+		//AchList::WriteArrayToJsonFile(xbFiles, userGamePrefix + pluginComboBox->Text + L"-NONVOICE-XB.achlist", this);
 
 		// Tell the user what was done
 		MessageBox::Show(this,
@@ -1120,9 +1122,9 @@ protected:
 	private: System::Void starfieldFolderTextBox_TextChanged(System::Object^ sender, System::EventArgs^ e) {
 		Util::WriteSetting(registryKey, registryNameStarfieldFolder, starfieldFolderTextBox->Text);
 		StarfieldData::starfieldFolder = starfieldFolderTextBox->Text;
-		StarfieldData::starfieldPrefix = StarfieldData::starfieldFolder + L"\\";
+		StarfieldData::starfieldPrefix = Util::PathToPrefix(StarfieldData::starfieldFolder);
 		StarfieldData::starfieldDataFolder = StarfieldData::starfieldPrefix + L"DATA";
-		StarfieldData::starfieldDataPrefix = StarfieldData::starfieldDataFolder + L"\\";
+		StarfieldData::starfieldDataPrefix = Util::PathToPrefix(StarfieldData::starfieldDataFolder);
 		StarfieldData::starfieldVoicePrefix = StarfieldData::starfieldDataPrefix + L"Sound\\Voice\\";
 		StarfieldData::starfieldBackupPrefix = StarfieldData::starfieldDataPrefix + L"BACKUP\\";
 		fileSystemWatcher->BeginInit();
@@ -1150,8 +1152,9 @@ protected:
 		}
 	}
 	private: System::Void xboxRootFolderTextBox_TextChanged(System::Object^ sender, System::EventArgs^ e) {
-		Util::WriteSetting(registryKey, registryNameXBoxWEMFolder, xboxRootFolderTextBox->Text);
-		if (0 == xboxRootFolderTextBox->Text->Length) {
+		String^ xbFolder = xboxRootFolderTextBox->Text;
+		Util::WriteSetting(registryKey, registryNameXBoxWEMFolder, xbFolder);
+		if (0 == xbFolder->Length) {
 			pluginComboBox->Enabled = false;
 			newPluginButton->Enabled = false;
 			startButton->Enabled = false;
@@ -1161,10 +1164,14 @@ protected:
 			packButton->Enabled = false;
 		}
 		else {
-			StarfieldData::starfieldXBoxDataFolder = xboxRootFolderTextBox->Text + L"\\DATA";
-			StarfieldData::starfieldXBoxRelativePrefix = L"Data\\.." + xboxRootFolderTextBox->Text->Substring(starfieldFolderTextBox->Text->Length) + L"\\";
-			StarfieldData::starfieldXBoxDataPrefix = StarfieldData::starfieldXBoxDataFolder + L"\\";
-			StarfieldData::starfieldXBoxRelativeVoicePrefix = StarfieldData::starfieldXBoxRelativePrefix + L"Data\\Sound\\Voice\\";
+			StarfieldData::starfieldXBoxDataFolder = xbFolder + L"\\DATA";
+			StarfieldData::starfieldXBoxRelativePrefix =
+				L"Data\\.." +
+				Util::PathToPrefix(xbFolder->Substring(starfieldFolderTextBox->Text->Length));
+			StarfieldData::starfieldXBoxDataPrefix =
+				Util::PathToPrefix(StarfieldData::starfieldXBoxDataFolder);
+			StarfieldData::starfieldXBoxRelativeVoicePrefix =
+				StarfieldData::starfieldXBoxRelativePrefix + L"Data\\Sound\\Voice\\";
 			pluginComboBox->Enabled = true;
 			newPluginButton->Enabled = true;
 			startButton->Enabled = true;
@@ -1179,7 +1186,7 @@ protected:
 	private: System::Void localizationFolderTextBox_TextChanged(System::Object^ sender, System::EventArgs^ e) {
 		Util::WriteSetting(registryKey, registryLocalizationFolder, localizationFolderTextBox->Text);
 		StarfieldData::localizationFolder = localizationFolderTextBox->Text;
-		StarfieldData::localizationPrefix = localizationFolderTextBox->Text + L"\\";
+		StarfieldData::localizationPrefix = Util::PathToPrefix(StarfieldData::localizationFolder);
 		StarfieldData::localizationRelativePrefix = L"Data\\.." +
 			StarfieldData::localizationPrefix->Substring(StarfieldData::starfieldPrefix->Length - 1);
 	}
@@ -1590,7 +1597,7 @@ protected:
 
 		// Now remove all audit logs whose directory matches the one being deleted
 		bool manifestAltered = false;
-		String^ relativePrefix = relativeName + L"\\";
+		String^ relativePrefix = Util::PathToPrefix(relativeName);
 		ListViewItem^ item = FindListViewItem(auditListView, relativePrefix, true);
 		while (nullptr != item) {
 			auditListView->Items->Remove(item);
@@ -1699,9 +1706,9 @@ protected:
 		}
 
 		// Ignore files whose extensions are in the configured audit filter list
-		ListView::ListViewItemCollection^ filters = AuditFilterDialog::singleton->GetAuditFilters();
-		for (int i = 0; i < filters->Count; i++) {
-			if (Util::HasSuffix(fullname, filters[i]->Text)) {
+		array<String^>^ filters = AuditFilterDialog::singleton->GetFilters();
+		for (int i = 0; i < filters->Length; i++) {
+			if (Util::HasSuffix(fullname, filters[i])) {
 				return false;
 			}
 		}
@@ -1759,7 +1766,7 @@ protected:
 	* @return true if everything worked, false otherwise
 	*/
 	private: bool RegisterPlugInIfNeeded(String^ plugin) {
-		String^ manifestFile = userGameFolder + L"\\" + plugin + manifestFileExt;
+		String^ manifestFile = userGamePrefix + plugin + manifestFileExt;
 		try {
 			StreamWriter^ fh = nullptr;
 			try {
@@ -1787,7 +1794,7 @@ protected:
 	* @param plugin - The plugin whose manifest should be read
 	*/
     private: System::Void LoadManifest(String^ plugin) {
-		String^ manifestFile = userGameFolder + L"\\" + plugin + manifestFileExt;
+		String^ manifestFile = userGamePrefix + plugin + manifestFileExt;
 		try {
 			array<String^>^ lines = File::ReadAllLines(manifestFile);
 			for (int i = 0; i < lines->Length; i++) {
@@ -1816,7 +1823,7 @@ protected:
 	private: System::Void WriteManifest(String^ plugin) {
 		// If we are not bound to a specific plugin, do not write a manifest
 		if (!plugin->Equals(autodetectPluginName)) {
-			String^ manifestFile = userGameFolder + L"\\" + plugin + manifestFileExt;
+			String^ manifestFile = userGamePrefix + plugin + manifestFileExt;
 			Collections::IEnumerator^ iter = auditListView->Items->GetEnumerator();
 			try {
 				StreamWriter^ fh = nullptr;
@@ -1862,7 +1869,7 @@ protected:
 			Generic::IEnumerable<String^>^ enumeration = Directory::EnumerateFiles(userGameFolder, L"*" + manifestFileExt);
 			Generic::IEnumerator<String^>^ iter = enumeration->GetEnumerator();
 			while (iter->MoveNext()) {
-				String^ filename = iter->Current->Substring(userGameFolder->Length + 1);
+				String^ filename = iter->Current->Substring(userGamePrefix->Length);
 				String^ plugin = filename->Substring(0, filename->Length - manifestFileExt->Length);
 				if (currentPlugIn->Equals(plugin)) {
 					restoreOriginalChoice = true;

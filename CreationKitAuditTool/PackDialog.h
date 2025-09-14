@@ -442,7 +442,8 @@ namespace CreationKitAuditTool {
 		this->auditLog = auditLog;
 		this->primaryLanguage = nullptr;
 		this->espPluginFolder = StarfieldData::starfieldVoicePrefix + plugin + L".esp";
-		this->espPluginRelativePrefix = StarfieldData::GetRelativeName(espPluginFolder) + L"\\";
+		this->espPluginRelativePrefix =
+			Util::PathToPrefix(StarfieldData::GetRelativeName(espPluginFolder));
 
 		// Force creation of the ESP folder if we don't have one already
 		Directory::CreateDirectory(espPluginFolder);
@@ -524,7 +525,8 @@ namespace CreationKitAuditTool {
 				ListViewItem^ item = cli::safe_cast<ListViewItem^>(iter->Current);
 				if (item != primary) {
 					item->Tag = nullptr;
-					item->Checked = File::Exists(espPluginFolder + L"\\" + item->Text + secondaryLanguageMarker);
+					item->Checked = File::Exists(
+						Util::PathToPrefix(espPluginFolder) + item->Text + secondaryLanguageMarker);
 					item->BackColor = languageListView->BackColor;
 				}
 			}
@@ -790,7 +792,8 @@ namespace CreationKitAuditTool {
 	private: String^ LocalizeWEMFilename(String^ filename, String^ lang, bool isPrimary) {
 		return isPrimary ?
 			filename :
-			Path::GetDirectoryName(filename) + L"\\" + Path::GetFileNameWithoutExtension(filename) +
+			Util::PathToPrefix(Path::GetDirectoryName(filename)) +
+			Path::GetFileNameWithoutExtension(filename) +
 			L"_" + lang + Path::GetExtension(filename);
 	}
 	/**
@@ -809,10 +812,11 @@ namespace CreationKitAuditTool {
 			Path::GetExtension(relativeName);
 		int pos = relativeName->IndexOf(L"\\" + plugin + L".esp\\", StringComparison::InvariantCultureIgnoreCase);
 		String^ espRelativePath = Path::GetDirectoryName(relativeName->Substring(pos + plugin->Length + 6));
+		String^ espRelativePrefix = Util::PathToPrefix(espRelativePath);
 		String^ localizedEsmPrefix =
 			StarfieldData::localizationPrefix + (isXBox ? L"XBOX\\" : L"") +
 			lang + L"\\Data\\Sound\\Voice\\" + plugin + L".esm\\";
-		return localizedEsmPrefix + espRelativePath + L"\\" + filename;
+		return localizedEsmPrefix + espRelativePrefix + filename;
 	}
 	/**
 	* Adds the indicated marker file to the plugin's ESP folder.
@@ -820,7 +824,7 @@ namespace CreationKitAuditTool {
 	* @return true if the marker was added, false otherwise
 	*/
 	private: bool CreateMarkerFile(String^ name) {
-		String^ fullname = espPluginFolder + L"\\" + name;
+		String^ fullname = Util::PathToPrefix(espPluginFolder) + name;
 		Forms::DialogResult status = Forms::DialogResult::Retry;
 		while (status == Forms::DialogResult::Retry) {
 			try {
@@ -847,7 +851,7 @@ namespace CreationKitAuditTool {
 	* @return true if the marker was removed, false otherwise
 	*/
 	private: bool RemoveMarkerFile(String^ name) {
-		String^ fullname = espPluginFolder + L"\\" + name;
+		String^ fullname = Util::PathToPrefix(espPluginFolder) + name;
 		Forms::DialogResult status = Forms::DialogResult::Retry;
 		while (status == Forms::DialogResult::Retry) {
 			try {

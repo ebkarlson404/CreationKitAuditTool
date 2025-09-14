@@ -83,6 +83,9 @@ namespace CreationKitAuditTool {
 	public: static bool HasSubstring(String^ filename, String^ substring) {
 		return 0 <= filename->IndexOf(substring, StringComparison::InvariantCultureIgnoreCase);
 	}
+	public: static String^ PathToPrefix(String^ path) {
+		return String::IsNullOrEmpty(path) ? String::Empty : path + L"\\";
+	}
 	public: static FileType ClassifyFile(String^ fullname) {
 		FileAttributes attr;
 		try {
