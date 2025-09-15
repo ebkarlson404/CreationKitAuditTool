@@ -623,12 +623,16 @@ namespace CreationKitAuditTool {
 		String^ lang = (0 > pos) ? primeLang : filename->Substring(pos + 1);
 
 		// Stage the file
-		return StageLocalizedWEMFile(
+		String^ targetFullName =
+			StageLocalizedWEMFile(
 				StarfieldData::GetRelativeName(fullname),
 				plugin,
 				lang,
 				Util::HasPrefix(fullname, StarfieldData::starfieldXBoxDataPrefix),
-				nullptr)->Substring(StarfieldData::starfieldPrefix->Length);
+				nullptr);
+		return (nullptr == targetFullName) ?
+			nullptr :
+			targetFullName->Substring(StarfieldData::starfieldPrefix->Length);
 	}
 	/**
 	* Called by the continuous replication logic to replicate the deletion of
