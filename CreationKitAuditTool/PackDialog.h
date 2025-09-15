@@ -911,10 +911,10 @@ namespace CreationKitAuditTool {
 	}
 	private: System::Void ComputeAndExecutePackingTasks() {
 		// Construct PackingTasks for all possible BA2 archives that might be created
-		PackingTask^ mainPC = gcnew PackingTask(false, false, gcnew List<String^>(), plugin + L" - Main.ba2");
-		PackingTask^ mainXB = gcnew PackingTask(false, true, gcnew List<String^>(), plugin + L" - Main_xbox.ba2");
-		PackingTask^ texturesPC = gcnew PackingTask(true, false, gcnew List<String^>(), plugin + L" - Textures.ba2");
-		PackingTask^ texturesXB = gcnew PackingTask(true, true, gcnew List<String^>(), plugin + L" - Textures_xbox.ba2");
+		PackingTask^ mainPC = gcnew PackingTask(false, false, gcnew List<String^>(), plugin);
+		PackingTask^ mainXB = gcnew PackingTask(false, true, gcnew List<String^>(), plugin);
+		PackingTask^ texturesPC = gcnew PackingTask(true, false, gcnew List<String^>(), plugin);
+		PackingTask^ texturesXB = gcnew PackingTask(true, true, gcnew List<String^>(), plugin);
 		Dictionary<String^, PackingTask^>^ voicesPC = gcnew Dictionary<String^, PackingTask^>();
 		Dictionary<String^, PackingTask^>^ voicesXB = gcnew Dictionary<String^, PackingTask^>();
 
