@@ -222,9 +222,9 @@ namespace CreationKitAuditTool {
 		File::AppendAllLines(manifestFilename, task->Files);
 
 		// Compute the arguments to the Archive2 tool
-		String^ args = 
-			L"-s=\"" + manifestFilename + L"\"" +
-			L" -c=\"Data\\" + task->ArchiveName + L"\"" +
+		String^ args =
+			L"-c=\"Data\\" + task->ArchiveName + L"\"" +
+			L" -s=\"" + manifestFilename + L"\"" +
 			L" -f=" + task->Format +
 			L" -compression=" + task->Compression;
 
@@ -303,10 +303,11 @@ namespace CreationKitAuditTool {
 		PackingTask^ task = workQueue->Dequeue();
 		progressBar->Value = 0;
 		progressBar->Maximum = task->Files->Count;
-		filesListView->Items->Add(
-			gcnew ListViewItem(gcnew cli::array<System::String^>(2) {
-			L"", task->ArchiveName }));
-		filesListView->AutoResizeColumn(1, ColumnHeaderAutoResizeStyle::ColumnContent);
+			filesListView->Items->Add(
+				gcnew ListViewItem(gcnew cli::array<System::String^>(2) {
+				L"", task->ArchiveName + (task->IsAppendTask ? L" (append voices)" : L"")
+			}));
+			filesListView->AutoResizeColumn(1, ColumnHeaderAutoResizeStyle::ColumnContent);
 		backgroundWorker->RunWorkerAsync(task);
 	}
 	private: static Object^ BumpProgress(ArchiveDialog^ dialog) {

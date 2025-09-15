@@ -924,12 +924,16 @@ namespace CreationKitAuditTool {
 			Collections::IEnumerator^ iter = auditLog->Items->GetEnumerator();
 			while (iter->MoveNext()) {
 				ListViewItem^ item = safe_cast<ListViewItem^>(iter->Current);
-				ReplicateAndCollateFile(item->Text, mainPC, mainXB, texturesPC, texturesXB, voicesPC, voicesXB);
+				ReplicateAndCollateFile(
+					item->Text, mainPC, mainXB,
+					texturesPC, texturesXB, voicesPC, voicesXB);
 			}
 
 			// Now that we've marshalled the file lists for all BA2 archive files,
 			// run the Archive2.exe tool to generate the files.
-			archiveDialog->Run(plugin, mainPC, mainXB, texturesPC, texturesXB, voicesPC, voicesXB, this);
+			archiveDialog->Run(
+				plugin, mainPC, mainXB,
+				texturesPC, texturesXB, voicesPC, voicesXB, this);
 		}
 		catch (AbortException^) {
 			MessageBox::Show(
