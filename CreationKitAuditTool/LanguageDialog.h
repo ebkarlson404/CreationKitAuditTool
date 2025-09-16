@@ -76,7 +76,7 @@ namespace CreationKitAuditTool {
 			this->languageComboBox->FormattingEnabled = true;
 			this->languageComboBox->Items->AddRange(gcnew cli::array< System::Object^  >(9) {
 				L"Chinese (simplified) - zhhans", L"English - en",
-					L"French - fr", L"German - de", L"Italian - it", L"Japanese - ja", L"Polish - pl", L"Portugese (Brazil) - ptbr", L"Spanish (Spain) - es"
+					L"French - fr", L"German - de", L"Italian - it", L"Japanese - ja", L"Polish - pl", L"Portuguese (Brazil) - ptbr", L"Spanish (Spain) - es"
 			});
 			this->languageComboBox->Location = System::Drawing::Point(25, 62);
 			this->languageComboBox->Name = L"languageComboBox";

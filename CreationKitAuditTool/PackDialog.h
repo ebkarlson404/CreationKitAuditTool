@@ -38,7 +38,7 @@ namespace CreationKitAuditTool {
 				LanguageMap->Add(L"it", L"Italian - it");
 				LanguageMap->Add(L"ja", L"Japanese - ja");
 				LanguageMap->Add(L"pl", L"Polish - pl");
-				LanguageMap->Add(L"ptbr", L"Portugese (Brazil) - ptbr");
+				LanguageMap->Add(L"ptbr", L"Portuguese (Brazil) - ptbr");
 				LanguageMap->Add(L"es", L"Spanish (Spain) - es");
 			}
 		}
@@ -137,7 +137,7 @@ namespace CreationKitAuditTool {
 			}, -1));
 			System::Windows::Forms::ListViewItem^ listViewItem8 = (gcnew System::Windows::Forms::ListViewItem(gcnew cli::array< System::String^  >(2) {
 				L"ptbr",
-					L"Portugese (Brazil)"
+					L"Portuguese (Brazil)"
 			}, -1));
 			System::Windows::Forms::ListViewItem^ listViewItem9 = (gcnew System::Windows::Forms::ListViewItem(gcnew cli::array< System::String^  >(2) {
 				L"es",
