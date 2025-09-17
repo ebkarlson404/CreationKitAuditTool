@@ -179,6 +179,7 @@ protected:
 			this->auditListView = (gcnew System::Windows::Forms::ListView());
 			this->columnHeader1 = (gcnew System::Windows::Forms::ColumnHeader());
 			this->auditGroupBox = (gcnew System::Windows::Forms::GroupBox());
+			this->viewLogButton = (gcnew System::Windows::Forms::Button());
 			this->replicationCheckBox = (gcnew System::Windows::Forms::CheckBox());
 			this->statusButton = (gcnew System::Windows::Forms::Button());
 			this->clearButton = (gcnew System::Windows::Forms::Button());
@@ -217,7 +218,6 @@ protected:
 			this->notifyToolStripExitItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->label4 = (gcnew System::Windows::Forms::Label());
 			this->localizationFolderTextBox = (gcnew System::Windows::Forms::TextBox());
-			this->viewLogButton = (gcnew System::Windows::Forms::Button());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pluginEnumerator))->BeginInit();
 			this->auditGroupBox->SuspendLayout();
@@ -349,6 +349,17 @@ protected:
 			this->auditGroupBox->TabIndex = 12;
 			this->auditGroupBox->TabStop = false;
 			this->auditGroupBox->Text = L"Audit Control";
+			// 
+			// viewLogButton
+			// 
+			this->viewLogButton->Location = System::Drawing::Point(271, 152);
+			this->viewLogButton->Name = L"viewLogButton";
+			this->viewLogButton->Size = System::Drawing::Size(157, 48);
+			this->viewLogButton->TabIndex = 6;
+			this->viewLogButton->Text = L"&View Log";
+			this->toolTip->SetToolTip(this->viewLogButton, L"Merge the contents of an existing ACHLIST file into this PlugIn\'s audit log");
+			this->viewLogButton->UseVisualStyleBackColor = true;
+			this->viewLogButton->Click += gcnew System::EventHandler(this, &MainForm::viewLogButton_Click);
 			// 
 			// replicationCheckBox
 			// 
@@ -703,17 +714,6 @@ protected:
 			this->localizationFolderTextBox->TabIndex = 6;
 			this->localizationFolderTextBox->TabStop = false;
 			this->localizationFolderTextBox->TextChanged += gcnew System::EventHandler(this, &MainForm::localizationFolderTextBox_TextChanged);
-			// 
-			// viewLogButton
-			// 
-			this->viewLogButton->Location = System::Drawing::Point(271, 152);
-			this->viewLogButton->Name = L"viewLogButton";
-			this->viewLogButton->Size = System::Drawing::Size(157, 48);
-			this->viewLogButton->TabIndex = 6;
-			this->viewLogButton->Text = L"&View Log";
-			this->toolTip->SetToolTip(this->viewLogButton, L"Merge the contents of an existing ACHLIST file into this PlugIn\'s audit log");
-			this->viewLogButton->UseVisualStyleBackColor = true;
-			this->viewLogButton->Click += gcnew System::EventHandler(this, &MainForm::viewLogButton_Click);
 			// 
 			// MainForm
 			// 
@@ -1354,7 +1354,7 @@ protected:
 			L"Generates platform-specific ACHLIST files for packaging PC and XBox WEM files.\n\n" +
 			L"Generated ACHLIST files are stored in one's >Documents\\My Games\\Starfield\\CreationKitAuditTool< folder.\n\n" +
 			L"GitHub: " + githubUrl + L"\n\n" +
-			L"Version 2.1.2\n\n" +
+			L"Version 2.1.3\n\n" +
 			L"Copyright 2025, Eric Karlson\n\n" +
 			L"Distrbuted under the terms of the Apache License version 2.0, January 2004",
 			L"Creation Kit Audit Log Help",

@@ -2122,7 +2122,7 @@
     <value>498, 46</value>
   </metadata>
   <data name="addFileToAuditDialog.Filter" xml:space="preserve">
-    <value>Animation AF files|*.af|Animation AFX files|*.afx|Audio files|*.wem|Biome files|*.biom|Face Anim files|*.ffxanim|Geometry files|*.mesh|Localizaion files|*.strings|Material files|*.mat|Mesh files|*.nif|Particle files|*.psfx|Script files|*.pex|Terrain files|*.btd|Texture files|*.dds|UI files|*.swf|All files|*.*</value>
+    <value>All Files|*.*|Animation AF files|*.af|Animation AFX files|*.afx|Audio files|*.wem|Biome files|*.biom|Face Anim files|*.ffxanim|Geometry files|*.mesh|Localizaion files|*.*strings|Material files|*.mat|Mesh files|*.nif|Particle files|*.psfx|Script files|*.pex|Terrain files|*.btd|Texture files|*.dds|UI files|*.swf</value>
   </data>
   <metadata name="notifyIcon.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>767, 46</value>
