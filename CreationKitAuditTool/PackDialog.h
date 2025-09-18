@@ -368,7 +368,7 @@ namespace CreationKitAuditTool {
 	private: System::Void setPrimaryButton_Click(System::Object^ sender, System::EventArgs^ e) {
 		try {
 			if (languageDialog->Run(this)) {
-				if (CreateMarkerFile(primaryLanguage + primaryLanguageMarker)) {
+				if (CreateMarkerFile(languageDialog->Language + primaryLanguageMarker)) {
 					primaryLanguage = languageDialog->Language;
 					hasVoiceLocalization = true;
 					setPrimaryButton->Enabled = false;
