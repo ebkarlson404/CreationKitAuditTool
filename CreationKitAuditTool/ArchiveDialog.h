@@ -305,7 +305,7 @@ namespace CreationKitAuditTool {
 		progressBar->Maximum = task->Files->Count;
 			filesListView->Items->Add(
 				gcnew ListViewItem(gcnew cli::array<System::String^>(2) {
-				L"", task->ArchiveName + (task->IsAppendTask ? L" (append voices)" : L"")
+				L"", task->ArchiveName
 			}));
 			filesListView->AutoResizeColumn(1, ColumnHeaderAutoResizeStyle::ColumnContent);
 		backgroundWorker->RunWorkerAsync(task);

@@ -806,7 +806,8 @@ protected:
 		if (folderBrowser->ShowDialog(this) == System::Windows::Forms::DialogResult::OK) {
 			String^ path = folderBrowser->SelectedPath;
 			if (!StarfieldData::FileResidesWithinStarfieldFolder(path)) {
-				MessageBox::Show( this,
+				MessageBox::Show(
+					this,
 					L"XBox Folder must reside within the Starfield Folder.",
 					L"Invalid XBox Folder",
 					MessageBoxButtons::OK,
@@ -824,7 +825,8 @@ protected:
 		if (folderBrowser->ShowDialog(this) == System::Windows::Forms::DialogResult::OK) {
 			String^ path = folderBrowser->SelectedPath;
 			if (!StarfieldData::FileResidesWithinStarfieldFolder(path)) {
-				MessageBox::Show( this,
+				MessageBox::Show(
+					this,
 					L"Localization Folder must reside within the Starfield Folder.",
 					L"Invalid Localization Folder",
 					MessageBoxButtons::OK,
@@ -908,10 +910,10 @@ protected:
 	private: System::Void generateButton_Click(System::Object^ sender, System::EventArgs^ e) {
 		List<String^>^ xbFullList = gcnew List<String^>;
 		List<String^>^ xbVoiceList = gcnew List<String^>;
-		List<String^>^ xbNonVoiceList = gcnew List<String^>;
+		List<String^>^ xbMainList = gcnew List<String^>;
 		List<String^>^ pcFullList = gcnew List<String^>;
 		List<String^>^ pcVoiceList = gcnew List<String^>;
-		List<String^>^ pcNonVoiceList = gcnew List<String^>;
+		List<String^>^ pcMainList = gcnew List<String^>;
 
 		// Iterate through the audit log to find the primary copies of all
 		// files in the manifest.  For WEM and DDS files, also find their
@@ -932,7 +934,7 @@ protected:
 				pcVoiceList->Add(relativeName);
 			}
 			else {
-				pcNonVoiceList->Add(relativeName);
+				pcMainList->Add(relativeName);
 			}
 
 			// If this is a platform-specific file format, go find the XBox
@@ -951,11 +953,11 @@ protected:
 					return;
 				}
 				xbFullList->Add(xboxRelativeName);
-				xbNonVoiceList->Add(xboxRelativeName);
+				xbMainList->Add(xboxRelativeName);
 			}
 			else {
 				xbFullList->Add(relativeName);
-				xbNonVoiceList->Add(relativeName);
+				xbMainList->Add(relativeName);
 			}
 		}
 
@@ -971,23 +973,23 @@ protected:
 		//AchList::WriteArrayToJsonFile(pcFiles, userGamePrefix + pluginComboBox->Text + L"-VOICE-PC.achlist", this);
 		//AchList::WriteArrayToJsonFile(xbFiles, userGamePrefix + pluginComboBox->Text + L"-VOICE-XB.achlist", this);
 
-		// Write the arrays out to the NONVOICE ACHLIST files
-		//pcFiles = pcNonVoiceList->ToArray();
-		//xbFiles = xbNonVoiceList->ToArray();
-		//AchList::WriteArrayToJsonFile(pcFiles, userGamePrefix + pluginComboBox->Text + L"-NONVOICE-PC.achlist", this);
-		//AchList::WriteArrayToJsonFile(xbFiles, userGamePrefix + pluginComboBox->Text + L"-NONVOICE-XB.achlist", this);
+		// Write the arrays out to the MAIN ACHLIST files
+		//pcFiles = pcMainList->ToArray();
+		//xbFiles = xbMainList->ToArray();
+		//AchList::WriteArrayToJsonFile(pcFiles, userGamePrefix + pluginComboBox->Text + L"-MAIN-PC.achlist", this);
+		//AchList::WriteArrayToJsonFile(xbFiles, userGamePrefix + pluginComboBox->Text + L"-MAIN-XB.achlist", this);
 
 		// Tell the user what was done
-		MessageBox::Show(this,
+		MessageBox::Show(
+			this,
 			L"Generated the following ACLIST files in " +
 			userGameFolder + L"\n\n * " +
 			pluginComboBox->Text + L"-PC.achlist\n * " + 
 			//pluginComboBox->Text + L"-VOICE-PC.achlist\n * " +
-			//pluginComboBox->Text + L"-NONVOICE-PC.achlist\n * " +
+			//pluginComboBox->Text + L"-MAIN-PC.achlist\n * " +
 			pluginComboBox->Text + L"-XB.achlist",
-			//pluginComboBox->Text + L"-XB.achlist\n * " +
 			//pluginComboBox->Text + L"-VOICE-XB.achlist\n * " +
-			//pluginComboBox->Text + L"-NONVOICE-XB.achlist"
+			//pluginComboBox->Text + L"-MAIN-XB.achlist"
 			L"ACHLIST Generation Complete",
 			MessageBoxButtons::OK,
 			MessageBoxIcon::Information);
@@ -1126,6 +1128,7 @@ protected:
 		StarfieldData::starfieldDataFolder = StarfieldData::starfieldPrefix + L"DATA";
 		StarfieldData::starfieldDataPrefix = Util::PathToPrefix(StarfieldData::starfieldDataFolder);
 		StarfieldData::starfieldVoicePrefix = StarfieldData::starfieldDataPrefix + L"Sound\\Voice\\";
+		StarfieldData::starfieldSoundBankPrefix = StarfieldData::starfieldDataPrefix + L"Sound\\SoundBanks\\";
 		StarfieldData::starfieldBackupPrefix = StarfieldData::starfieldDataPrefix + L"BACKUP\\";
 		fileSystemWatcher->BeginInit();
 		fileSystemWatcher->Path = StarfieldData::starfieldFolder;
@@ -1354,7 +1357,7 @@ protected:
 			L"Generates platform-specific ACHLIST files for packaging PC and XBox WEM files.\n\n" +
 			L"Generated ACHLIST files are stored in one's >Documents\\My Games\\Starfield\\CreationKitAuditTool< folder.\n\n" +
 			L"GitHub: " + githubUrl + L"\n\n" +
-			L"Version 2.1.3\n\n" +
+			L"Version 2.1.4\n\n" +
 			L"Copyright 2025, Eric Karlson\n\n" +
 			L"Distrbuted under the terms of the Apache License version 2.0, January 2004",
 			L"Creation Kit Audit Log Help",
@@ -1434,13 +1437,15 @@ protected:
 
 			// Report any skipped files
 			if (skippedFiles->Length > 0) {
-				MessageBox::Show( this,
-					L"The following files were not added to the audit log because they do not reside within either the Starfield Data or Starfield XBox Data folders or they are not related to the current plugin:\n" +
+				MessageBox::Show(
+					this,
+					L"The following files were not added to the audit log because they " +
+					L"do not reside within the Starfield Data folder or they are not " +
+					L"related to the current plugin's ESP folder:\n" +
 					skippedFiles,
-					L"Invalid File Selections",
+					L"Invalid Files in Imported ACHLIST",
 					MessageBoxButtons::OK,
 					MessageBoxIcon::Error);
-
 			}
 		}
 	}
@@ -1809,7 +1814,8 @@ protected:
 			}
 			auditListView->AutoResizeColumns(ColumnHeaderAutoResizeStyle::ColumnContent);
 		} catch (Exception^ e) {
-			MessageBox::Show(this,
+			MessageBox::Show(
+				this,
 				L"Error while reading " + manifestFile + L": " + e->Message,
 				L"Manifest Read Error",
 				MessageBoxButtons::OK,
@@ -1841,7 +1847,8 @@ protected:
 				}
 			}
 			catch (Exception^ e) {
-				MessageBox::Show(this,
+				MessageBox::Show(
+					this,
 					L"Error while writing " + manifestFile + L": " + e->Message,
 					L"Manifest Write Error",
 					MessageBoxButtons::OK,

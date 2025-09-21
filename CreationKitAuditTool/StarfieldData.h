@@ -13,6 +13,8 @@ namespace CreationKitAuditTool {
 	public: static String^ starfieldDataPrefix;
 	public: static String^ starfieldVoicePrefix;
 	public: static String^ starfieldRelativeVoicePrefix = L"Data\\Sound\\Voice\\";
+	public: static String^ starfieldSoundBankPrefix;
+	public: static String^ starfieldRelativeSoundBankPrefix = L"Data\\Sound\\SoundBanks\\";
 	public: static String^ starfieldBackupPrefix;
 	public: static String^ starfieldXBoxDataFolder;
 	public: static String^ starfieldXBoxRelativePrefix;

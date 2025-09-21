@@ -144,6 +144,7 @@
     <ClInclude Include="ArchiveErrorDialog.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="ArchiveType.h" />
     <ClInclude Include="AuditFilterDialog.h">
       <FileType>CppForm</FileType>
     </ClInclude>

@@ -2,6 +2,7 @@
 
 #include "AbortException.h"
 #include "ArchiveDialog.h"
+#include "ArchiveType.h"
 #include "LanguageDialog.h"
 #include "PackingTask.h"
 #include "Replication.h"
@@ -911,10 +912,10 @@ namespace CreationKitAuditTool {
 	}
 	private: System::Void ComputeAndExecutePackingTasks() {
 		// Construct PackingTasks for all possible BA2 archives that might be created
-		PackingTask^ mainPC = gcnew PackingTask(false, false, gcnew List<String^>(), plugin);
-		PackingTask^ mainXB = gcnew PackingTask(false, true, gcnew List<String^>(), plugin);
-		PackingTask^ texturesPC = gcnew PackingTask(true, false, gcnew List<String^>(), plugin);
-		PackingTask^ texturesXB = gcnew PackingTask(true, true, gcnew List<String^>(), plugin);
+		PackingTask^ mainPC = gcnew PackingTask(ArchiveType::PC_MAIN, plugin);
+		PackingTask^ mainXB = gcnew PackingTask(ArchiveType::XBOX_MAIN, plugin);
+		PackingTask^ texturesPC = gcnew PackingTask(ArchiveType::PC_TEXTURE, plugin);
+		PackingTask^ texturesXB = gcnew PackingTask(ArchiveType::XBOX_TEXTURE, plugin);
 		Dictionary<String^, PackingTask^>^ voicesPC = gcnew Dictionary<String^, PackingTask^>();
 		Dictionary<String^, PackingTask^>^ voicesXB = gcnew Dictionary<String^, PackingTask^>();
 
@@ -978,30 +979,49 @@ namespace CreationKitAuditTool {
 
 		// Add the file to the appropriate PackingTasks
 		if (Util::HasSuffix(esmRelativeName, L".DDS")) {
-			texturesPC->Files->Add(esmRelativeName);
-			String^ xbEsmRelativeName = GetXBoxEsmRelativeName(espRelativeName);
-			if (nullptr == xbEsmRelativeName) {
+			if (!PackPlatformSpecificFile(
+				texturesPC, texturesXB, espRelativeName, esmRelativeName)) {
 				return false;
 			}
-			texturesXB->Files->Add(xbEsmRelativeName);
 		}
-		else if (Util::HasSuffix(esmRelativeName, L".WEM")) {
-			if (hasVoiceLocalization) {
-				PackLocalizedWEMFiles(espRelativeName, voicesPC, voicesXB);
-			}
-			else {
-				mainPC->Files->Add(esmRelativeName);
-				String^ xbEsmRelativeName = GetXBoxEsmRelativeName(espRelativeName);
-				if (nullptr == xbEsmRelativeName) {
-					return false;
-				}
-				mainXB->Files->Add(xbEsmRelativeName);
-			}
-		}
-		else {
+		else if (!Util::HasSuffix(esmRelativeName, L".WEM")) {
 			mainPC->Files->Add(esmRelativeName);
 			mainXB->Files->Add(esmRelativeName);
 		}
+		else if (Util::HasPrefix(esmRelativeName, StarfieldData::starfieldRelativeSoundBankPrefix)) {
+			if (!PackPlatformSpecificFile(mainPC, mainXB, espRelativeName, esmRelativeName)) {
+				return false;
+			}
+		}
+		else if (!Util::HasPrefix(esmRelativeName, StarfieldData::starfieldRelativeVoicePrefix)) {
+			// WEM file does not appear to be a SoundBank nor a Voice file.
+			// For the time being, pack into the MAIN archive file as a
+			// non-localized asset.
+			if (!PackPlatformSpecificFile(mainPC, mainXB, espRelativeName, esmRelativeName)) {
+				return false;
+			}
+		}
+		else if (hasVoiceLocalization) {
+			PackLocalizedWEMFiles(espRelativeName, voicesPC, voicesXB);
+		}
+		else {
+			if (!PackPlatformSpecificFile(mainPC, mainXB, espRelativeName, esmRelativeName)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	private: bool PackPlatformSpecificFile(
+		PackingTask^ pcTask,
+		PackingTask^ xbTask,
+		String^ espRelativeName,
+		String^ esmRelativeName) {
+		pcTask->Files->Add(esmRelativeName);
+		String^ xbEsmRelativeName = GetXBoxEsmRelativeName(espRelativeName);
+		if (nullptr == xbEsmRelativeName) {
+			return false;
+		}
+		xbTask->Files->Add(xbEsmRelativeName);
 		return true;
 	}
 	/**
@@ -1055,7 +1075,8 @@ namespace CreationKitAuditTool {
 
 		// Find/Create the PackingTask
 		if (!voiceTasks->ContainsKey(lang)) {
-			voiceTasks->Add(lang, gcnew PackingTask(isXBox, plugin, lang));
+			ArchiveType^ spec = gcnew ArchiveType(isXBox, lang);
+			voiceTasks->Add(lang, gcnew PackingTask(spec, plugin));
 		}
 		PackingTask^ task = voiceTasks[lang];
 

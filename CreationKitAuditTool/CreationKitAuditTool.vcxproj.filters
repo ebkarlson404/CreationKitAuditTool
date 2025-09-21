@@ -89,6 +89,9 @@
     <ClInclude Include="ReplicationEvent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ArchiveType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CreationKitAuditTool.rc">
