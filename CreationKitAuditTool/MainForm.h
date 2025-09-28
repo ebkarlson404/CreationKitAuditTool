@@ -95,7 +95,9 @@ namespace CreationKitAuditTool {
 	private: System::Windows::Forms::ToolStripMenuItem^ aboutToolStripMenuItem;
 	private: System::Windows::Forms::BindingSource^ pluginEnumerator;
 	private: System::Windows::Forms::ContextMenuStrip^ auditContextMenuStrip;
-	private: System::Windows::Forms::ToolStripMenuItem^ contextToolRemove;
+	private: System::Windows::Forms::ToolStripMenuItem^ auditContextRemove;
+
+
 	private: System::Windows::Forms::ToolTip^ toolTip;
 	private: System::Windows::Forms::Button^ newPluginButton;
 	private: System::Windows::Forms::OpenFileDialog^ findPluginDialog;
@@ -152,6 +154,9 @@ namespace CreationKitAuditTool {
 	protected: ReplicationLogDialog^ replicationLogDialog = gcnew ReplicationLogDialog();
 	private: System::Windows::Forms::Button^ clipboardButton;
 	private: System::Windows::Forms::Button^ viewLogButton;
+private: System::Windows::Forms::ToolStripMenuItem^ auditContextCopyPath;
+private: System::Windows::Forms::ToolStripMenuItem^ auditContextExplorer;
+
 
 protected:
 	protected: PackDialog^ packDialog = gcnew PackDialog();
@@ -200,7 +205,7 @@ protected:
 			this->gitHubToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->aboutToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->auditContextMenuStrip = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
-			this->contextToolRemove = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->auditContextRemove = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->toolTip = (gcnew System::Windows::Forms::ToolTip(this->components));
 			this->newPluginButton = (gcnew System::Windows::Forms::Button());
 			this->addAuditFileButton = (gcnew System::Windows::Forms::Button());
@@ -218,6 +223,8 @@ protected:
 			this->notifyToolStripExitItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->label4 = (gcnew System::Windows::Forms::Label());
 			this->localizationFolderTextBox = (gcnew System::Windows::Forms::TextBox());
+			this->auditContextCopyPath = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->auditContextExplorer = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pluginEnumerator))->BeginInit();
 			this->auditGroupBox->SuspendLayout();
@@ -322,7 +329,7 @@ protected:
 			this->auditListView->Sorting = System::Windows::Forms::SortOrder::Ascending;
 			this->auditListView->TabIndex = 10;
 			this->auditListView->TabStop = false;
-			this->toolTip->SetToolTip(this->auditListView, L"RIght click on a file to remove it from the audit log");
+			this->toolTip->SetToolTip(this->auditListView, L"RIght click on a file to operate on the file");
 			this->auditListView->UseCompatibleStateImageBehavior = false;
 			this->auditListView->View = System::Windows::Forms::View::Details;
 			this->auditListView->MouseClick += gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::auditListView_MouseClick);
@@ -468,7 +475,7 @@ protected:
 			});
 			this->mainMenuStrip->Location = System::Drawing::Point(0, 0);
 			this->mainMenuStrip->Name = L"mainMenuStrip";
-			this->mainMenuStrip->Size = System::Drawing::Size(1026, 38);
+			this->mainMenuStrip->Size = System::Drawing::Size(1026, 42);
 			this->mainMenuStrip->TabIndex = 12;
 			this->mainMenuStrip->Text = L"menuStrip1";
 			// 
@@ -479,7 +486,7 @@ protected:
 					this->exitToolStripMenuItem
 			});
 			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
-			this->fileToolStripMenuItem->Size = System::Drawing::Size(62, 34);
+			this->fileToolStripMenuItem->Size = System::Drawing::Size(62, 38);
 			this->fileToolStripMenuItem->Text = L"&File";
 			// 
 			// auditFiltersToolStripMenuItem
@@ -507,7 +514,7 @@ protected:
 					this->gitHubToolStripMenuItem, this->aboutToolStripMenuItem
 			});
 			this->helpToolStripMenuItem->Name = L"helpToolStripMenuItem";
-			this->helpToolStripMenuItem->Size = System::Drawing::Size(74, 34);
+			this->helpToolStripMenuItem->Size = System::Drawing::Size(74, 38);
 			this->helpToolStripMenuItem->Text = L"&Help";
 			// 
 			// auditProcessAndFilteringToolStripMenuItem
@@ -556,16 +563,19 @@ protected:
 			// auditContextMenuStrip
 			// 
 			this->auditContextMenuStrip->ImageScalingSize = System::Drawing::Size(28, 28);
-			this->auditContextMenuStrip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->contextToolRemove });
+			this->auditContextMenuStrip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {
+				this->auditContextCopyPath,
+					this->auditContextExplorer, this->auditContextRemove
+			});
 			this->auditContextMenuStrip->Name = L"auditContextMenuStrip";
-			this->auditContextMenuStrip->Size = System::Drawing::Size(270, 40);
+			this->auditContextMenuStrip->Size = System::Drawing::Size(332, 112);
 			// 
-			// contextToolRemove
+			// auditContextRemove
 			// 
-			this->contextToolRemove->Name = L"contextToolRemove";
-			this->contextToolRemove->Size = System::Drawing::Size(269, 36);
-			this->contextToolRemove->Text = L"Remove From Audit";
-			this->contextToolRemove->Click += gcnew System::EventHandler(this, &MainForm::contextToolRemove_Click);
+			this->auditContextRemove->Name = L"auditContextRemove";
+			this->auditContextRemove->Size = System::Drawing::Size(331, 36);
+			this->auditContextRemove->Text = L"Remove From Audit";
+			this->auditContextRemove->Click += gcnew System::EventHandler(this, &MainForm::auditContextRemove_Click);
 			// 
 			// newPluginButton
 			// 
@@ -714,6 +724,20 @@ protected:
 			this->localizationFolderTextBox->TabIndex = 6;
 			this->localizationFolderTextBox->TabStop = false;
 			this->localizationFolderTextBox->TextChanged += gcnew System::EventHandler(this, &MainForm::localizationFolderTextBox_TextChanged);
+			// 
+			// auditContextCopyPath
+			// 
+			this->auditContextCopyPath->Name = L"auditContextCopyPath";
+			this->auditContextCopyPath->Size = System::Drawing::Size(331, 36);
+			this->auditContextCopyPath->Text = L"Copy Path";
+			this->auditContextCopyPath->Click += gcnew System::EventHandler(this, &MainForm::auditContextCopyPath_Click);
+			// 
+			// auditContextExplorer
+			// 
+			this->auditContextExplorer->Name = L"auditContextExplorer";
+			this->auditContextExplorer->Size = System::Drawing::Size(331, 36);
+			this->auditContextExplorer->Text = L"Show in Windows Explorer";
+			this->auditContextExplorer->Click += gcnew System::EventHandler(this, &MainForm::auditContextExplorer_Click);
 			// 
 			// MainForm
 			// 
@@ -1357,10 +1381,10 @@ protected:
 			L"Generates platform-specific ACHLIST files for packaging PC and XBox WEM files.\n\n" +
 			L"Generated ACHLIST files are stored in one's >Documents\\My Games\\Starfield\\CreationKitAuditTool< folder.\n\n" +
 			L"GitHub: " + githubUrl + L"\n\n" +
-			L"Version 2.1.4\n\n" +
+			L"Version 2.2.0\n\n" +
 			L"Copyright 2025, Eric Karlson\n\n" +
 			L"Distrbuted under the terms of the Apache License version 2.0, January 2004",
-			L"Creation Kit Audit Log Help",
+			L"Creation Kit Audit Tool Help",
 			MessageBoxButtons::OK,
 			MessageBoxIcon::Information);
 	}
@@ -1373,11 +1397,27 @@ protected:
 			}
 		}
 	}
-	private: System::Void contextToolRemove_Click(System::Object^ sender, System::EventArgs^ e) {
+	private: System::Void auditContextRemove_Click(System::Object^ sender, System::EventArgs^ e) {
 		if (nullptr != selectedAuditItem) {
 			auditListView->Items->Remove(selectedAuditItem);
 			selectedAuditItem = nullptr;
 			WriteManifest(pluginComboBox->Text);
+		}
+	}
+	private: System::Void auditContextCopyPath_Click(System::Object^ sender, System::EventArgs^ e) {
+		if (nullptr != selectedAuditItem) {
+			String^ fullname = Path::GetFullPath(
+				StarfieldData::starfieldPrefix + selectedAuditItem->Text);
+			Clipboard::SetText(fullname);
+			selectedAuditItem = nullptr;
+		}
+	}
+	private: System::Void auditContextExplorer_Click(System::Object^ sender, System::EventArgs^ e) {
+		if (nullptr != selectedAuditItem) {
+			String^ fullname = Path::GetFullPath(
+				StarfieldData::starfieldPrefix + selectedAuditItem->Text);
+			selectedAuditItem = nullptr;
+			Process::Start("explorer.exe", String::Format("/select,\"{0}\"", fullname));
 		}
 	}
 	private: System::Void newPluginButton_Click(System::Object^ sender, System::EventArgs^ e) {
