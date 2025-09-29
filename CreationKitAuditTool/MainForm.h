@@ -939,89 +939,103 @@ protected:
 		List<String^>^ pcVoiceList = gcnew List<String^>;
 		List<String^>^ pcMainList = gcnew List<String^>;
 
-		// Iterate through the audit log to find the primary copies of all
-		// files in the manifest.  For WEM and DDS files, also find their
-		// XBox versions in the Starfield XBox alternate directory tree.
-		Collections::IEnumerator^ iter = auditListView->Items->GetEnumerator();
-		while (iter->MoveNext()) {
-			// Replicate the file to the ESM directory if required
-			ListViewItem^ item = cli::safe_cast<ListViewItem^>(iter->Current);
-			String^ relativeName = Replication::EspToEsmReplication(item->Text, this);
-			if (nullptr == relativeName) {
-				return;
-			}
-
-			// Marshall the file into the correct PC packing lists
-			pcFullList->Add(relativeName);
-			if (Util::HasPrefix(relativeName, StarfieldData::starfieldRelativeVoicePrefix) &&
-				Util::HasSuffix(relativeName, L".WEM")) {
-				pcVoiceList->Add(relativeName);
-			}
-			else {
-				pcMainList->Add(relativeName);
-			}
-
-			// If this is a platform-specific file format, go find the XBox
-			// version of the file.  Otherwise it is a platform-neutral file
-			// which should be added to teh XBox non-voice manifest
-			if (Util::HasSuffix(relativeName, L".WEM")) {
-				String^ xboxRelativeName = PCEspToXBoxEsmReplication(item->Text);
-				if (nullptr == xboxRelativeName) {
+		try {
+			// Iterate through the audit log to find the primary copies of all
+			// files in the manifest.  For WEM and DDS files, also find their
+			// XBox versions in the Starfield XBox alternate directory tree.
+			Collections::IEnumerator^ iter = auditListView->Items->GetEnumerator();
+			while (iter->MoveNext()) {
+				// Replicate the file to the ESM directory if required
+				ListViewItem^ item = cli::safe_cast<ListViewItem^>(iter->Current);
+				String^ relativeName = Replication::EspToEsmReplication(item->Text, this);
+				if (nullptr == relativeName) {
 					return;
 				}
-				xbFullList->Add(xboxRelativeName);
-				xbVoiceList->Add(xboxRelativeName);
-			} else if (Util::HasSuffix(relativeName, L".DDS")) {
-				String^ xboxRelativeName = PCEspToXBoxEsmReplication(item->Text);
-				if (nullptr == xboxRelativeName) {
-					return;
+
+				// Marshall the file into the correct PC packing lists
+				pcFullList->Add(relativeName);
+				if (Util::HasPrefix(relativeName, StarfieldData::starfieldRelativeVoicePrefix) &&
+					Util::HasSuffix(relativeName, L".WEM")) {
+					pcVoiceList->Add(relativeName);
 				}
-				xbFullList->Add(xboxRelativeName);
-				xbMainList->Add(xboxRelativeName);
+				else {
+					pcMainList->Add(relativeName);
+				}
+
+				// If this is a platform-specific file format, go find the XBox
+				// version of the file.  Otherwise it is a platform-neutral file
+				// which should be added to teh XBox non-voice manifest
+				if (Util::HasSuffix(relativeName, L".WEM")) {
+					String^ xboxRelativeName = PCEspToXBoxEsmReplication(item->Text);
+					if (nullptr == xboxRelativeName) {
+						return;
+					}
+					xbFullList->Add(xboxRelativeName);
+					xbVoiceList->Add(xboxRelativeName);
+				}
+				else if (Util::HasSuffix(relativeName, L".DDS")) {
+					String^ xboxRelativeName = PCEspToXBoxEsmReplication(item->Text);
+					if (nullptr == xboxRelativeName) {
+						return;
+					}
+					xbFullList->Add(xboxRelativeName);
+					xbMainList->Add(xboxRelativeName);
+				}
+				else {
+					xbFullList->Add(relativeName);
+					xbMainList->Add(relativeName);
+				}
 			}
-			else {
-				xbFullList->Add(relativeName);
-				xbMainList->Add(relativeName);
-			}
+
+			// Write the arrays out to the FULL ACHLIST files
+			array<String^>^ pcFiles = pcFullList->ToArray();
+			array<String^>^ xbFiles = xbFullList->ToArray();
+			AchList::WriteArrayToJsonFile(pcFiles, userGamePrefix + pluginComboBox->Text + L"-PC.achlist", this);
+			AchList::WriteArrayToJsonFile(xbFiles, userGamePrefix + pluginComboBox->Text + L"-XB.achlist", this);
+
+			// Write the arrays out to the VOICE ACHLIST files
+			//pcFiles = pcVoiceList->ToArray();
+			//xbFiles = xbVoiceList->ToArray();
+			//AchList::WriteArrayToJsonFile(pcFiles, userGamePrefix + pluginComboBox->Text + L"-VOICE-PC.achlist", this);
+			//AchList::WriteArrayToJsonFile(xbFiles, userGamePrefix + pluginComboBox->Text + L"-VOICE-XB.achlist", this);
+
+			// Write the arrays out to the MAIN ACHLIST files
+			//pcFiles = pcMainList->ToArray();
+			//xbFiles = xbMainList->ToArray();
+			//AchList::WriteArrayToJsonFile(pcFiles, userGamePrefix + pluginComboBox->Text + L"-MAIN-PC.achlist", this);
+			//AchList::WriteArrayToJsonFile(xbFiles, userGamePrefix + pluginComboBox->Text + L"-MAIN-XB.achlist", this);
+
+			// Tell the user what was done
+			MessageBox::Show(
+				this,
+				L"Generated the following ACLIST files in " +
+				userGameFolder + L"\n\n * " +
+				pluginComboBox->Text + L"-PC.achlist\n * " +
+				//pluginComboBox->Text + L"-VOICE-PC.achlist\n * " +
+				//pluginComboBox->Text + L"-MAIN-PC.achlist\n * " +
+				pluginComboBox->Text + L"-XB.achlist",
+				//pluginComboBox->Text + L"-VOICE-XB.achlist\n * " +
+				//pluginComboBox->Text + L"-MAIN-XB.achlist"
+				L"ACHLIST Generation Complete",
+				MessageBoxButtons::OK,
+				MessageBoxIcon::Information);
 		}
-
-		// Write the arrays out to the FULL ACHLIST files
-		array<String^>^ pcFiles = pcFullList->ToArray();
-		array<String^>^ xbFiles = xbFullList->ToArray();
-		AchList::WriteArrayToJsonFile(pcFiles, userGamePrefix + pluginComboBox->Text + L"-PC.achlist", this);
-		AchList::WriteArrayToJsonFile(xbFiles, userGamePrefix + pluginComboBox->Text + L"-XB.achlist", this);
-
-		// Write the arrays out to the VOICE ACHLIST files
-		//pcFiles = pcVoiceList->ToArray();
-		//xbFiles = xbVoiceList->ToArray();
-		//AchList::WriteArrayToJsonFile(pcFiles, userGamePrefix + pluginComboBox->Text + L"-VOICE-PC.achlist", this);
-		//AchList::WriteArrayToJsonFile(xbFiles, userGamePrefix + pluginComboBox->Text + L"-VOICE-XB.achlist", this);
-
-		// Write the arrays out to the MAIN ACHLIST files
-		//pcFiles = pcMainList->ToArray();
-		//xbFiles = xbMainList->ToArray();
-		//AchList::WriteArrayToJsonFile(pcFiles, userGamePrefix + pluginComboBox->Text + L"-MAIN-PC.achlist", this);
-		//AchList::WriteArrayToJsonFile(xbFiles, userGamePrefix + pluginComboBox->Text + L"-MAIN-XB.achlist", this);
-
-		// Tell the user what was done
-		MessageBox::Show(
-			this,
-			L"Generated the following ACLIST files in " +
-			userGameFolder + L"\n\n * " +
-			pluginComboBox->Text + L"-PC.achlist\n * " + 
-			//pluginComboBox->Text + L"-VOICE-PC.achlist\n * " +
-			//pluginComboBox->Text + L"-MAIN-PC.achlist\n * " +
-			pluginComboBox->Text + L"-XB.achlist",
-			//pluginComboBox->Text + L"-VOICE-XB.achlist\n * " +
-			//pluginComboBox->Text + L"-MAIN-XB.achlist"
-			L"ACHLIST Generation Complete",
-			MessageBoxButtons::OK,
-			MessageBoxIcon::Information);
-
-	}
-	private: String^ PCEspToXBoxEsmReplication(String^ pcEspRelativePath) {
-		String^ xBoxEspRelativeName = StarfieldData::starfieldXBoxRelativePrefix + pcEspRelativePath;
-		return Replication::EspToEsmReplication(xBoxEspRelativeName, this);
+		catch (AbortException^) {
+			MessageBox::Show(
+				this,
+				L"ACHLIST Generation aborted at user's request.",
+				L"ACHLIST Generation Aborted",
+				MessageBoxButtons::OK,
+				MessageBoxIcon::Warning);
+		}
+		catch (Exception^ e) {
+			MessageBox::Show(
+				this,
+				L"Unexpected exception during ACHLIST Generation: " + e->Message,
+				L"ACHLIST Generation Fatal Error",
+				MessageBoxButtons::OK,
+				MessageBoxIcon::Warning);
+		}
 	}
 	private: System::Void packButton_Click(System::Object^ sender, System::EventArgs^ e) {
 		try {
@@ -1381,7 +1395,7 @@ protected:
 			L"Generates platform-specific ACHLIST files for packaging PC and XBox WEM files.\n\n" +
 			L"Generated ACHLIST files are stored in one's >Documents\\My Games\\Starfield\\CreationKitAuditTool< folder.\n\n" +
 			L"GitHub: " + githubUrl + L"\n\n" +
-			L"Version 2.2.0\n\n" +
+			L"Version 2.2.1\n\n" +
 			L"Copyright 2025, Eric Karlson\n\n" +
 			L"Distrbuted under the terms of the Apache License version 2.0, January 2004",
 			L"Creation Kit Audit Tool Help",
@@ -1564,7 +1578,20 @@ protected:
 	//
 	// Utility functions
 	//
-    private: System::Void UpdateNotifyIcon() {
+	/**
+	* Given a file in a plugin's PC directory tree, find the corresponding XBox file
+	* in the plugin's XBox directory tree, performing ESP to ESM replication in the
+	* XBox tree, if necessary.
+	* @param pcEspRelativePath - The data-relative name of the plugin's PC file
+	* @return The data-relative name of the corresponding file in the plugin's XBox
+	* directory tree, or nullptr if the operation fails
+	* @throws AbortException if the user requested that the operation be aborted
+	*/
+	private: String^ PCEspToXBoxEsmReplication(String^ pcEspRelativePath) {
+		String^ xBoxEspRelativeName = StarfieldData::starfieldXBoxRelativePrefix + pcEspRelativePath;
+		return Replication::EspToEsmReplication(xBoxEspRelativeName, this);
+	}
+	private: System::Void UpdateNotifyIcon() {
 		notifyIcon->Text = "Creation Kit Audit Tool - " + (running ? "running" : "paused");
     }
 	private: ListViewItem^ FindListViewItem(ListView^ listview, String^ text, bool prefixSearch) {
