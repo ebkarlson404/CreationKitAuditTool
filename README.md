@@ -26,40 +26,45 @@ files into a corresponding *MyMod.ESM* directory to use for the generated ACHLIS
 `BA2` file that is ready to ship with the resulting `.ESM` plugin file.
 ## WWise Configuration: Streamlined Multi-Platform Distribution
 For some reason, the format of the audio WEM files is platform-specific.  So WEM files meant for a PC platform cannot be used on
-an XBox and vice versa.  This makes generation of cross-platform plugins tedious as the nominal configuration for the WWise
+an XBox/PS5 and vice versa.  This makes generation of cross-platform plugins tedious as the nominal configuration for the WWise
 audio toolkit that integrates into the Starfield Creation Kit is specific to one platform or the other.  This forces one to
 do all the work to create the PC version of one's plugin, pack the `BA2` archive files, then exit Creation Kit, change the
 `CreationKitCustom.ini` file to reconfigure WWise to generate XBox WEM files, restart Creation Kit, regenerate the WEM files
 and then pack the XBox-specific `BA2` archive files.
 
-The Creation Kit Audit Tool has been engineered to work with an alternate WWise configuration which will generate *both*
-the PC and XBox WEM files in a single pass, placing the XBox WEM files into an alternate directory tree.  The Creation Kit
-Audit Tool can be configured to know about this alternate XBox WEM tree and generate the two platform-specific ACHLIST
-packing lists that will pull the WEM files from the appropriate tree for each platform.
+The Creation Kit Audit Tool has been engineered to work with an alternate WWise configuration which will generate
+the PC, PS5 and XBox WEM files in a single pass, placing the XBox and PS5 WEM files into an alternate directory tree.
+The Creation Kit Audit Tool can be configured to know about these alternate XBox and PS5 WEM trees and generate the
+three platform-specific ACHLIST packing lists that will pull the WEM files from the appropriate tree for each platform.
 
 To configure the Starfield Creation Kit for single-pass WEM generation, go into your `CreationKitCustom.ini` file and
 ensure that the `Audio` settings are as follows:
 > [Audio]  
-> bProcessAudioForPC=1  
+> bProcessAudioForPC=1
+> bProcessAudioForPS5=1  
 > bProcessAudioForXB=1  
 > sPathToVoiceOutputPC=  
+> sPathToVoiceOutputPS5=PS5\Data\Sound\Voice  
 > sPathToVoiceOutputXB=XBOX\Data\Sound\Voice  
 > sPathToSoundBankOutputPC=  
+> sPathToSoundBankOutputPS5=PS5\Data\Sound\SoundBanks  
 > sPathToSoundBankOutputXB=XBOX\Data\Sound\SoundBanks  
 > bLogWwiseConversationOutput=1  
 > sPathToWwiseProj=Tools\wwise\Starfield\Starfield.wproj  
 
-Then go to your Starfield Installation Folder and create a folder named `XBOX` and then within that folder a subfolder named `Data`.
+Then go to your Starfield Installation Folder and create a folder named `XBOX` and another one named `PS5` and then within
+both of those folders create a subfolder named `Data`.
 
-When one runs the Creation Kit Audit Tool, ensure that the XBox WEM Folder is set to the `XBOX` folder that you created inside your Starfield Installtion Folder.
+When one runs the Creation Kit Audit Tool, ensure that the `XBox WEM Folder` is set to the `XBOX` folder
+and that the `PS5 WEM Folder` is set to the `PS5` folder that you created inside your Starfield Installtion Folder.
 
 Now when one uses the `Audio | Process Local Voice WAVs` or `Audio | Build Soundbank for Active File` tool in Creation
-Kit to process `.WAV` files into `.WEM` files, it will create *both* the PC and XBox WEM files in a single pass, placing the XBox WEM
-files into the alternate directory paths specified in the `CreationKitCustom.ini` file above.  The Creation Kit Audit Tool
-will detect both files and add them to the audit log for the plugin.  When one uses the Creation Kit Audit Tool to generate
-the ACHLIST packing lists for the plugin, it will create two such lists - one for the PC platform that packs the PC WEM
-files, and one for the XBox platform that packs the XBox WEM files.  One can pull these ACHLIST files into Creation Kit
-to generate the two, platform-specific, `BA2` archive files to distributed your plugin to both platforms.
+Kit to process `.WAV` files into `.WEM` files, it will create the PC, PS5 and XBox WEM files in a single pass, placing the XBox
+and PS5 WEM files into their alternate directory paths specified in the `CreationKitCustom.ini` file above.  The Creation Kit Audit Tool
+will detect all files and add them to the audit log for the plugin.  When one uses the Creation Kit Audit Tool to generate
+the ACHLIST packing lists for the plugin, it will create three such lists - one for the PC platform that packs the PC WEM
+files, one for the PS5 platform that packs the PS5 WEM files and one for the XBox platform that packs the XBox WEM files.  One can pull
+these ACHLIST files into Creation Kit to generate the three, platform-specific, `BA2` archive files to distributed your plugin to all platforms.
 
 ## Dovetails with AssetWatcher for multi-platform Texture Files
 If one configures the *AssetWatcher* tool that comes with Creation Kit to place the XBox versions of one's texture files into the
@@ -68,6 +73,9 @@ the XBox versions of one's texture files in the same way that it tracks the XBox
 appropriate ACHLIST packing lists for both XBox and PC.  The PC ACHLIST file will draw the WEM and DDS files from the standard
 `Starfield\Data` folder while the XBox ACHLIST file will draw the WEM and DDS files from the alternate `Starfield\XBox\Data`
 folder.
+
+Note that PlayStation texture files use the same format as the PC texture files, so no conversion is required for the PlayStation
+platform.
 
 The recommended configuration for the *AssetWatcher* tool would look like this:
 
@@ -87,12 +95,13 @@ this also provides a greatly streamlined workflow for creating the required arch
 includes localized voice assets.
 
 ## Localized Plugins
-The vast majority of plugins that are published by independent modders are English-only.  However, as of version 1.15.222 of the Starfield Creation Kit, the basic tools for
-creating *Localized* plugins now exists.  This allows one to publish plugins that support multiple languages instead of just English.  Starfield itself supports textual localization
-for nine languages, and voice localization for five languages.  Please see Bethesda's official page for their list of supported languages: [What languages does Starfield support?](https://help.bethesda.net/#en/answer/60444)
+The vast majority of plugins that are published by independent modders are English-only.  However, as of version 1.15.222 of the Starfield Creation Kit,
+the basic tools for creating *Localized* plugins now exists.  This allows one to publish plugins that support multiple languages instead of just English.
+Starfield itself supports textual localization for nine languages, and voice localization for five languages.  Please see Bethesda's official page for
+their list of supported languages: [What languages does Starfield support?](https://help.bethesda.net/#en/answer/60444)
 
-There are two components to localizing a plugin: *String Translations* and *Alternate Voice Files*.  A localized plugin can have one or the other or both of these elements, though
-not localizing strings would be an odd ommission.
+There are two components to localizing a plugin: *String Translations* and *Alternate Voice Files*.  A localized plugin can have one or the other or both of these
+elements, though not localizing strings would be an odd ommission.
 ### Localized Strings
 One can provide *string translation* files that will translate any textual information presented to the player into the langauge of choice.  These translation files take
 the form of a set of three files for each language that are stored in the `Starfield\Data\Strings` folder.  When one packs the BA2 file for one's plugin, simply include
