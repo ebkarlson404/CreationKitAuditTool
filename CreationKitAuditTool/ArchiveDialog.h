@@ -317,10 +317,13 @@ namespace CreationKitAuditTool {
 	public: System::Void Run(
 		String^ plugin,
 		PackingTask^ mainPC,
+		PackingTask^ mainPS5,
 		PackingTask^ mainXB,
 		PackingTask^ texturesPC,
+		PackingTask^ texturesPS5,
 		PackingTask^ texturesXB,
 		Dictionary<String^,PackingTask^>^ voicesPC,
+		Dictionary<String^,PackingTask^>^ voicesPS5,
 		Dictionary<String^,PackingTask^>^ voicesXB,
 		IWin32Window^ parent) {
 
@@ -332,16 +335,26 @@ namespace CreationKitAuditTool {
 		if (mainPC->Files->Count > 0) {
 			this->workQueue->Enqueue(mainPC);
 		}
+		if (mainPS5->Files->Count > 0) {
+			this->workQueue->Enqueue(mainPS5);
+		}
 		if (mainXB->Files->Count > 0) {
 			this->workQueue->Enqueue(mainXB);
 		}
 		if (texturesPC->Files->Count > 0) {
 			this->workQueue->Enqueue(texturesPC);
 		}
+		if (texturesPS5->Files->Count > 0) {
+			this->workQueue->Enqueue(texturesPS5);
+		}
 		if (texturesXB->Files->Count > 0) {
 			this->workQueue->Enqueue(texturesXB);
 		}
 		Dictionary<String^, PackingTask^>::Enumerator iter = voicesPC->GetEnumerator();
+		while (iter.MoveNext()) {
+			this->workQueue->Enqueue(iter.Current.Value);
+		}
+		iter = voicesPS5->GetEnumerator();
 		while (iter.MoveNext()) {
 			this->workQueue->Enqueue(iter.Current.Value);
 		}

@@ -128,6 +128,7 @@
   <ItemGroup>
     <ClCompile Include="ArchiveDialog.cpp" />
     <ClCompile Include="ArchiveErrorDialog.cpp" />
+    <ClCompile Include="ArchiveTarget.cpp" />
     <ClCompile Include="AuditFilterDialog.cpp" />
     <ClCompile Include="LanguageDialog.cpp" />
     <ClCompile Include="MainForm.cpp" />
@@ -144,6 +145,7 @@
     <ClInclude Include="ArchiveErrorDialog.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="ArchiveTarget.h" />
     <ClInclude Include="ArchiveType.h" />
     <ClInclude Include="AuditFilterDialog.h">
       <FileType>CppForm</FileType>

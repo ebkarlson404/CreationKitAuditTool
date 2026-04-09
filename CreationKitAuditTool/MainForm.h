@@ -39,6 +39,10 @@ namespace CreationKitAuditTool {
 			if (nullptr != value) {
 				starfieldFolderTextBox->Text = cli::safe_cast<String^>(value);
 			}
+			value = Util::ReadStringSetting(registryKey, registryNamePS5WEMFolder);
+			if (nullptr != value && ps5RootFolderTextBox->Enabled) {
+				ps5RootFolderTextBox->Text = cli::safe_cast<String^>(value);
+			}
 			value = Util::ReadStringSetting(registryKey, registryNameXBoxWEMFolder);
 			if (nullptr != value && xboxRootFolderTextBox->Enabled) {
 				xboxRootFolderTextBox->Text = cli::safe_cast<String^>(value);
@@ -141,6 +145,7 @@ namespace CreationKitAuditTool {
 	protected: static Color pausedTextColor = Color::White;
 	protected: static String^ registryKey = L"SOFTWARE\\GrizBane\\CreationKitAuditTool";
 	protected: static String^ registryNameStarfieldFolder = L"StarfieldFolder";
+	protected: static String^ registryNamePS5WEMFolder = L"PS5WEMFolder";
 	protected: static String^ registryNameXBoxWEMFolder = L"XBoxWEMFolder";
 	protected: static String^ registryNameContinuousReplication = L"ContinuousReplication";
 	protected: static String^ registryLocalizationFolder = L"LocalizationRootFolder";
@@ -156,6 +161,10 @@ namespace CreationKitAuditTool {
 	private: System::Windows::Forms::Button^ viewLogButton;
 private: System::Windows::Forms::ToolStripMenuItem^ auditContextCopyPath;
 private: System::Windows::Forms::ToolStripMenuItem^ auditContextExplorer;
+private: System::Windows::Forms::Button^ ps5WEMButton;
+private: System::Windows::Forms::TextBox^ ps5RootFolderTextBox;
+
+private: System::Windows::Forms::Label^ label5;
 
 
 protected:
@@ -205,6 +214,8 @@ protected:
 			this->gitHubToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->aboutToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->auditContextMenuStrip = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
+			this->auditContextCopyPath = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->auditContextExplorer = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->auditContextRemove = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->toolTip = (gcnew System::Windows::Forms::ToolTip(this->components));
 			this->newPluginButton = (gcnew System::Windows::Forms::Button());
@@ -212,6 +223,7 @@ protected:
 			this->generateButton = (gcnew System::Windows::Forms::Button());
 			this->localizationButton = (gcnew System::Windows::Forms::Button());
 			this->clipboardButton = (gcnew System::Windows::Forms::Button());
+			this->ps5WEMButton = (gcnew System::Windows::Forms::Button());
 			this->findPluginDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->importAchlistDialog = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->addFileToAuditDialog = (gcnew System::Windows::Forms::OpenFileDialog());
@@ -223,8 +235,8 @@ protected:
 			this->notifyToolStripExitItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->label4 = (gcnew System::Windows::Forms::Label());
 			this->localizationFolderTextBox = (gcnew System::Windows::Forms::TextBox());
-			this->auditContextCopyPath = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->auditContextExplorer = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->label5 = (gcnew System::Windows::Forms::Label());
+			this->ps5RootFolderTextBox = (gcnew System::Windows::Forms::TextBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->fileSystemWatcher))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pluginEnumerator))->BeginInit();
 			this->auditGroupBox->SuspendLayout();
@@ -297,7 +309,7 @@ protected:
 			// label3
 			// 
 			this->label3->AutoSize = true;
-			this->label3->Location = System::Drawing::Point(40, 183);
+			this->label3->Location = System::Drawing::Point(40, 223);
 			this->label3->Name = L"label3";
 			this->label3->Size = System::Drawing::Size(201, 25);
 			this->label3->TabIndex = 6;
@@ -308,11 +320,11 @@ protected:
 			this->pluginComboBox->DropDownStyle = System::Windows::Forms::ComboBoxStyle::DropDownList;
 			this->pluginComboBox->Enabled = false;
 			this->pluginComboBox->FormattingEnabled = true;
-			this->pluginComboBox->Location = System::Drawing::Point(286, 183);
+			this->pluginComboBox->Location = System::Drawing::Point(286, 223);
 			this->pluginComboBox->MaxDropDownItems = 16;
 			this->pluginComboBox->Name = L"pluginComboBox";
 			this->pluginComboBox->Size = System::Drawing::Size(646, 32);
-			this->pluginComboBox->TabIndex = 8;
+			this->pluginComboBox->TabIndex = 11;
 			this->toolTip->SetToolTip(this->pluginComboBox, L"Select which PlugIn to audit");
 			this->pluginComboBox->TextChanged += gcnew System::EventHandler(this, &MainForm::pluginComboBox_TextChanged);
 			// 
@@ -322,12 +334,12 @@ protected:
 			this->auditListView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(1) { this->columnHeader1 });
 			this->auditListView->HeaderStyle = System::Windows::Forms::ColumnHeaderStyle::None;
 			this->auditListView->HideSelection = false;
-			this->auditListView->Location = System::Drawing::Point(45, 221);
+			this->auditListView->Location = System::Drawing::Point(45, 261);
 			this->auditListView->MultiSelect = false;
 			this->auditListView->Name = L"auditListView";
 			this->auditListView->Size = System::Drawing::Size(887, 422);
 			this->auditListView->Sorting = System::Windows::Forms::SortOrder::Ascending;
-			this->auditListView->TabIndex = 10;
+			this->auditListView->TabIndex = 13;
 			this->auditListView->TabStop = false;
 			this->toolTip->SetToolTip(this->auditListView, L"RIght click on a file to operate on the file");
 			this->auditListView->UseCompatibleStateImageBehavior = false;
@@ -350,10 +362,10 @@ protected:
 			this->auditGroupBox->Controls->Add(this->importButton);
 			this->auditGroupBox->Controls->Add(this->stopButton);
 			this->auditGroupBox->ForeColor = System::Drawing::SystemColors::ControlText;
-			this->auditGroupBox->Location = System::Drawing::Point(45, 671);
+			this->auditGroupBox->Location = System::Drawing::Point(45, 711);
 			this->auditGroupBox->Name = L"auditGroupBox";
 			this->auditGroupBox->Size = System::Drawing::Size(612, 212);
-			this->auditGroupBox->TabIndex = 12;
+			this->auditGroupBox->TabIndex = 15;
 			this->auditGroupBox->TabStop = false;
 			this->auditGroupBox->Text = L"Audit Control";
 			// 
@@ -444,10 +456,10 @@ protected:
 			// packButton
 			// 
 			this->packButton->Enabled = false;
-			this->packButton->Location = System::Drawing::Point(710, 762);
+			this->packButton->Location = System::Drawing::Point(710, 802);
 			this->packButton->Name = L"packButton";
 			this->packButton->Size = System::Drawing::Size(222, 48);
-			this->packButton->TabIndex = 14;
+			this->packButton->TabIndex = 17;
 			this->packButton->Text = L"Localize and &Pack";
 			this->toolTip->SetToolTip(this->packButton, L"Pack files from the Audit Log into BA2 Archive Files");
 			this->packButton->UseVisualStyleBackColor = true;
@@ -475,7 +487,7 @@ protected:
 			});
 			this->mainMenuStrip->Location = System::Drawing::Point(0, 0);
 			this->mainMenuStrip->Name = L"mainMenuStrip";
-			this->mainMenuStrip->Size = System::Drawing::Size(1026, 42);
+			this->mainMenuStrip->Size = System::Drawing::Size(1026, 38);
 			this->mainMenuStrip->TabIndex = 12;
 			this->mainMenuStrip->Text = L"menuStrip1";
 			// 
@@ -486,7 +498,7 @@ protected:
 					this->exitToolStripMenuItem
 			});
 			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
-			this->fileToolStripMenuItem->Size = System::Drawing::Size(62, 38);
+			this->fileToolStripMenuItem->Size = System::Drawing::Size(62, 34);
 			this->fileToolStripMenuItem->Text = L"&File";
 			// 
 			// auditFiltersToolStripMenuItem
@@ -514,7 +526,7 @@ protected:
 					this->gitHubToolStripMenuItem, this->aboutToolStripMenuItem
 			});
 			this->helpToolStripMenuItem->Name = L"helpToolStripMenuItem";
-			this->helpToolStripMenuItem->Size = System::Drawing::Size(74, 38);
+			this->helpToolStripMenuItem->Size = System::Drawing::Size(74, 34);
 			this->helpToolStripMenuItem->Text = L"&Help";
 			// 
 			// auditProcessAndFilteringToolStripMenuItem
@@ -570,6 +582,20 @@ protected:
 			this->auditContextMenuStrip->Name = L"auditContextMenuStrip";
 			this->auditContextMenuStrip->Size = System::Drawing::Size(332, 112);
 			// 
+			// auditContextCopyPath
+			// 
+			this->auditContextCopyPath->Name = L"auditContextCopyPath";
+			this->auditContextCopyPath->Size = System::Drawing::Size(331, 36);
+			this->auditContextCopyPath->Text = L"Copy Path";
+			this->auditContextCopyPath->Click += gcnew System::EventHandler(this, &MainForm::auditContextCopyPath_Click);
+			// 
+			// auditContextExplorer
+			// 
+			this->auditContextExplorer->Name = L"auditContextExplorer";
+			this->auditContextExplorer->Size = System::Drawing::Size(331, 36);
+			this->auditContextExplorer->Text = L"Show in Windows Explorer";
+			this->auditContextExplorer->Click += gcnew System::EventHandler(this, &MainForm::auditContextExplorer_Click);
+			// 
 			// auditContextRemove
 			// 
 			this->auditContextRemove->Name = L"auditContextRemove";
@@ -580,10 +606,10 @@ protected:
 			// newPluginButton
 			// 
 			this->newPluginButton->Enabled = false;
-			this->newPluginButton->Location = System::Drawing::Point(963, 180);
+			this->newPluginButton->Location = System::Drawing::Point(963, 220);
 			this->newPluginButton->Name = L"newPluginButton";
 			this->newPluginButton->Size = System::Drawing::Size(47, 39);
-			this->newPluginButton->TabIndex = 9;
+			this->newPluginButton->TabIndex = 12;
 			this->newPluginButton->Text = L"+";
 			this->toolTip->SetToolTip(this->newPluginButton, L"Add a new PlugIn to the repository of known PlugIns");
 			this->newPluginButton->UseVisualStyleBackColor = true;
@@ -592,10 +618,10 @@ protected:
 			// addAuditFileButton
 			// 
 			this->addAuditFileButton->Enabled = false;
-			this->addAuditFileButton->Location = System::Drawing::Point(963, 412);
+			this->addAuditFileButton->Location = System::Drawing::Point(963, 452);
 			this->addAuditFileButton->Name = L"addAuditFileButton";
 			this->addAuditFileButton->Size = System::Drawing::Size(47, 39);
-			this->addAuditFileButton->TabIndex = 11;
+			this->addAuditFileButton->TabIndex = 14;
 			this->addAuditFileButton->Text = L"+";
 			this->toolTip->SetToolTip(this->addAuditFileButton, L"Manually add a file to the Audit Log");
 			this->addAuditFileButton->UseVisualStyleBackColor = true;
@@ -604,10 +630,10 @@ protected:
 			// generateButton
 			// 
 			this->generateButton->Enabled = false;
-			this->generateButton->Location = System::Drawing::Point(710, 823);
+			this->generateButton->Location = System::Drawing::Point(710, 863);
 			this->generateButton->Name = L"generateButton";
 			this->generateButton->Size = System::Drawing::Size(222, 48);
-			this->generateButton->TabIndex = 15;
+			this->generateButton->TabIndex = 18;
 			this->generateButton->Text = L"&Generate ACHLIST";
 			this->toolTip->SetToolTip(this->generateButton, L"Replicates files from *.ESP folders to *.ESM folders and then generate the PC and"
 				L" XBox ACHLIST files from the current audit log");
@@ -617,10 +643,10 @@ protected:
 			// localizationButton
 			// 
 			this->localizationButton->Enabled = false;
-			this->localizationButton->Location = System::Drawing::Point(963, 140);
+			this->localizationButton->Location = System::Drawing::Point(963, 180);
 			this->localizationButton->Name = L"localizationButton";
 			this->localizationButton->Size = System::Drawing::Size(47, 39);
-			this->localizationButton->TabIndex = 7;
+			this->localizationButton->TabIndex = 10;
 			this->localizationButton->Text = L"...";
 			this->toolTip->SetToolTip(this->localizationButton, L"The root of the Localization Staging Folder");
 			this->localizationButton->UseVisualStyleBackColor = true;
@@ -628,14 +654,26 @@ protected:
 			// 
 			// clipboardButton
 			// 
-			this->clipboardButton->Location = System::Drawing::Point(710, 649);
+			this->clipboardButton->Location = System::Drawing::Point(710, 689);
 			this->clipboardButton->Name = L"clipboardButton";
 			this->clipboardButton->Size = System::Drawing::Size(222, 48);
-			this->clipboardButton->TabIndex = 13;
+			this->clipboardButton->TabIndex = 16;
 			this->clipboardButton->Text = L"Copy to Clip&board";
 			this->toolTip->SetToolTip(this->clipboardButton, L"Pack files from the Audit Log into BA2 Archive Files");
 			this->clipboardButton->UseVisualStyleBackColor = true;
 			this->clipboardButton->Click += gcnew System::EventHandler(this, &MainForm::clipboardButton_Click);
+			// 
+			// ps5WEMButton
+			// 
+			this->ps5WEMButton->Enabled = false;
+			this->ps5WEMButton->Location = System::Drawing::Point(963, 140);
+			this->ps5WEMButton->Name = L"ps5WEMButton";
+			this->ps5WEMButton->Size = System::Drawing::Size(47, 39);
+			this->ps5WEMButton->TabIndex = 8;
+			this->ps5WEMButton->Text = L"...";
+			this->toolTip->SetToolTip(this->ps5WEMButton, L"Select the root of the PS5 Alternate Path");
+			this->ps5WEMButton->UseVisualStyleBackColor = true;
+			this->ps5WEMButton->Click += gcnew System::EventHandler(this, &MainForm::ps5WEMButton_Click);
 			// 
 			// findPluginDialog
 			// 
@@ -708,7 +746,7 @@ protected:
 			// label4
 			// 
 			this->label4->AutoSize = true;
-			this->label4->Location = System::Drawing::Point(40, 143);
+			this->label4->Location = System::Drawing::Point(40, 183);
 			this->label4->Name = L"label4";
 			this->label4->Size = System::Drawing::Size(220, 25);
 			this->label4->TabIndex = 14;
@@ -717,33 +755,42 @@ protected:
 			// localizationFolderTextBox
 			// 
 			this->localizationFolderTextBox->BackColor = System::Drawing::SystemColors::InactiveCaption;
-			this->localizationFolderTextBox->Location = System::Drawing::Point(286, 143);
+			this->localizationFolderTextBox->Location = System::Drawing::Point(286, 183);
 			this->localizationFolderTextBox->Name = L"localizationFolderTextBox";
 			this->localizationFolderTextBox->ReadOnly = true;
 			this->localizationFolderTextBox->Size = System::Drawing::Size(646, 29);
-			this->localizationFolderTextBox->TabIndex = 6;
+			this->localizationFolderTextBox->TabIndex = 9;
 			this->localizationFolderTextBox->TabStop = false;
 			this->localizationFolderTextBox->TextChanged += gcnew System::EventHandler(this, &MainForm::localizationFolderTextBox_TextChanged);
 			// 
-			// auditContextCopyPath
+			// label5
 			// 
-			this->auditContextCopyPath->Name = L"auditContextCopyPath";
-			this->auditContextCopyPath->Size = System::Drawing::Size(331, 36);
-			this->auditContextCopyPath->Text = L"Copy Path";
-			this->auditContextCopyPath->Click += gcnew System::EventHandler(this, &MainForm::auditContextCopyPath_Click);
+			this->label5->AutoSize = true;
+			this->label5->Location = System::Drawing::Point(40, 143);
+			this->label5->Name = L"label5";
+			this->label5->Size = System::Drawing::Size(155, 25);
+			this->label5->TabIndex = 6;
+			this->label5->Text = L"PS5 Root Folder";
 			// 
-			// auditContextExplorer
+			// ps5RootFolderTextBox
 			// 
-			this->auditContextExplorer->Name = L"auditContextExplorer";
-			this->auditContextExplorer->Size = System::Drawing::Size(331, 36);
-			this->auditContextExplorer->Text = L"Show in Windows Explorer";
-			this->auditContextExplorer->Click += gcnew System::EventHandler(this, &MainForm::auditContextExplorer_Click);
+			this->ps5RootFolderTextBox->BackColor = System::Drawing::SystemColors::InactiveCaption;
+			this->ps5RootFolderTextBox->Location = System::Drawing::Point(286, 143);
+			this->ps5RootFolderTextBox->Name = L"ps5RootFolderTextBox";
+			this->ps5RootFolderTextBox->ReadOnly = true;
+			this->ps5RootFolderTextBox->Size = System::Drawing::Size(646, 29);
+			this->ps5RootFolderTextBox->TabIndex = 7;
+			this->ps5RootFolderTextBox->TabStop = false;
+			this->ps5RootFolderTextBox->TextChanged += gcnew System::EventHandler(this, &MainForm::ps5RootFolderTextBox_TextChanged);
 			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(11, 24);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(1026, 901);
+			this->ClientSize = System::Drawing::Size(1026, 996);
+			this->Controls->Add(this->ps5WEMButton);
+			this->Controls->Add(this->ps5RootFolderTextBox);
+			this->Controls->Add(this->label5);
 			this->Controls->Add(this->clipboardButton);
 			this->Controls->Add(this->localizationButton);
 			this->Controls->Add(this->localizationFolderTextBox);
@@ -823,6 +870,25 @@ protected:
 			starfieldFolderTextBox->Text = folderBrowser->SelectedPath;
 		}
 	}
+	private: System::Void ps5WEMButton_Click(System::Object^ sender, System::EventArgs^ e) {
+		folderBrowser->Description = "Select the PS5 Alternate Folder";
+		folderBrowser->SelectedPath = starfieldFolderTextBox->Text;
+		folderBrowser->ShowNewFolderButton = true;
+		if (folderBrowser->ShowDialog(this) == System::Windows::Forms::DialogResult::OK) {
+			String^ path = folderBrowser->SelectedPath;
+			if (!StarfieldData::FileResidesWithinStarfieldFolder(path)) {
+				MessageBox::Show(
+					this,
+					L"PS5 Folder must reside within the Starfield Folder.",
+					L"Invalid XBox Folder",
+					MessageBoxButtons::OK,
+					MessageBoxIcon::Error);
+			}
+			else {
+				ps5RootFolderTextBox->Text = path;
+			}
+		}
+	}
 	private: System::Void xboxWEMButton_Click(System::Object^ sender, System::EventArgs^ e) {
 		folderBrowser->Description = "Select the XBox Alternate Folder";
 		folderBrowser->SelectedPath = starfieldFolderTextBox->Text;
@@ -868,6 +934,7 @@ protected:
 		startButton->Enabled = false;
 		stopButton->Enabled = true;
 		starfieldFolderButton->Enabled = false;
+		ps5WEMButton->Enabled = false;
 		xboxWEMButton->Enabled = false;
 		pluginComboBox->Enabled = false;
 		newPluginButton->Enabled = false;
@@ -891,6 +958,7 @@ protected:
 		stopButton->Enabled = false;
 		startButton->Enabled = true;
 		starfieldFolderButton->Enabled = true;
+		ps5WEMButton->Enabled = true;
 		xboxWEMButton->Enabled = true;
 		pluginComboBox->Enabled = true;
 		newPluginButton->Enabled = true;
@@ -938,11 +1006,16 @@ protected:
 		List<String^>^ pcFullList = gcnew List<String^>;
 		List<String^>^ pcVoiceList = gcnew List<String^>;
 		List<String^>^ pcMainList = gcnew List<String^>;
+		List<String^>^ ps5FullList = gcnew List<String^>;
+		List<String^>^ ps5VoiceList = gcnew List<String^>;
+		List<String^>^ ps5MainList = gcnew List<String^>;
 
 		try {
 			// Iterate through the audit log to find the primary copies of all
-			// files in the manifest.  For WEM and DDS files, also find their
-			// XBox versions in the Starfield XBox alternate directory tree.
+			// files in the manifest.  For WEM files, also find their XBox/PS5
+			// versions in the Starfield alternate directory trees.  For DDS files,
+			// find the XBox versions in the Starfield XBox alternate directory
+			// tree.
 			Collections::IEnumerator^ iter = auditListView->Items->GetEnumerator();
 			while (iter->MoveNext()) {
 				// Replicate the file to the ESM directory if required
@@ -962,18 +1035,32 @@ protected:
 					pcMainList->Add(relativeName);
 				}
 
-				// If this is a platform-specific file format, go find the XBox
+				// If this is a platform-specific file format, go find the XBox/PS5
 				// version of the file.  Otherwise it is a platform-neutral file
-				// which should be added to teh XBox non-voice manifest
+				// which should be added to the XBox/PS5 non-voice manifest
 				if (Util::HasSuffix(relativeName, L".WEM")) {
+					// XBox variant
 					String^ xboxRelativeName = PCEspToXBoxEsmReplication(item->Text);
 					if (nullptr == xboxRelativeName) {
 						return;
 					}
 					xbFullList->Add(xboxRelativeName);
 					xbVoiceList->Add(xboxRelativeName);
+
+					// PS5 variant
+					String^ ps5RelativeName = PCEspToPS5EsmReplication(item->Text);
+					if (nullptr == ps5RelativeName) {
+						return;
+					}
+					ps5FullList->Add(ps5RelativeName);
+					ps5VoiceList->Add(ps5RelativeName);
 				}
 				else if (Util::HasSuffix(relativeName, L".DDS")) {
+					// PS5 uses the same files as PC
+					ps5FullList->Add(relativeName);
+					ps5MainList->Add(relativeName);
+
+					// XBox variant
 					String^ xboxRelativeName = PCEspToXBoxEsmReplication(item->Text);
 					if (nullptr == xboxRelativeName) {
 						return;
@@ -982,6 +1069,8 @@ protected:
 					xbMainList->Add(xboxRelativeName);
 				}
 				else {
+					ps5FullList->Add(relativeName);
+					ps5MainList->Add(relativeName);
 					xbFullList->Add(relativeName);
 					xbMainList->Add(relativeName);
 				}
@@ -989,8 +1078,10 @@ protected:
 
 			// Write the arrays out to the FULL ACHLIST files
 			array<String^>^ pcFiles = pcFullList->ToArray();
+			array<String^>^ ps5Files = ps5FullList->ToArray();
 			array<String^>^ xbFiles = xbFullList->ToArray();
 			AchList::WriteArrayToJsonFile(pcFiles, userGamePrefix + pluginComboBox->Text + L"-PC.achlist", this);
+			AchList::WriteArrayToJsonFile(ps5Files, userGamePrefix + pluginComboBox->Text + L"-PS5.achlist", this);
 			AchList::WriteArrayToJsonFile(xbFiles, userGamePrefix + pluginComboBox->Text + L"-XB.achlist", this);
 
 			// Write the arrays out to the VOICE ACHLIST files
@@ -1013,6 +1104,7 @@ protected:
 				pluginComboBox->Text + L"-PC.achlist\n * " +
 				//pluginComboBox->Text + L"-VOICE-PC.achlist\n * " +
 				//pluginComboBox->Text + L"-MAIN-PC.achlist\n * " +
+				pluginComboBox->Text + L"-PS5.achlist\n * " +
 				pluginComboBox->Text + L"-XB.achlist",
 				//pluginComboBox->Text + L"-VOICE-XB.achlist\n * " +
 				//pluginComboBox->Text + L"-MAIN-XB.achlist"
@@ -1135,6 +1227,7 @@ protected:
 			MoveControl(generateButton, deltaWidth, deltaHeight);
 			MoveControl(packButton, deltaWidth, deltaHeight);
 			MoveControl(starfieldFolderButton, deltaWidth, 0);
+			MoveControl(ps5WEMButton, deltaWidth, 0);
 			MoveControl(xboxWEMButton, deltaWidth, 0);
 			MoveControl(localizationButton, deltaWidth, 0);
 			addAuditFileButton->Left += deltaWidth;
@@ -1142,6 +1235,7 @@ protected:
 
 			// Change the size of the text-based controls to track the change-of-size
 			starfieldFolderTextBox->Width += deltaWidth;
+			ps5RootFolderTextBox->Width += deltaWidth;
 			xboxRootFolderTextBox->Width += deltaWidth;
 			localizationFolderTextBox->Width += deltaWidth;
 			pluginComboBox->Width += deltaWidth;
@@ -1165,6 +1259,8 @@ protected:
 		StarfieldData::starfieldPrefix = Util::PathToPrefix(StarfieldData::starfieldFolder);
 		StarfieldData::starfieldDataFolder = StarfieldData::starfieldPrefix + L"DATA";
 		StarfieldData::starfieldDataPrefix = Util::PathToPrefix(StarfieldData::starfieldDataFolder);
+		StarfieldData::starfieldStringsFolder = StarfieldData::starfieldDataFolder + L"\\Strings";
+		StarfieldData::starfieldStringsPrefix = StarfieldData::starfieldStringsFolder + L"\\";
 		StarfieldData::starfieldVoicePrefix = StarfieldData::starfieldDataPrefix + L"Sound\\Voice\\";
 		StarfieldData::starfieldSoundBankPrefix = StarfieldData::starfieldDataPrefix + L"Sound\\SoundBanks\\";
 		StarfieldData::starfieldBackupPrefix = StarfieldData::starfieldDataPrefix + L"BACKUP\\";
@@ -1174,15 +1270,55 @@ protected:
 		findPluginDialog->InitialDirectory = StarfieldData::starfieldDataFolder;
 		importAchlistDialog->InitialDirectory = starfieldFolderTextBox->Text;
 		addFileToAuditDialog->InitialDirectory = StarfieldData::starfieldDataFolder;
+		ps5WEMButton->Enabled = true;
 		xboxWEMButton->Enabled = true;
 		localizationButton->Enabled = true;
+		bool start = true;
 		if (!StarfieldData::FileResidesWithinStarfieldFolder(localizationFolderTextBox->Text)) {
 			localizationFolderTextBox->Text = L"";
+			start = false;
+		}
+		if (!StarfieldData::FileResidesWithinStarfieldFolder(ps5RootFolderTextBox->Text)) {
+			ps5RootFolderTextBox->Text = L"";
+			start = false;
 		}
 		if (!StarfieldData::FileResidesWithinStarfieldFolder(xboxRootFolderTextBox->Text)) {
 			xboxRootFolderTextBox->Text = L"";
+			start = false;
+		}
+		if (start) {
+			startButton->Enabled = true;
+			if (!pluginComboBox->Text->Equals(autodetectPluginName)) {
+				importButton->Enabled = true;
+				addAuditFileButton->Enabled = true;
+				generateButton->Enabled = true;
+				packButton->Enabled = true;
+			}
+		}
+	}
+	private: System::Void ps5RootFolderTextBox_TextChanged(System::Object^ sender, System::EventArgs^ e) {
+		String^ ps5Folder = ps5RootFolderTextBox->Text;
+		Util::WriteSetting(registryKey, registryNamePS5WEMFolder, ps5Folder);
+		if (0 == ps5Folder->Length) {
+			pluginComboBox->Enabled = false;
+			newPluginButton->Enabled = false;
+			startButton->Enabled = false;
+			importButton->Enabled = false;
+			addAuditFileButton->Enabled = false;
+			generateButton->Enabled = false;
+			packButton->Enabled = false;
 		}
 		else {
+			StarfieldData::starfieldPS5DataFolder = ps5Folder + L"\\DATA";
+			StarfieldData::starfieldPS5RelativePrefix =
+				L"Data\\.." +
+				Util::PathToPrefix(ps5Folder->Substring(starfieldFolderTextBox->Text->Length));
+			StarfieldData::starfieldPS5DataPrefix =
+				Util::PathToPrefix(StarfieldData::starfieldPS5DataFolder);
+			StarfieldData::starfieldPS5RelativeVoicePrefix =
+				StarfieldData::starfieldPS5RelativePrefix + L"Data\\Sound\\Voice\\";
+			pluginComboBox->Enabled = true;
+			newPluginButton->Enabled = true;
 			startButton->Enabled = true;
 			if (!pluginComboBox->Text->Equals(autodetectPluginName)) {
 				importButton->Enabled = true;
@@ -1340,18 +1476,23 @@ protected:
 	private: System::Void wWiseConfigurationToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) {
 		MessageBox::Show(this,
 			L"In order to generate platform-specific ACHLIST files, one must configure " +
-			L"WWise in the CreationKitCustom.ini file to generate *both* PC and XBox WEM files " +
-			L"simultaneously, placing the XBox WEM files in an alternate directory structure.\n\n"
+			L"WWise in the CreationKitCustom.ini file to generate PC, PS5 and XBox WEM files " +
+			L"simultaneously, placing the PS5 and XBox WEM files in an alternate directory structure.\n\n"
 			L"One can provide a suitable configuration for WWise by ensuring that the [Audio] " +
 			L"section of the CreationKitCustom.ini file " +
-			L"has the following settings:\n\n[Audio]\nbProcessAudioForPC = 1\nbProcessAudioForXB = 1\n" +
-			L"sPathToVoiceOutputPC =\nsPathToVoiceOutputXB = XBOX\\Data\\Sound\\Voice\n" +
-			L"sPathToSoundBankOutputPC =\nsPathToSoundBankOutputXB = XBOX\\Data\\Sound\\SoundBanks\n" +
+			L"has the following settings:\n\n[Audio]\nbProcessAudioForPC = 1\nbProcessAudioForPS5 = 1\n" +
+			L"bProcessAudioForXB = 1\n" +
+			L"sPathToVoiceOutputPC =\nsPathToVoiceOutputPS5 = PS5\\Data\\Sound\\Voice\n" +
+			L"sPathToVoiceOutputXB = XBOX\\Data\\Sound\\Voice\n" +
+			L"sPathToSoundBankOutputPC =\nsPathToSoundBankOutputPS5 = PS5\\Data\\Sound\\SoundBanks"
+			L"\nsPathToSoundBankOutputXB = XBOX\\Data\\Sound\\SoundBanks\n" +
 			L"bLogWwiseConversationOutput = 1\nsPathToWwiseProj = Tools\\wwise\\Starfield\\Starfield.wproj\n\n" +
-			L"Once WWise has been configured, one should configure the 'XBox WEM Folder' property " +
-			L"of the audit tool to point at the root of the XBox Alternate folder.  Using the " +
+			L"Once WWise has been configured, one should configure the 'PS5 WEM Folder' and " +
+			L"'XBox WEM Folder' properties " +
+			L"of the audit tool to point at the roots of the PS5 and XBox Alternate folders, respectively.  " +
+			L"Using the " +
 			L"WWise configuration shown above, this would be your Starfield Installation folder " +
-			L"followed by '\\XBOX'.",
+			L"followed by '\\PS5' and '\\XBOX', respectively.",
 			L"WWise Configuration",
 			MessageBoxButtons::OK,
 			MessageBoxIcon::Information);
@@ -1395,8 +1536,8 @@ protected:
 			L"Generates platform-specific ACHLIST files for packaging PC and XBox WEM files.\n\n" +
 			L"Generated ACHLIST files are stored in one's >Documents\\My Games\\Starfield\\CreationKitAuditTool< folder.\n\n" +
 			L"GitHub: " + githubUrl + L"\n\n" +
-			L"Version 2.2.1\n\n" +
-			L"Copyright 2025, Eric Karlson\n\n" +
+			L"Version 2.3.0\n\n" +
+			L"Copyright 2025,2026 Eric Karlson\n\n" +
 			L"Distrbuted under the terms of the Apache License version 2.0, January 2004",
 			L"Creation Kit Audit Tool Help",
 			MessageBoxButtons::OK,
@@ -1579,14 +1720,27 @@ protected:
 	// Utility functions
 	//
 	/**
-	* Given a file in a plugin's PC directory tree, find the corresponding XBox file
-	* in the plugin's XBox directory tree, performing ESP to ESM replication in the
-	* XBox tree, if necessary.
+	* Given a file in a plugin's PC directory tree, find the corresponding PS5 file
+	* in the plugin's PS5 directory tree, performing ESP to ESM replication in the
+	* PS5 tree, if necessary.
 	* @param pcEspRelativePath - The data-relative name of the plugin's PC file
-	* @return The data-relative name of the corresponding file in the plugin's XBox
+	* @return The data-relative name of the corresponding file in the plugin's PS5
 	* directory tree, or nullptr if the operation fails
 	* @throws AbortException if the user requested that the operation be aborted
 	*/
+	private: String^ PCEspToPS5EsmReplication(String^ pcEspRelativePath) {
+		String^ ps5EspRelativeName = StarfieldData::starfieldPS5RelativePrefix + pcEspRelativePath;
+		return Replication::EspToEsmReplication(ps5EspRelativeName, this);
+	}
+		   /**
+		   * Given a file in a plugin's PC directory tree, find the corresponding XBox file
+		   * in the plugin's XBox directory tree, performing ESP to ESM replication in the
+		   * XBox tree, if necessary.
+		   * @param pcEspRelativePath - The data-relative name of the plugin's PC file
+		   * @return The data-relative name of the corresponding file in the plugin's XBox
+		   * directory tree, or nullptr if the operation fails
+		   * @throws AbortException if the user requested that the operation be aborted
+		   */
 	private: String^ PCEspToXBoxEsmReplication(String^ pcEspRelativePath) {
 		String^ xBoxEspRelativeName = StarfieldData::starfieldXBoxRelativePrefix + pcEspRelativePath;
 		return Replication::EspToEsmReplication(xBoxEspRelativeName, this);

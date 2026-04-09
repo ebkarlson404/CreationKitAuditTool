@@ -11,6 +11,9 @@ namespace CreationKitAuditTool {
 	public: static String^ starfieldPrefix;
 	public: static String^ starfieldDataFolder;
 	public: static String^ starfieldDataPrefix;
+	public: static String^ starfieldStringsFolder;
+	public: static String^ starfieldStringsPrefix;
+	public: static String^ starfieldRelativeStringsPrefix = L"Data\\Strings\\";
 	public: static String^ starfieldVoicePrefix;
 	public: static String^ starfieldRelativeVoicePrefix = L"Data\\Sound\\Voice\\";
 	public: static String^ starfieldSoundBankPrefix;
@@ -20,11 +23,31 @@ namespace CreationKitAuditTool {
 	public: static String^ starfieldXBoxRelativePrefix;
 	public: static String^ starfieldXBoxDataPrefix;
 	public: static String^ starfieldXBoxRelativeVoicePrefix;
+	public: static String^ starfieldPS5DataFolder;
+	public: static String^ starfieldPS5RelativePrefix;
+	public: static String^ starfieldPS5DataPrefix;
+	public: static String^ starfieldPS5RelativeVoicePrefix;
 	public: static String^ espDirName = nullptr;
 	public: static String^ esmDirName = nullptr;
 	public: static String^ localizationFolder;
 	public: static String^ localizationPrefix;
 	public: static String^ localizationRelativePrefix;
+
+	/**
+	* Maps the name of a staged WEM file to its corresponding target platform.
+	* @param fullname - The full name of the staged WEM file
+	* @return - The ArchiveTarget of the target platform
+	*/
+	public: static ArchiveTarget MapFullNameToArchiveTarget(String^ fullname) {
+		if (Util::HasPrefix(fullname, starfieldXBoxDataPrefix)) {
+			return TARGET_XBOX;
+		}
+		if (Util::HasPrefix(fullname, starfieldPS5DataPrefix)) {
+			return TARGET_PS5;
+		}
+		return TARGET_PC;
+	}
+
 	/**
 	* Checks whether a file is a plugin's ESP file
 	* @param fullname - The full name of the file to check
@@ -47,6 +70,13 @@ namespace CreationKitAuditTool {
 			return L"Data\\..\\" + fullname->Substring(starfieldPrefix->Length);
 		}
 
+		// If the file resides in the Starfield PS5 Alternate Data folder, we have to construct
+		// the special relative path that will resolve properly when the Creation Kit processes
+		// the ARCHLIST file.
+		if (FileResidesWithinPS5DataFolder(fullname)) {
+			return L"Data\\..\\" + fullname->Substring(starfieldPrefix->Length);
+		}
+
 		// For a normal Starfield Data file, just compute a simple relative path
 		if (FileResidesWithinStarfieldDataFolder(fullname)) {
 			return fullname->Substring(starfieldPrefix->Length);
@@ -64,9 +94,13 @@ namespace CreationKitAuditTool {
 	public: static bool FileResidesWithinXBoxDataFolder(String^ fullname) {
 		return Util::HasPrefix(fullname, StarfieldData::starfieldXBoxDataPrefix);
 	}
+	public: static bool FileResidesWithinPS5DataFolder(String^ fullname) {
+		return Util::HasPrefix(fullname, StarfieldData::starfieldPS5DataPrefix);
+	}
 	public: static bool FileResidesWithinAnyDataFolder(String^ fullname) {
 		return FileResidesWithinStarfieldDataFolder(fullname) ||
-			FileResidesWithinXBoxDataFolder(fullname);
+			FileResidesWithinXBoxDataFolder(fullname) ||
+			FileResidesWithinPS5DataFolder(fullname);
 	}
 	/**
 	* Transforms the name of a file that resides within a <mod>.esp folder

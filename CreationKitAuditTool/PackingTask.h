@@ -14,11 +14,14 @@ namespace CreationKitAuditTool {
 	* @param spec - The type of spec to pack
 	* @param plugin - The name of the plugin we are packing
 	*/
-	public: PackingTask(ArchiveType^ spec,String^ plugin) :
+	public: PackingTask(ArchiveType^ spec, String^ plugin) :
 		Format(spec->Format),
 		Compression(spec->Compression),
 		Files(gcnew Generic::List<String^>),
-		ArchiveName(spec->GetArchiveName(plugin)) {}
+		ArchiveName(spec->GetArchiveName(plugin)) {
+		String^ test = ArchiveName;
+
+	}
 	protected: ~PackingTask() {}
 
 	public: String^ Format;

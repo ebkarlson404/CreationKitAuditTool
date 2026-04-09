@@ -175,7 +175,7 @@ namespace CreationKitAuditTool {
 			this->pluginTypeGroupBox->Size = System::Drawing::Size(351, 206);
 			this->pluginTypeGroupBox->TabIndex = 0;
 			this->pluginTypeGroupBox->TabStop = false;
-			this->pluginTypeGroupBox->Text = L"Plugin Type";
+			this->pluginTypeGroupBox->Text = L"Packing Model";
 			// 
 			// bothRadioButton
 			// 
@@ -186,7 +186,7 @@ namespace CreationKitAuditTool {
 			this->bothRadioButton->TabIndex = 3;
 			this->bothRadioButton->TabStop = true;
 			this->bothRadioButton->Text = L"Text and Voice Localization";
-			this->toolTip->SetToolTip(this->bothRadioButton, L"Plugin has both textual and voice localization");
+			this->toolTip->SetToolTip(this->bothRadioButton, L"Pack with both localized string and localized voice files");
 			this->bothRadioButton->UseVisualStyleBackColor = true;
 			// 
 			// voiceOnlyRadioButton
@@ -198,7 +198,7 @@ namespace CreationKitAuditTool {
 			this->voiceOnlyRadioButton->TabIndex = 2;
 			this->voiceOnlyRadioButton->TabStop = true;
 			this->voiceOnlyRadioButton->Text = L"Voice Localization Only";
-			this->toolTip->SetToolTip(this->voiceOnlyRadioButton, L"Plugin has only voice localization");
+			this->toolTip->SetToolTip(this->voiceOnlyRadioButton, L"Pack with localized voice files only");
 			this->voiceOnlyRadioButton->UseVisualStyleBackColor = true;
 			// 
 			// textOnlyRadioButton
@@ -210,7 +210,7 @@ namespace CreationKitAuditTool {
 			this->textOnlyRadioButton->TabIndex = 1;
 			this->textOnlyRadioButton->TabStop = true;
 			this->textOnlyRadioButton->Text = L"Text Localization Only";
-			this->toolTip->SetToolTip(this->textOnlyRadioButton, L"Plugin has only textual localization");
+			this->toolTip->SetToolTip(this->textOnlyRadioButton, L"Pack with localized strings only");
 			this->textOnlyRadioButton->UseVisualStyleBackColor = true;
 			// 
 			// nonlocalizedRadioButton
@@ -222,7 +222,7 @@ namespace CreationKitAuditTool {
 			this->nonlocalizedRadioButton->TabIndex = 0;
 			this->nonlocalizedRadioButton->TabStop = true;
 			this->nonlocalizedRadioButton->Text = L"Non-Localized";
-			this->toolTip->SetToolTip(this->nonlocalizedRadioButton, L"Plugin has no localization");
+			this->toolTip->SetToolTip(this->nonlocalizedRadioButton, L"Pack as a non-localized plugin");
 			this->nonlocalizedRadioButton->UseVisualStyleBackColor = true;
 			// 
 			// doneButton
@@ -451,7 +451,8 @@ namespace CreationKitAuditTool {
 
 		// Does this plugin have any string translation files?
 		Generic::IEnumerator<String^>^ iter =
-			Directory::EnumerateFiles(StarfieldData::starfieldDataPrefix + L"Strings",
+			Directory::EnumerateFiles(
+				StarfieldData::starfieldStringsFolder,
 				plugin + L"*.*")->GetEnumerator();
 		hasTextLocalization = iter->MoveNext();
 
@@ -485,20 +486,16 @@ namespace CreationKitAuditTool {
 		return Path::GetFileNameWithoutExtension(iter->Current);
 	}
 	private: System::Void InitializePluginRadioButtons() {
+		nonlocalizedRadioButton->Enabled = true;
+		textOnlyRadioButton->Enabled = hasTextLocalization;;
+		voiceOnlyRadioButton->Enabled = hasVoiceLocalization;
+		bothRadioButton->Enabled = hasTextLocalization && hasVoiceLocalization;
 		if (hasVoiceLocalization) {
-			nonlocalizedRadioButton->Enabled = false;
-			textOnlyRadioButton->Enabled = false;
-			bothRadioButton->Enabled = true;
 			bothRadioButton->Checked = hasTextLocalization;
-			voiceOnlyRadioButton->Enabled = true;
 			voiceOnlyRadioButton->Checked = !hasTextLocalization;
 		}
 		else {
-			voiceOnlyRadioButton->Enabled = false;
-			bothRadioButton->Enabled = false;
-			textOnlyRadioButton->Enabled = true;
 			textOnlyRadioButton->Checked = hasTextLocalization;
-			nonlocalizedRadioButton->Enabled = true;
 			nonlocalizedRadioButton->Checked = !hasTextLocalization;
 		}
 	}
@@ -584,12 +581,17 @@ namespace CreationKitAuditTool {
 				String^ localizedName = LocalizeWEMFilename(item->Text, lang, isPrimaryLang);
 
 				// Stage the PC version of the WEM file
-				StageLocalizedWEMFile(localizedName, plugin, lang, false, this);
+				StageLocalizedWEMFile(localizedName, plugin, lang, ArchiveTarget::TARGET_PC, this);
+
+				// Stage the PS5 version of the WEM file
+				StageLocalizedWEMFile(
+					StarfieldData::starfieldPS5RelativePrefix + localizedName,
+					plugin, lang, ArchiveTarget::TARGET_PS5, this);
 
 				// Stage the XBox version of the WEM file
 				StageLocalizedWEMFile(
 					StarfieldData::starfieldXBoxRelativePrefix + localizedName,
-					plugin, lang, true, this);
+					plugin, lang, ArchiveTarget::TARGET_XBOX, this);
 			}
 		}
 	}
@@ -629,7 +631,7 @@ namespace CreationKitAuditTool {
 				StarfieldData::GetRelativeName(fullname),
 				plugin,
 				lang,
-				Util::HasPrefix(fullname, StarfieldData::starfieldXBoxDataPrefix),
+				StarfieldData::MapFullNameToArchiveTarget(fullname),
 				nullptr);
 		return (nullptr == targetFullName) ?
 			nullptr :
@@ -668,7 +670,7 @@ namespace CreationKitAuditTool {
 		// Compute the full name of the staged copy
 		String^ stagedFullName = espToLocalEsmNameTransform(
 			StarfieldData::GetRelativeName(fullname), plugin, lang,
-			Util::HasPrefix(fullname, StarfieldData::starfieldXBoxDataPrefix));
+			StarfieldData::MapFullNameToArchiveTarget(fullname));
 
 		// Delete the staged file if it exists
 		if (!File::Exists(stagedFullName)) {
@@ -703,7 +705,7 @@ namespace CreationKitAuditTool {
 		}
 
 		// Are we working on XBox files or PC files?
-		bool isXBox = Util::HasPrefix(oldFullName, StarfieldData::starfieldXBoxDataPrefix);
+		ArchiveTarget target = StarfieldData::MapFullNameToArchiveTarget(oldFullName);
 
 		// Extract the base filename and the language tag for both the old and new names
 		String^ oldBaseName = Path::GetFileNameWithoutExtension(oldFullName);
@@ -715,9 +717,9 @@ namespace CreationKitAuditTool {
 
 		// Compute the old and new names for the staged file
 		String^ oldTargetName = espToLocalEsmNameTransform(
-			StarfieldData::GetRelativeName(oldFullName), plugin, oldLang, isXBox);
+			StarfieldData::GetRelativeName(oldFullName), plugin, oldLang, target);
 		String^ newTargetName = espToLocalEsmNameTransform(
-			StarfieldData::GetRelativeName(newFullName), plugin, newLang, isXBox);
+			StarfieldData::GetRelativeName(newFullName), plugin, newLang, target);
 
 		// If the language tag changed, we have to ensure that the staging folder
 		// for the new language exists.
@@ -752,16 +754,16 @@ namespace CreationKitAuditTool {
 	* @param espRelativeName - The relative name of the file in the ESP folder
 	* @param plugin - The name of the current plugin
 	* @param lang - The language to use for staging
-	* @param isXBox - Indicates that the file is for the XBox platform
+	* @param target - Indicates the target platform
 	* @param caller - The window to use for MessageBoxes, or nullptr to not show MessageBoxes
 	* @returns The full name of the staged file, or nullptr if the operation failed
 	* @throw AbortException if something goes wrong and the user chooses to
 	* abort the operation
 	*/
 	private: static String^ StageLocalizedWEMFile(
-		String^ espRelativeName, String^ plugin, String^ lang, bool isXBox, IWin32Window^ caller) {
+		String^ espRelativeName, String^ plugin, String^ lang, ArchiveTarget target, IWin32Window^ caller) {
 		Forms::DialogResult status = Forms::DialogResult::Retry;
-		String^ targetName = espToLocalEsmNameTransform(espRelativeName, plugin, lang, isXBox);
+		String^ targetName = espToLocalEsmNameTransform(espRelativeName, plugin, lang, target);
 		while (status == Forms::DialogResult::Retry) {
 			try {
 				Directory::CreateDirectory(Path::GetDirectoryName(targetName));
@@ -801,17 +803,25 @@ namespace CreationKitAuditTool {
 			Path::GetFileNameWithoutExtension(filename) +
 			L"_" + lang + Path::GetExtension(filename);
 	}
+	private: static String^ MapTargetToSubdir(ArchiveTarget target) {
+		switch (target) {
+		case TARGET_PC: return L"";
+		case TARGET_PS5: return L"PS5\\";
+		case TARGET_XBOX: return L"XBOX\\";
+		}
+		throw gcnew Exception(L"Unimplemented ArchiveType");
+	}
 	/**
 	* Converts relative name of a file that resides within this plugin's ESP folder
 	* to its corresponding Localization Staged name.
 	* @param espRelativeName - The name of the file to be transformed
 	* @param plugin - The name of the current plugin
 	* @param lang - The language to use for staging
-	* @param isXBox - Indicates if this should be staged to the XBox tree
+	* @param target - Indicates the target platform for the staged file
 	* @return The full name to use for staging the file to the localization tree
 	*/
 	private: static String^ espToLocalEsmNameTransform(
-		String^ relativeName, String^ plugin, String^ lang, bool isXBox) {
+		String^ relativeName, String^ plugin, String^ lang, ArchiveTarget target) {
 		String^ filename =
 			DelocalizeWEMFilename(Path::GetFileNameWithoutExtension(relativeName)) +
 			Path::GetExtension(relativeName);
@@ -819,7 +829,7 @@ namespace CreationKitAuditTool {
 		String^ espRelativePath = Path::GetDirectoryName(relativeName->Substring(pos + plugin->Length + 6));
 		String^ espRelativePrefix = Util::PathToPrefix(espRelativePath);
 		String^ localizedEsmPrefix =
-			StarfieldData::localizationPrefix + (isXBox ? L"XBOX\\" : L"") +
+			StarfieldData::localizationPrefix + MapTargetToSubdir(target) +
 			lang + L"\\Data\\Sound\\Voice\\" + plugin + L".esm\\";
 		return localizedEsmPrefix + espRelativePrefix + filename;
 	}
@@ -913,10 +923,13 @@ namespace CreationKitAuditTool {
 	private: System::Void ComputeAndExecutePackingTasks() {
 		// Construct PackingTasks for all possible BA2 archives that might be created
 		PackingTask^ mainPC = gcnew PackingTask(ArchiveType::PC_MAIN, plugin);
+		PackingTask^ mainPS5 = gcnew PackingTask(ArchiveType::PS5_MAIN, plugin);
 		PackingTask^ mainXB = gcnew PackingTask(ArchiveType::XBOX_MAIN, plugin);
 		PackingTask^ texturesPC = gcnew PackingTask(ArchiveType::PC_TEXTURE, plugin);
+		PackingTask^ texturesPS5 = gcnew PackingTask(ArchiveType::PS5_TEXTURE, plugin);
 		PackingTask^ texturesXB = gcnew PackingTask(ArchiveType::XBOX_TEXTURE, plugin);
 		Dictionary<String^, PackingTask^>^ voicesPC = gcnew Dictionary<String^, PackingTask^>();
+		Dictionary<String^, PackingTask^>^ voicesPS5 = gcnew Dictionary<String^, PackingTask^>();
 		Dictionary<String^, PackingTask^>^ voicesXB = gcnew Dictionary<String^, PackingTask^>();
 
 		try {
@@ -926,15 +939,20 @@ namespace CreationKitAuditTool {
 			while (iter->MoveNext()) {
 				ListViewItem^ item = safe_cast<ListViewItem^>(iter->Current);
 				ReplicateAndCollateFile(
-					item->Text, mainPC, mainXB,
-					texturesPC, texturesXB, voicesPC, voicesXB);
+					item->Text,
+					mainPC, mainPS5, mainXB,
+					texturesPC, texturesPS5, texturesXB,
+					voicesPC, voicesPS5, voicesXB);
 			}
 
 			// Now that we've marshalled the file lists for all BA2 archive files,
 			// run the Archive2.exe tool to generate the files.
 			archiveDialog->Run(
-				plugin, mainPC, mainXB,
-				texturesPC, texturesXB, voicesPC, voicesXB, this);
+				plugin,
+				mainPC, mainPS5, mainXB,
+				texturesPC, texturesPS5, texturesXB,
+				voicesPC, voicesPS5, voicesXB,
+				this);
 		}
 		catch (AbortException^) {
 			MessageBox::Show(
@@ -947,15 +965,18 @@ namespace CreationKitAuditTool {
 	}
 	/**
 	* Given the relative name of a file in the plugin's ESP folder, replicate
-	* that file, any XBox derivations of the file and all localized variants of
+	* that file, any PS5/XBox derivations of the file and all localized variants of
 	* that file, to their corresponding ESM folders and then add the replicated
 	* files to the appropriate PackingTasks.
 	* @param espRelativeName - The relative name of the ESP data file
 	* @param mainPC - The PackingTask for the Main PC archive
+	* @param mainPS5 - The PackingTask for the Main PS5 archive
 	* @param mainXB - The PackingTask for the Main XBox archive
 	* @param texturesPC - The PackingTask for the Textures PC archive
+	* @param texturesPS5 - The PackingTask for the Textures PS5 archive
 	* @param texturesXB - The PackingTask for the Textures XBox archive
 	* @param voicesPC - A Dictionary containing all known localized PC PackingTasks
+	* @param voicesPS5 - A Dictionary containing all known localized PS5 PackingTasks
 	* @param voicesXB - A Dictionary containing all known localized XBox PackingTasks
 	* @return true if everything worked, false if there were failures but the user
 	* choose to ignore them
@@ -965,11 +986,17 @@ namespace CreationKitAuditTool {
 	private: bool ReplicateAndCollateFile(
 		String^ espRelativeName,
 		PackingTask^ mainPC,
+		PackingTask^ mainPS5,
 		PackingTask^ mainXB,
 		PackingTask^ texturesPC,
+		PackingTask^ texturesPS5,
 		PackingTask^ texturesXB,
 		Dictionary<String^, PackingTask^>^ voicesPC,
+		Dictionary<String^, PackingTask^>^ voicesPS5,
 		Dictionary<String^, PackingTask^>^ voicesXB) {
+
+		bool packLocalizedVoiceFiles = voiceOnlyRadioButton->Checked || bothRadioButton->Checked;
+		bool packLocalizedStringFiles = textOnlyRadioButton->Checked || bothRadioButton->Checked;
 
 		// Replicate to the ESM folder if needed
 		String^ esmRelativeName = Replication::EspToEsmReplication(espRelativeName, this);
@@ -980,16 +1007,26 @@ namespace CreationKitAuditTool {
 		// Add the file to the appropriate PackingTasks
 		if (Util::HasSuffix(esmRelativeName, L".DDS")) {
 			if (!PackPlatformSpecificFile(
-				texturesPC, texturesXB, espRelativeName, esmRelativeName)) {
+				texturesPC, texturesPS5, texturesXB, espRelativeName, esmRelativeName)) {
 				return false;
+			}
+		}
+		else if (Util::HasSuffix(esmRelativeName, L"STRINGS") &&
+			Util::HasPrefix(esmRelativeName, StarfieldData::starfieldRelativeStringsPrefix)) {
+			if (packLocalizedStringFiles) {
+				mainPC->Files->Add(esmRelativeName);
+				mainPS5->Files->Add(esmRelativeName);
+				mainXB->Files->Add(esmRelativeName);
 			}
 		}
 		else if (!Util::HasSuffix(esmRelativeName, L".WEM")) {
 			mainPC->Files->Add(esmRelativeName);
+			mainPS5->Files->Add(esmRelativeName);
 			mainXB->Files->Add(esmRelativeName);
 		}
-		else if (Util::HasPrefix(esmRelativeName, StarfieldData::starfieldRelativeSoundBankPrefix)) {
-			if (!PackPlatformSpecificFile(mainPC, mainXB, espRelativeName, esmRelativeName)) {
+		else if (Util::HasPrefix(esmRelativeName, StarfieldData::starfieldRelativeSoundBankPrefix) ||
+			!packLocalizedVoiceFiles) {
+			if (!PackPlatformSpecificFile(mainPC, mainPS5, mainXB, espRelativeName, esmRelativeName)) {
 				return false;
 			}
 		}
@@ -997,15 +1034,15 @@ namespace CreationKitAuditTool {
 			// WEM file does not appear to be a SoundBank nor a Voice file.
 			// For the time being, pack into the MAIN archive file as a
 			// non-localized asset.
-			if (!PackPlatformSpecificFile(mainPC, mainXB, espRelativeName, esmRelativeName)) {
+			if (!PackPlatformSpecificFile(mainPC, mainPS5, mainXB, espRelativeName, esmRelativeName)) {
 				return false;
 			}
 		}
 		else if (hasVoiceLocalization) {
-			PackLocalizedWEMFiles(espRelativeName, voicesPC, voicesXB);
+			PackLocalizedWEMFiles(espRelativeName, voicesPC, voicesPS5, voicesXB);
 		}
 		else {
-			if (!PackPlatformSpecificFile(mainPC, mainXB, espRelativeName, esmRelativeName)) {
+			if (!PackPlatformSpecificFile(mainPC, mainPS5, mainXB, espRelativeName, esmRelativeName)) {
 				return false;
 			}
 		}
@@ -1013,16 +1050,31 @@ namespace CreationKitAuditTool {
 	}
 	private: bool PackPlatformSpecificFile(
 		PackingTask^ pcTask,
+		PackingTask^ ps5Task,
 		PackingTask^ xbTask,
 		String^ espRelativeName,
 		String^ esmRelativeName) {
 		pcTask->Files->Add(esmRelativeName);
+		ps5Task->Files->Add(esmRelativeName);
 		String^ xbEsmRelativeName = GetXBoxEsmRelativeName(espRelativeName);
 		if (nullptr == xbEsmRelativeName) {
 			return false;
 		}
 		xbTask->Files->Add(xbEsmRelativeName);
 		return true;
+	}
+	/**
+	* Given the ESP-Relative name of a PC-encoded WEM file, find the corresponding
+	* PS5 derived WEM file, replicate that file to the PS5 ESM folder and
+	* return the name of the PS5 ESM-Relative WEM file.
+	* @param pcEspRelativeName - The ESP-Relative name of the PC-encoded WEM file
+	* @return The ESM-Relative name of the PS5-encoded WEM file or nullptr if
+	* the replication failed and the user choose to ignore the problem
+	* @throws AbortException - If the user aborted the replication
+	*/
+	private: String^ GetPS5EsmRelativeName(String^ pcEspRelativeName) {
+		String^ ps5EspRelativeName = StarfieldData::starfieldPS5RelativePrefix + pcEspRelativeName;
+		return Replication::EspToEsmReplication(ps5EspRelativeName, this);
 	}
 	/**
 	* Given the ESP-Relative name of a PC-encoded WEM file, find the corresponding
@@ -1047,6 +1099,7 @@ namespace CreationKitAuditTool {
 	private: System::Void PackLocalizedWEMFiles(
 		String^ espRelativeName,
 		Dictionary<String^, PackingTask^>^ voicesPC,
+		Dictionary<String^, PackingTask^>^ voicesPS5,
 		Dictionary<String^, PackingTask^>^ voicesXB) {
 
 		// Find every localized set of voice files and pack them into their
@@ -1055,8 +1108,9 @@ namespace CreationKitAuditTool {
 		while (iter->MoveNext()) {
 			ListViewItem^ item = cli::safe_cast<ListViewItem^>(iter->Current);
 			if (item->Checked) {
-				PackLanguageWEMFile(espRelativeName, item->Text, false, voicesPC);
-				PackLanguageWEMFile(espRelativeName, item->Text, true, voicesXB);
+				PackLanguageWEMFile(espRelativeName, item->Text, ArchiveTarget::TARGET_PC, voicesPC);
+				PackLanguageWEMFile(espRelativeName, item->Text, ArchiveTarget::TARGET_PS5, voicesPS5);
+				PackLanguageWEMFile(espRelativeName, item->Text, ArchiveTarget::TARGET_XBOX, voicesXB);
 			}
 		}
 	}
@@ -1064,24 +1118,24 @@ namespace CreationKitAuditTool {
 	* Adds a localized WEM file to the appropriate PackingTask
 	* @param espRelativeName - The ESP-relative name of the WEM file
 	* @param lang - The language used in the WEM file
-	* @param isXBox - Indicates whether the WEM file is formatted for XBox
+	* @param target - Indicates the target platform for the archive
 	* @param voiceTasks - A Dictionary of all known language-specific PackingTask's
 	*/
 	private: System::Void PackLanguageWEMFile(
 		String^ espRelativeName,
 		String^ lang,
-		bool isXBox,
+		ArchiveTarget target,
 		Dictionary<String^, PackingTask^>^ voiceTasks) {
 
 		// Find/Create the PackingTask
 		if (!voiceTasks->ContainsKey(lang)) {
-			ArchiveType^ spec = gcnew ArchiveType(isXBox, lang);
+			ArchiveType^ spec = gcnew ArchiveType(target, lang);
 			voiceTasks->Add(lang, gcnew PackingTask(spec, plugin));
 		}
 		PackingTask^ task = voiceTasks[lang];
 
 		// Map the name to the staged copy of the localized file
-		String^ stagedName = espToLocalEsmNameTransform(espRelativeName, plugin, lang, isXBox);
+		String^ stagedName = espToLocalEsmNameTransform(espRelativeName, plugin, lang, target);
 
 		// Generate a data-relative name for the staged file and append the PackingTask
 		String^ localRelativeName =
